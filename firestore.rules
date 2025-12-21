@@ -1,0 +1,24 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      // Administratorzy oraz właściciel dokumentu mogą czytać i pisać w głównym dokumencie użytkownika.
+      allow read, write: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
+
+      // NOWA, ULEPSZONA REGUŁA DLA WSZYSTKICH PODKOLEKCJI
+      // Ta reguła pozwala administratorom oraz właścicielowi na dostęp do WSZYSTKICH dokumentów
+      // w podkolekcjach (takich jak 'profile', 'analyses', 'backlog' itd.).
+      // Zastępuje ona potrzebę tworzenia osobnych reguł dla każdej podkolekcji.
+      match /{document=**} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
+      }
+    }
+    
+    match /admins/{adminId} {
+        // Administratorzy mogą czytać listę innych administratorów.
+        allow read: if request.auth != null && request.auth.token.admin == true;
+        // Zapis do tej kolekcji jest zarządzany tylko przez funkcję w chmurze.
+        allow write: if false;
+    }
+  }
+}

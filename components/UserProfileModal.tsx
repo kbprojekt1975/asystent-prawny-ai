@@ -1,0 +1,331 @@
+
+import React, { useState, useEffect } from 'react';
+import { UserProfile, QuickAction, LawArea, InteractionMode } from '../types';
+import { XIcon, PlusCircleIcon, TrashIcon } from './Icons';
+import { signOut } from 'firebase/auth';
+import { auth } from '../services/firebase';
+import HelpModal from './HelpModal';
+import { InfoIcon } from './InfoIcon';
+
+interface UserProfileModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onUpdateProfile: (profile: UserProfile, isSessionOnly: boolean) => void;
+    profile: UserProfile;
+    allTopics: Record<LawArea, string[]>;
+}
+
+const UserProfileModal: React.FC<UserProfileModalProps> = ({
+    isOpen,
+    onClose,
+    onUpdateProfile,
+    profile: initialProfile,
+    allTopics
+}) => {
+    const [currentProfile, setCurrentProfile] = useState<UserProfile>(initialProfile);
+    const [newActionArea, setNewActionArea] = useState<LawArea | ''>('');
+    const [newActionTopic, setNewActionTopic] = useState<string>('');
+    const [isSessionOnly, setIsSessionOnly] = useState<boolean>(false);
+    const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+    useEffect(() => {
+        setCurrentProfile(initialProfile);
+        if (!isOpen) {
+            setNewActionArea('');
+            setNewActionTopic('');
+        }
+    }, [initialProfile, isOpen]);
+
+    const handleAddQuickAction = () => {
+        if (!newActionArea) return;
+        const newAction: QuickAction = {
+            lawArea: newActionArea,
+            ...(newActionTopic && { topic: newActionTopic })
+        };
+
+        const isDuplicate = currentProfile.quickActions?.some(
+            qa => qa.lawArea === newAction.lawArea && qa.topic === newAction.topic
+        );
+        if (isDuplicate) {
+            return; // Don't add duplicates
+        }
+
+        const updatedProfile = {
+            ...currentProfile,
+            quickActions: [...(currentProfile.quickActions || []), newAction]
+        };
+        setCurrentProfile(updatedProfile);
+        onUpdateProfile(updatedProfile);
+        setNewActionArea('');
+        setNewActionTopic('');
+    };
+
+    const handleDeleteQuickAction = (indexToDelete: number) => {
+        const updatedProfile = {
+            ...currentProfile,
+            quickActions: currentProfile.quickActions?.filter((_, index) => index !== indexToDelete)
+        };
+        setCurrentProfile(updatedProfile);
+        onUpdateProfile(updatedProfile);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            onClose();
+        } catch (error) {
+            console.error("Logout error", error);
+        }
+    };
+
+    return (
+        <div
+            className={`fixed inset-0 bg-black bg-opacity-60 z-50 transition-opacity duration-300 ease-in-out ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            aria-labelledby="panel-title"
+            role="dialog"
+            aria-modal="true"
+            onClick={onClose}
+        >
+            <div
+                className={`fixed top-0 right-0 h-full w-full max-w-md bg-slate-800 shadow-xl border-l border-slate-700 transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                onClick={e => e.stopPropagation()}
+            >
+                <header className="p-6 flex justify-between items-center border-b border-slate-700 flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                        <h3 className="text-xl leading-6 font-bold text-white" id="panel-title">
+                            Panel Użytkownika
+                        </h3>
+                        <InfoIcon onClick={() => setIsHelpOpen(true)} className="ml-2" />
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                        aria-label="Zamknij panel"
+                    >
+                        <XIcon />
+                    </button>
+                </header>
+
+                <main className="flex-1 overflow-y-auto p-6 space-y-6">
+                    <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-700">
+                        <div className="w-12 h-12 rounded-full bg-cyan-600 flex items-center justify-center text-xl font-bold text-white">
+                            {auth.currentUser?.email?.charAt(0).toUpperCase() || "U"}
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                            <p className="text-white font-medium truncate">{auth.currentUser?.email}</p>
+                            <button
+                                onClick={handleLogout}
+                                className="text-sm text-red-400 hover:text-red-300 transition-colors"
+                            >
+                                Wyloguj się
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="">
+                        <h4 className="text-lg font-medium text-white mb-2">Szybkie Akcje</h4>
+                        <p className="text-sm text-slate-400 mb-4">Dodaj skróty do najczęściej używanych dziedzin lub tematów, aby mieć do nich szybki dostęp.</p>
+
+                        <div className="space-y-2 mb-4">
+                            {currentProfile.quickActions?.map((qa, index) => (
+                                <div key={`${qa.lawArea}-${qa.topic || 'general'}-${index}`} className="flex items-center justify-between bg-slate-700/50 rounded-lg p-2 px-3 group">
+                                    <span className="text-sm text-slate-200">
+                                        {qa.lawArea}{qa.topic ? <span className="text-slate-400"> / {qa.topic}</span> : ''}
+                                    </span>
+                                    <button onClick={() => handleDeleteQuickAction(index)} className="text-slate-500 hover:text-red-500 transition-colors opacity-50 group-hover:opacity-100" aria-label={`Usuń skrót ${qa.lawArea} ${qa.topic || ''}`}>
+                                        <TrashIcon />
+                                    </button>
+                                </div>
+                            ))}
+                            {(!currentProfile.quickActions || currentProfile.quickActions.length === 0) && (
+                                <p className="text-sm text-slate-500 text-center py-2">Brak zdefiniowanych szybkich akcji.</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-3 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
+                            <h5 className="text-sm font-semibold text-white">Dodaj nowy skrót</h5>
+                            <select
+                                value={newActionArea}
+                                onChange={e => { setNewActionArea(e.target.value as LawArea); setNewActionTopic(''); }}
+                                className="w-full bg-slate-700/50 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 border border-slate-600/50"
+                            >
+                                <option value="">Wybierz dziedzinę prawa...</option>
+                                {Object.values(LawArea).map(area => <option key={area} value={area}>{area}</option>)}
+                            </select>
+
+                            {newActionArea && (
+                                <select
+                                    value={newActionTopic}
+                                    onChange={e => setNewActionTopic(e.target.value)}
+                                    className="w-full bg-slate-700/50 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 border border-slate-600/50"
+                                >
+                                    <option value="">Dowolny temat / Ogólne</option>
+                                    {allTopics[newActionArea]?.map(topic => <option key={topic} value={topic}>{topic}</option>)}
+                                </select>
+                            )}
+
+                            <button
+                                onClick={handleAddQuickAction}
+                                disabled={!newActionArea}
+                                className="w-full flex items-center justify-center gap-2 bg-cyan-600/20 text-cyan-300 border border-cyan-600/50 rounded-lg p-3 text-sm font-medium hover:bg-cyan-600/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <PlusCircleIcon />
+                                Dodaj skrót
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-slate-700">
+                        <h4 className="text-lg font-medium text-white mb-2">Dane do Pism</h4>
+                        <p className="text-sm text-slate-400 mb-4">Uzupełnij swoje dane, aby automatycznie wstawiać je do generowanych dokumentów.</p>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Imię i Nazwisko</label>
+                                <input
+                                    type="text"
+                                    value={currentProfile.personalData?.fullName || ''}
+                                    onChange={e => setCurrentProfile({
+                                        ...currentProfile,
+                                        personalData: { ...(currentProfile.personalData || {}), fullName: e.target.value }
+                                    })}
+                                    placeholder="Jan Kowalski"
+                                    className="w-full bg-slate-700/50 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 border border-slate-600/50"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="col-span-2">
+                                    <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Adres zamieszkania</label>
+                                    <input
+                                        type="text"
+                                        value={currentProfile.personalData?.address || ''}
+                                        onChange={e => setCurrentProfile({
+                                            ...currentProfile,
+                                            personalData: { ...(currentProfile.personalData || {}), address: e.target.value }
+                                        })}
+                                        placeholder="ul. Wiejska 1/2"
+                                        className="w-full bg-slate-700/50 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 border border-slate-600/50"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Kod pocztowy</label>
+                                    <input
+                                        type="text"
+                                        value={currentProfile.personalData?.postalCode || ''}
+                                        onChange={e => setCurrentProfile({
+                                            ...currentProfile,
+                                            personalData: { ...(currentProfile.personalData || {}), postalCode: e.target.value }
+                                        })}
+                                        placeholder="00-001"
+                                        className="w-full bg-slate-700/50 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 border border-slate-600/50"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Miejscowość</label>
+                                    <input
+                                        type="text"
+                                        value={currentProfile.personalData?.city || ''}
+                                        onChange={e => setCurrentProfile({
+                                            ...currentProfile,
+                                            personalData: { ...(currentProfile.personalData || {}), city: e.target.value }
+                                        })}
+                                        placeholder="Warszawa"
+                                        className="w-full bg-slate-700/50 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 border border-slate-600/50"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">PESEL</label>
+                                    <input
+                                        type="text"
+                                        value={currentProfile.personalData?.pesel || ''}
+                                        onChange={e => setCurrentProfile({
+                                            ...currentProfile,
+                                            personalData: { ...(currentProfile.personalData || {}), pesel: e.target.value }
+                                        })}
+                                        placeholder="80010100000"
+                                        className="w-full bg-slate-700/50 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 border border-slate-600/50"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Nr Dowodu</label>
+                                    <input
+                                        type="text"
+                                        value={currentProfile.personalData?.idNumber || ''}
+                                        onChange={e => setCurrentProfile({
+                                            ...currentProfile,
+                                            personalData: { ...(currentProfile.personalData || {}), idNumber: e.target.value }
+                                        })}
+                                        placeholder="ABC 123456"
+                                        className="w-full bg-slate-700/50 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 border border-slate-600/50"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 mb-2 p-3 bg-slate-900/30 rounded-lg border border-slate-700/50">
+                                <input
+                                    type="checkbox"
+                                    id="sessionOnly"
+                                    checked={isSessionOnly}
+                                    onChange={e => setIsSessionOnly(e.target.checked)}
+                                    className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-slate-800"
+                                />
+                                <label htmlFor="sessionOnly" className="text-sm text-slate-300 cursor-pointer">
+                                    Zapisz tylko dla tej sesji (dane znikną po zamknięciu przeglądarki)
+                                </label>
+                            </div>
+
+                            <button
+                                onClick={() => onUpdateProfile(currentProfile, isSessionOnly)}
+                                className="w-full bg-cyan-600 text-white rounded-lg p-3 text-sm font-bold hover:bg-cyan-500 shadow-lg shadow-cyan-600/20 transition-all mt-2"
+                            >
+                                Zapisz Dane Osobowe
+                            </button>
+                        </div>
+                    </div>
+                </main>
+
+                <footer className="p-6 border-t border-slate-700 flex-shrink-0">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="w-full inline-flex justify-center rounded-md border border-slate-600 shadow-sm px-4 py-2 bg-slate-700 text-base font-medium text-slate-300 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 focus:ring-offset-slate-800 sm:w-auto sm:text-sm transition-colors"
+                    >
+                        Zamknij
+                    </button>
+                </footer>
+            </div>
+
+            <HelpModal
+                isOpen={isHelpOpen}
+                onClose={() => setIsHelpOpen(false)}
+                title="Panel Użytkownika - Pomoc"
+            >
+                <div className="space-y-4">
+                    <p>
+                        W tym panelu możesz zarządzać swoimi ustawieniami i danymi.
+                    </p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>
+                            <strong>Szybkie Akcje:</strong> Definiuj skróty do najczęściej używanych tematów.
+                            Dzięki temu będziesz mieć je zawsze pod ręką w głównym menu.
+                        </li>
+                        <li>
+                            <strong>Dane do Pism:</strong> Uzupełnij swoje dane raz, a system automatycznie
+                            będzie je wstawiał do generowanych pozwów i wniosków. To oszczędność czasu!
+                        </li>
+                        <li>
+                            <strong>Zapis sesji:</strong> Możesz wybrać, czy dane mają być zapamiętane na stałe,
+                            czy tylko do momentu zamknięcia przeglądarki.
+                        </li>
+                    </ul>
+                </div>
+            </HelpModal>
+        </div>
+    );
+};
+
+export default UserProfileModal;
