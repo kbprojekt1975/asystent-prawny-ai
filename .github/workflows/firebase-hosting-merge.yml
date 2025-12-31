@@ -19,6 +19,10 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_LOW_ASSIT }}
           channelId: live
           projectId: low-assit
+      - name: Install Functions Dependencies
+        run: cd functions && npm ci
+      - name: Build Functions
+        run: cd functions && npm run build
       - name: Deploy Functions
         run: npx firebase-tools deploy --only functions --token ${{ secrets.FIREBASE_TOKEN }}
         # Note: This requires FIREBASE_TOKEN to be set in GitHub Secrets if not using Service Account for functions

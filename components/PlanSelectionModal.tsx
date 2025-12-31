@@ -79,9 +79,16 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                         Prosimy o dokonanie wpłaty (10 PLN). <br />
                         Administrator aktywuje Twoje konto wkrótce.
                     </p>
-                    <div className="text-xs text-amber-400/70 bg-amber-400/10 px-4 py-2 rounded-full border border-amber-400/20">
+                    <div className="text-xs text-amber-400/70 bg-amber-400/10 px-4 py-2 rounded-full border border-amber-400/20 mb-6">
                         Status: PENDING_APPROVAL
                     </div>
+                    <button
+                        onClick={onSelectPlan}
+                        disabled={isLoading}
+                        className="text-xs text-slate-500 hover:text-white underline transition-colors"
+                    >
+                        {isLoading ? "Przetwarzanie..." : "Wymuś aktywację (Demo)"}
+                    </button>
                 </div>
             );
         }

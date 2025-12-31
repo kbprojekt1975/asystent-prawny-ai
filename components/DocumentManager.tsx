@@ -32,13 +32,6 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({ userId, caseId, onDoc
         const file = event.target.files?.[0];
         if (!file) return;
 
-        // Basic validation
-        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-        if (!allowedTypes.includes(file.type)) {
-            alert("Dozwolone formaty to PDF, JPG i PNG.");
-            return;
-        }
-
         if (file.size > 5 * 1024 * 1024) { // 5MB limit
             alert("Maksymalny rozmiar pliku to 5MB.");
             return;
@@ -92,7 +85,6 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({ userId, caseId, onDoc
                     ref={fileInputRef}
                     onChange={handleFileUpload}
                     className="hidden"
-                    accept=".pdf,.jpg,.jpeg,.png"
                 />
             </div>
 

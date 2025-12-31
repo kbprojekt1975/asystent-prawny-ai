@@ -9,6 +9,8 @@ import { useState } from 'react';
 interface LawSelectorProps {
   onSelect: (area: LawArea) => void;
   onAnalyzeClick: () => void;
+  isLocalOnly: boolean;
+  setIsLocalOnly: (val: boolean) => void;
 }
 
 const lawOptions = [
@@ -18,7 +20,7 @@ const lawOptions = [
   { area: LawArea.Commercial, icon: <BuildingIcon />, description: "Spółki, kontrakty, działalność gospodarcza." },
 ];
 
-const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick }) => {
+const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isLocalOnly, setIsLocalOnly }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   return (
@@ -43,7 +45,7 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick }) =
         ))}
       </div>
 
-      <div className="w-full max-w-6xl">
+      <div className="w-full max-w-6xl mb-8">
         <button
           onClick={onAnalyzeClick}
           className="w-full group bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border border-violet-500/30 rounded-lg p-6 flex items-center gap-6 hover:bg-violet-600/30 hover:border-violet-500 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500"
@@ -59,6 +61,28 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick }) =
             <p className="text-slate-300">Nie wiesz, którą kategorię wybrać? Opisz swoją sytuację, a asystent sam dopasuje odpowiednie prawo i tryb pracy.</p>
           </div>
         </button>
+      </div>
+
+      <div className="w-full max-w-6xl p-6 bg-slate-800/40 rounded-xl border border-slate-700/50 backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-white mb-1">Tryb "Zapisuj tylko lokalnie"</h3>
+            <p className="text-sm text-slate-400">
+              Twoje dane nie zostaną przesłane do chmury (Firestore). Otrzymasz poradę, ale historia i dokumenty znikną bezpowrotnie po zamknięciu strony lub odświeżeniu przeglądarki.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 bg-slate-700/50 px-4 py-2 rounded-lg">
+            <span className={`text-sm font-medium ${isLocalOnly ? 'text-cyan-400' : 'text-slate-400'}`}>
+              {isLocalOnly ? 'WŁĄCZONE' : 'WYŁĄCZONE'}
+            </span>
+            <button
+              onClick={() => setIsLocalOnly(!isLocalOnly)}
+              className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${isLocalOnly ? 'bg-cyan-600' : 'bg-slate-600'}`}
+            >
+              <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isLocalOnly ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+        </div>
       </div>
 
       <HelpModal

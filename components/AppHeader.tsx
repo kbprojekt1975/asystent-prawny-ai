@@ -1,6 +1,6 @@
 import React from 'react';
 import HamburgerMenu from './HamburgerMenu';
-import { SparklesIcon, ClockIcon, HomeIcon, ArrowsExpandIcon, CreditCardIcon, ProfileIcon } from './Icons';
+import { SparklesIcon, ClockIcon, HomeIcon, ArrowsExpandIcon, CreditCardIcon, ProfileIcon, BookOpenIcon } from './Icons';
 import CostCounter from './CostCounter';
 import { SubscriptionInfo, SubscriptionStatus } from '../types';
 import HelpModal from './HelpModal';
@@ -20,6 +20,8 @@ interface AppHeaderProps {
   onFullScreenClick?: () => void;
   totalCost?: number;
   subscription?: SubscriptionInfo;
+  onKnowledgeClick?: () => void;
+  onGenerateKnowledgeClick?: () => void;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({
@@ -34,7 +36,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   onHomeClick,
   onFullScreenClick,
   totalCost = 0,
-  subscription
+  subscription,
+  onKnowledgeClick,
+  onGenerateKnowledgeClick
 }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
@@ -82,6 +86,26 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             <HomeIcon className="h-6 w-6" />
           </button>
         )}
+        {onGenerateKnowledgeClick && (
+          <button
+            onClick={onGenerateKnowledgeClick}
+            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden md:block"
+            aria-label="Generuj Bazę Wiedzy"
+            title="Generuj Bazę Wiedzy (Pobierz Akty i Wyroki)"
+          >
+            <BookOpenIcon className="h-6 w-6 text-green-400" /> {/* Use green or distinct color */}
+          </button>
+        )}
+        {onKnowledgeClick && (
+          <button
+            onClick={onKnowledgeClick}
+            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors"
+            aria-label="Baza Wiedzy"
+            title="Baza Wiedzy"
+          >
+            <BookOpenIcon className="h-6 w-6" />
+          </button>
+        )}
         {onHistoryClick && (
           <button
             onClick={onHistoryClick}
@@ -123,16 +147,15 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 
         <div className="border-l border-slate-700 h-6 mx-1 hidden md:block"></div>
 
-        <button
+        <InfoIcon
           onClick={() => setIsHelpOpen(true)}
-          className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden md:block"
-          aria-label="Pomoc"
-          title="Pomoc"
-        >
-          <InfoIcon onClick={() => setIsHelpOpen(true)} />
-        </button>
+          className="hidden md:block"
+        />
 
-        <HamburgerMenu onProfileClick={onProfileClick} />
+        <HamburgerMenu
+          onProfileClick={onProfileClick}
+          onKnowledgeClick={onKnowledgeClick || (() => { })}
+        />
       </div>
 
       <HelpModal
@@ -145,6 +168,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           <p>Oto co oznaczają poszczególne ikony:</p>
           <ul className="list-disc pl-5 space-y-2 text-sm">
             <li><HomeIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Dom:</strong> Powrót do ekranu startowego.</li>
+            <li><BookOpenIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Baza Wiedzy:</strong> Twoje zapisane akty prawne i przepisy.</li>
             <li><ClockIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Zegar/Historia:</strong> Dostęp do Twoich poprzednich rozmów.</li>
             <li><SparklesIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Różdżka/Szybkie Akcje:</strong> Gotowe scenariusze (np. "Napisz pozew").</li>
             <li><ArrowsExpandIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Strzałki:</strong> Tryb pełnoekranowy dla czytelniejszej pracy z tekstem.</li>

@@ -7,11 +7,20 @@ export enum LawArea {
 
 export enum InteractionMode {
   Advice = 'Porada Prawna',
+  Analysis = 'Analiza Sprawy',
   Document = 'Generowanie Pisma',
   LegalTraining = 'Szkolenie Prawne',
   SuggestRegulations = 'Zasugeruj Przepisy',
   FindRulings = 'Znajdź Podobne Wyroki',
-  Court = 'Tryb Sądowy'
+  Court = 'Tryb Sądowy',
+  Negotiation = 'Konwersacja ze stroną przeciwną'
+}
+
+export enum CourtRole {
+  MyAttorney = 'Mój Mecenas (Przygotowanie)',
+  OpposingAttorney = 'Mecenas Strony Przeciwnej (Cross-Examination)',
+  Judge = 'Sąd (Przesłuchanie)',
+  Prosecutor = 'Prokurator'
 }
 
 export enum SubscriptionStatus {
@@ -46,6 +55,7 @@ export interface CaseDocument {
   url: string;
   uploadedAt: any;
   path: string;
+  userId?: string; // Added for Global Collection Group queries
 }
 
 export interface TimelineEvent {
@@ -82,4 +92,28 @@ export interface UserProfile {
   totalCost?: number;
   subscription?: SubscriptionInfo;
   personalData?: PersonalData;
+}
+
+export interface LegalAct {
+  id: string;
+  publisher: string;
+  year: number;
+  pos: number;
+  title?: string;
+  content: string;
+  savedAt: any;
+  lastAccessed: any;
+  cited_articles?: string[];
+}
+
+export interface Reminder {
+  id: string;
+  date: string; // YYYY-MM-DD
+  title: string;
+  description?: string;
+  completed: boolean;
+  createdAt: any;
+  type?: 'personal' | 'deadline';
+  lawArea?: string;
+  topic?: string;
 }

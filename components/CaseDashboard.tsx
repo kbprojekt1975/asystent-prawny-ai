@@ -39,7 +39,7 @@ const CaseDashboard: React.FC<CaseDashboardProps> = ({ userId, caseId }) => {
                         <ChevronDownIcon className="w-5 h-5 text-slate-400" />
                     </div>
                 </div>
-                <div className="absolute right-12 top-1/2 -translate-y-1/2 z-10">
+                <div className="absolute right-20 top-1/2 -translate-y-1/2 z-10">
                     <InfoIcon onClick={() => setIsHelpOpen(true)} />
                 </div>
             </div>

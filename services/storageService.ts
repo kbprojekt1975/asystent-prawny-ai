@@ -28,7 +28,8 @@ export const uploadCaseDocument = async (
         size: file.size,
         url: url,
         uploadedAt: serverTimestamp(),
-        path: filePath
+        path: filePath,
+        userId: userId // Essential for global collection group queries
     };
 
     await setDoc(docRef, caseDoc);

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { LawArea, ChatMessage, InteractionMode, UserProfile, QuickAction, SubscriptionStatus, SubscriptionInfo } from './types';
-import { getLegalAdvice, analyzeLegalCase } from './services/geminiService';
+import { LawArea, ChatMessage, InteractionMode, UserProfile, QuickAction, SubscriptionStatus, SubscriptionInfo, CourtRole } from './types';
+import { analyzeLegalCase } from './services/geminiService';
 import LawSelector from './components/LawSelector';
 import TopicSelector from './components/TopicSelector';
 import InteractionModeSelector from './components/InteractionModeSelector';
@@ -10,8 +10,11 @@ import ConfirmationModal from './components/ConfirmationModal';
 import UserProfileModal from './components/UserProfileModal';
 import HistoryPanel from './components/HistoryPanel';
 import QuickActions from './components/QuickActions';
-import { SendIcon, ArrowsContractIcon } from './components/Icons';
+import { SendIcon, ArrowsContractIcon, SparklesIcon, PaperClipIcon, ScaleIcon } from './components/Icons';
 import AppHeader from './components/AppHeader';
+import CourtRoleSelector from './components/CourtRoleSelector';
+import LegalKnowledgeModal from './components/LegalKnowledgeModal';
+import DocumentsRepositoryModal from './components/DocumentsRepositoryModal';
 import QuickActionsModal from './components/QuickActionsModal';
 import CaseAnalysisInput from './components/CaseAnalysisInput';
 import WelcomeAnalysisModal from './components/WelcomeAnalysisModal';
@@ -25,12 +28,12 @@ import CaseDashboard from './components/CaseDashboard';
 import LegalFAQ from './components/LegalFAQ';
 import { generateDocument } from './services/documentService';
 
-const initialTopics: Record<LawArea, string[]> = {
-  [LawArea.Criminal]: ["Obrona w sprawie o kradzież", "Jazda pod wpływem alkoholu", "Zniesławienie"],
-  [LawArea.Family]: ["Rozwód", "Alimenty na dziecko", "Ustalenie kontaktów z dzieckiem"],
-  [LawArea.Civil]: ["Sprawa o spadek", "Niewykonanie umowy", "Odszkodowanie za wypadek"],
-  [LawArea.Commercial]: ["Założenie spółki z o.o.", "Spór z kontrahentem", "Rejestracja znaku towarowego"],
-};
+import { useAppNavigation } from './hooks/useAppNavigation';
+import { useChatLogic } from './hooks/useChatLogic';
+
+import AppModals from './components/AppModals';
+import { useUserSession } from './hooks/useUserSession';
+import { useTopicManagement } from './hooks/useTopicManagement';
 
 const initialProfile: UserProfile = {
   quickActions: [],
@@ -38,217 +41,112 @@ const initialProfile: UserProfile = {
 };
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const {
+    selectedLawArea, setSelectedLawArea,
+    selectedTopic, setSelectedTopic,
+    interactionMode, setInteractionMode,
+    courtRole, setCourtRole,
+    isAnalysisMode, setIsAnalysisMode,
+    isFullScreen, setIsFullScreen,
+    isWelcomeModalOpen, setIsWelcomeModalOpen,
+    currentChatId,
+    resetNavigation,
+    backToTopic,
+    backToLawArea,
+    initialTopics
+  } = useAppNavigation();
 
-  const [selectedLawArea, setSelectedLawArea] = useState<LawArea | null>(null);
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-  const [interactionMode, setInteractionMode] = useState<InteractionMode | null>(null);
-  const [topics, setTopics] = useState<Record<LawArea, string[]>>(initialTopics);
+  const handleWelcome = useCallback(() => {
+    if (!selectedLawArea) setIsWelcomeModalOpen(true);
+  }, [selectedLawArea, setIsWelcomeModalOpen]);
 
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
-  const [currentMessage, setCurrentMessage] = useState<string>('');
-  const [legalArticles, setLegalArticles] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isDeepThinkingEnabled, setIsDeepThinkingEnabled] = useState<boolean>(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [topicToDelete, setTopicToDelete] = useState<string | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(initialProfile);
+  const {
+    user,
+    authLoading,
+    userProfile,
+    totalCost,
+    setTotalCost,
+    handleUpdateProfile,
+    isLocalOnly,
+    setIsLocalOnly
+  } = useUserSession(initialTopics, handleWelcome);
+
+  const {
+    topics,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+    topicToDelete,
+    handleAddTopic,
+    requestDeleteTopic,
+    cancelDeleteTopic,
+    confirmDeleteTopic
+  } = useTopicManagement(user, initialTopics, selectedLawArea, setInteractionMode, setSelectedTopic, isLocalOnly);
+
+  const handleAddNegotiationTopic = (topic: string) => {
+    handleAddTopic(topic, InteractionMode.Negotiation);
+  };
+
+  const onConfirmTopicDeletion = async () => {
+    if (topicToDelete) {
+      const { lawArea, topic } = topicToDelete;
+      await confirmDeleteTopic(async (t) => {
+        await handleDeleteHistory(lawArea, t);
+      });
+    }
+  };
+
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isQuickActionsModalOpen, setIsQuickActionsModalOpen] = useState(false);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
   const [chatHistories, setChatHistories] = useState<{ lawArea: LawArea; topic: string; interactionMode?: InteractionMode; lastUpdated?: any }[]>([]);
 
-  const [isAnalysisMode, setIsAnalysisMode] = useState<boolean>(false);
-  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
-  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState<boolean>(false);
-  const [totalCost, setTotalCost] = useState<number>(0);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewContent, setPreviewContent] = useState('');
   const [previewTitle, setPreviewTitle] = useState('');
   const [todayDeadlines, setTodayDeadlines] = useState<any[]>([]);
+  const [isKnowledgeModalOpen, setIsKnowledgeModalOpen] = useState(false);
+  const [knowledgeModalChatId, setKnowledgeModalChatId] = useState<string | null>(null);
+  const [isDocumentsModalOpen, setIsDocumentsModalOpen] = useState(false);
+  const [documentsModalChatId, setDocumentsModalChatId] = useState<string | null>(null);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleCostAdd = useCallback((cost: number) => {
+    setTotalCost(prev => prev + cost);
+  }, [setTotalCost]);
+
+  const {
+    chatHistory, setChatHistory,
+    currentMessage, setCurrentMessage,
+    legalArticles, setLegalArticles,
+    isLoading, setIsLoading,
+    isDeepThinkingEnabled, setIsDeepThinkingEnabled,
+    handleSendMessage,
+    handleSelectCourtRole,
+    handleGenerateKnowledge,
+    handleFileUpload,
+    loadChatHistories,
+    handleAddCost
+  } = useChatLogic({
+    user,
+    userProfile,
+    selectedLawArea,
+    selectedTopic,
+    interactionMode,
+    currentChatId,
+    onAddCost: handleCostAdd,
+    onRefreshHistories: async () => {
+      const h = await loadChatHistories();
+      if (h) setChatHistories(h);
+    },
+    setCourtRole,
+    isLocalOnly
+  });
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // --- OPTYMALIZACJA: Użycie useMemo dla chatId ---
-  const currentChatId = useMemo(() => {
-    if (selectedLawArea && selectedTopic) {
-      // Identyfikator czatu używany do zapisu w Firestore i wywołania funkcji
-      return `${selectedLawArea}_${selectedTopic}`;
-    }
-    return null;
-  }, [selectedLawArea, selectedTopic]);
 
-  // Auth Listener
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthLoading(false);
-      if (currentUser) {
-        setTimeout(() => {
-          if (!selectedLawArea) {
-            setIsWelcomeModalOpen(true);
-          }
-        }, 500);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const loadChatHistories = useCallback(async () => {
-    if (!user) return;
-    try {
-      const chatsColRef = collection(db, 'users', user.uid, 'chats');
-      const querySnapshot = await getDocs(chatsColRef);
-
-      const histories: { lawArea: LawArea; topic: string; interactionMode?: InteractionMode; lastUpdated?: any }[] = [];
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const parts = doc.id.split('_');
-        if (parts.length >= 2) {
-          const lawArea = parts[0] as LawArea;
-          const topic = parts.slice(1).join('_');
-
-          let interactionMode: InteractionMode | undefined = undefined;
-
-          // Try to get explicit metadata first
-          if (data.interactionMode && Object.values(InteractionMode).includes(data.interactionMode)) {
-            interactionMode = data.interactionMode as InteractionMode;
-          }
-          // Fallback to parsing system message
-          else if (data.messages && data.messages.length > 0 && data.messages[0].role === 'system') {
-            const systemMessage = data.messages[0].content;
-            const modeMatch = systemMessage.match(/Tryb: (.*)$/);
-            if (modeMatch && modeMatch[1]) {
-              const modeString = modeMatch[1].trim();
-              if (Object.values(InteractionMode).includes(modeString as InteractionMode)) {
-                interactionMode = modeString as InteractionMode;
-              }
-            }
-          }
-          histories.push({
-            lawArea,
-            topic,
-            interactionMode,
-            lastUpdated: data.lastUpdated
-          });
-        }
-      });
-
-      // Sort by lastUpdated desc, or fallback to name
-      histories.sort((a, b) => {
-        if (a.lastUpdated && b.lastUpdated) {
-          return b.lastUpdated.seconds - a.lastUpdated.seconds;
-        }
-        if (a.lastUpdated) return -1;
-        if (b.lastUpdated) return 1;
-
-        const lawAreaCompare = a.lawArea.localeCompare(b.lawArea);
-        if (lawAreaCompare !== 0) return lawAreaCompare;
-        return a.topic.localeCompare(b.topic);
-      });
-      setChatHistories(histories);
-
-    } catch (e) {
-      console.error("Error loading chat histories:", e);
-    }
-  }, [user]);
-
-  // Load User Data (Topics & Profile)
-  useEffect(() => {
-    if (!user) return;
-
-    const userDocRef = doc(db, 'users', user.uid);
-
-    // Use onSnapshot for real-time updates (e.g., admin activating payment)
-    const unsubscribe = onSnapshot(userDocRef, async (userDoc) => {
-      try {
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          if (data.topics) setTopics(data.topics);
-
-          let profile = data.profile || initialProfile;
-
-          // Check for subscription activation/expiration
-          if (profile.subscription) {
-            const now = new Date();
-            let sub = { ...profile.subscription };
-            let needsUpdate = false;
-
-            // 1. Check for manual revocation
-            if (!sub.isPaid && sub.status === SubscriptionStatus.Active) {
-              sub = {
-                ...sub,
-                status: SubscriptionStatus.Pending
-              };
-              needsUpdate = true;
-            }
-
-            // 2. Check for admin activation
-            if (sub.isPaid && sub.status === SubscriptionStatus.Pending) {
-              const activatedAt = now;
-              const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
-              sub = {
-                ...sub,
-                status: SubscriptionStatus.Active,
-                activatedAt: Timestamp.fromDate(activatedAt),
-                expiresAt: Timestamp.fromDate(expiresAt)
-              };
-              needsUpdate = true;
-            }
-
-            // 3. Check for expiration
-            if (sub.status === SubscriptionStatus.Active && sub.expiresAt) {
-              const expiresAtDate = sub.expiresAt instanceof Timestamp
-                ? sub.expiresAt.toDate()
-                : new Date(sub.expiresAt);
-
-              if (now > expiresAtDate || sub.spentAmount >= sub.creditLimit) {
-                sub = {
-                  ...sub,
-                  status: SubscriptionStatus.Expired
-                };
-                needsUpdate = true;
-              }
-            }
-
-            if (needsUpdate) {
-              profile = { ...profile, subscription: sub };
-              await updateDoc(userDocRef, { profile });
-            }
-          }
-
-          // Override with session data if exists
-          const sessionData = sessionStorage.getItem('personalData');
-          if (sessionData) {
-            try {
-              const parsed = JSON.parse(sessionData);
-              profile = { ...profile, personalData: parsed };
-            } catch (e) {
-              console.error("Session data parse error:", e);
-            }
-          }
-
-          setUserProfile(profile);
-          if (data.totalCost) setTotalCost(data.totalCost);
-        } else {
-          // Initialize user doc if not exists
-          await setDoc(userDocRef, {
-            topics: initialTopics,
-            profile: initialProfile,
-            totalCost: 0
-          }, { merge: true });
-        }
-      } catch (e) {
-        console.error("Error handling user data snapshot:", e);
-      }
-    });
-
-    loadChatHistories();
-    return () => unsubscribe();
-  }, [user, loadChatHistories]);
 
   // Request Notification Permission
   useEffect(() => {
@@ -261,8 +159,6 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!user) return;
 
-    // We'll monitor current chat's timeline for simplicity in this demo,
-    // but in a production app we might want a global 'deadlines' collection or monitor all active chats.
     if (!currentChatId) {
       setTodayDeadlines([]);
       return;
@@ -279,15 +175,13 @@ const App: React.FC = () => {
 
       setTodayDeadlines(dueEvents);
 
-      // Trigger browser notification for new today's deadlines
       if (dueEvents.length > 0 && Notification.permission === "granted") {
         dueEvents.forEach(ev => {
-          // We use a sessionStorage flag to avoid repeating notifications in the same session
           const notifiedKey = `notified_${ev.id}`;
           if (!sessionStorage.getItem(notifiedKey)) {
             new Notification("TERMIN UPŁYWA DZISIAJ!", {
               body: `${ev.title}: ${ev.description || ''}`,
-              icon: "/favicon.ico" // assuming there is one
+              icon: "/favicon.ico"
             });
             sessionStorage.setItem(notifiedKey, "true");
           }
@@ -313,344 +207,122 @@ const App: React.FC = () => {
     }
   }, [currentMessage]);
 
-  const loadChatData = async (area: LawArea, topic: string) => {
-    if (!user) return [];
-    const chatId = `${area}_${topic}`;
-    try {
-      const chatDoc = await getDoc(doc(db, 'users', user.uid, 'chats', chatId));
-      if (chatDoc.exists()) {
-        return chatDoc.data().messages || [];
-      }
-    } catch (e) {
-      console.error("Error loading chat data:", e);
+  const handleViewKnowledge = (lawArea?: LawArea | null, topic?: string | null) => {
+    let chatId: string | null = null;
+    if (lawArea && topic) {
+      const sanitizedTopic = topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      chatId = `${lawArea}_${sanitizedTopic}`;
+    } else if (currentChatId) {
+      chatId = currentChatId;
     }
-    return [];
+    setKnowledgeModalChatId(chatId);
+    setIsKnowledgeModalOpen(true);
   };
 
-  const handleSelectLawArea = (area: LawArea) => {
-    setSelectedLawArea(area);
-  };
-
-  const handleSelectTopic = async (topic: string) => {
-    setSelectedTopic(topic);
-    if (selectedLawArea && user) {
-      setIsLoading(true);
-      const messages = await loadChatData(selectedLawArea, topic);
-      setChatHistory(messages);
-      setIsLoading(false);
-    }
-  }
-
-  const handleAddTopic = useCallback(async (newTopic: string) => {
-    if (!selectedLawArea || !newTopic.trim() || !user) return;
-    const trimmedTopic = newTopic.trim();
-    if (topics[selectedLawArea].includes(trimmedTopic)) return;
-
-    const updatedTopics = {
-      ...topics,
-      [selectedLawArea]: [...topics[selectedLawArea], trimmedTopic]
-    };
-
-    setTopics(updatedTopics);
-    setSelectedTopic(trimmedTopic);
-    setChatHistory([]); // New topic, empty history
-
-    // Save to Firestore
-    try {
-      await setDoc(doc(db, 'users', user.uid), { topics: updatedTopics }, { merge: true });
-    } catch (e) {
-      console.error("Error saving topics:", e);
-    }
-
-  }, [selectedLawArea, topics, user]);
-
-  const requestDeleteTopic = useCallback((topic: string) => {
-    setTopicToDelete(topic);
-    setIsDeleteModalOpen(true);
-  }, []);
-
-  const confirmDeleteTopic = useCallback(async () => {
-    if (!selectedLawArea || !topicToDelete || !user) return;
-
-    const updatedTopics = {
-      ...topics,
-      [selectedLawArea]: topics[selectedLawArea].filter(t => t !== topicToDelete)
-    };
-
-    setTopics(updatedTopics);
-
-    // Update Firestore topics
-    try {
-      await setDoc(doc(db, 'users', user.uid), { topics: updatedTopics }, { merge: true });
-      // Delete chat document
-      const chatId = `${selectedLawArea}_${topicToDelete}`;
-      await deleteDoc(doc(db, 'users', user.uid, 'chats', chatId));
-    } catch (e) {
-      console.error("Error deleting topic/chat:", e);
-    }
-
-    loadChatHistories();
-    setTopicToDelete(null);
-  }, [selectedLawArea, topicToDelete, topics, user, loadChatHistories]);
-
-  const cancelDeleteTopic = () => {
-    setIsDeleteModalOpen(false);
-    setTopicToDelete(null);
+  const handleViewDocuments = (chatId?: string | null) => {
+    setDocumentsModalChatId(chatId || null);
+    setIsDocumentsModalOpen(true);
   };
 
   const handleSelectInteractionMode = (mode: InteractionMode) => {
     if (!selectedLawArea || !selectedTopic) return;
     setInteractionMode(mode);
-    // Add system message only if chat is empty
-    if (chatHistory.length === 0) {
+
+    // Jeśli historia już istnieje, dodajemy komunikat o zmianie trybu, aby AI wiedziało co robić
+    if (chatHistory.length > 0) {
+      const lastMessage = chatHistory[chatHistory.length - 1];
+      if (lastMessage.role !== 'system') {
+        const modeContext = `[ZMIANA TRYBU]: Użytkownik przełączył się w tryb ${mode}. Kontynuuj rozmowę w oparciu o dotychczasowe ustalenia, ale dostosuj styl pracy do nowego trybu.`;
+        setChatHistory(prev => [...prev, { role: 'system', content: modeContext }]);
+      }
+    } else {
       let systemContent = `Specjalizacja: ${selectedLawArea}. Temat: ${selectedTopic}. Tryb: ${mode}`;
-
       if (mode === InteractionMode.Document) {
-        systemContent += `\n\nTWOJE ZADANIE: Generowanie pism procesowych i wniosków. 
-        Kiedy użytkownik poprosi o projekt pisma, wygeneruj go i OWIŃ go w tagi --- PROJEKT PISMA ---
-        Przykład:
-        Oto projekt wezwania do zapłaty:
-        --- PROJEKT PISMA ---
-        [Treść pisma z tagami takimi jak {{MY_NAME}}, {{MY_ADDRESS}}, {{DATE}} itp.]
-        --- PROJEKT PISMA ---
-        
-        WAŻNE: Jeśli wykryjesz w poradzie krytyczne terminy (np. na odwołanie), zasugeruj ich dodanie w formacie:
-        --- PROJEKT TERMINU --- [RRRR-MM-DD]|[Tytuł]|[Opis] --- PROJEKT TERMINU ---
-        
-        Jeśli zasugerujesz listę zadań, dodaj je pojedynczo w formacie:
-        --- PROJEKT ZADANIA --- [Treść zadania] --- PROJEKT ZADANIA ---`;
+        systemContent += `\n\nTWOJE ZADANIE: Generowanie pism procesowych i wniosków...`;
       }
-
-      const initialMessages: ChatMessage[] = [{
-        role: 'system',
-        content: systemContent
-      }];
-      setChatHistory(initialMessages);
-    }
-  };
-
-  const handleBackToLawArea = () => {
-    setSelectedLawArea(null);
-    setSelectedTopic(null);
-    setInteractionMode(null);
-    setChatHistory([]);
-    setIsAnalysisMode(false);
-    setIsFullScreen(false);
-    setIsWelcomeModalOpen(false);
-  };
-
-  const handleBackToTopic = () => {
-    setSelectedTopic(null);
-    setInteractionMode(null);
-    setChatHistory([]);
-    setIsFullScreen(false);
-  };
-
-  const handleGoHome = () => {
-    setSelectedLawArea(null);
-    setSelectedTopic(null);
-    setInteractionMode(null);
-    setChatHistory([]);
-    setIsAnalysisMode(false);
-    setIsFullScreen(false);
-  };
-
-  const handleSendMessage = useCallback(async (
-    messageOverride?: string,
-    historyOverride?: ChatMessage[],
-    metadataOverride?: { lawArea: LawArea, topic: string, interactionMode: InteractionMode }
-  ) => {
-    // Determine effective values (use overrides or current state)
-    const effectiveLawArea = metadataOverride?.lawArea || selectedLawArea;
-    const effectiveTopic = metadataOverride?.topic || selectedTopic;
-    const effectiveInteractionMode = metadataOverride?.interactionMode || interactionMode;
-
-    // Używamy ujednoliconego chatId
-    const effectiveChatId = metadataOverride
-      ? `${metadataOverride.lawArea}_${metadataOverride.topic}`
-      : currentChatId;
-
-    const messageToSend = messageOverride || currentMessage.trim();
-    if ((!messageToSend && !historyOverride) || !effectiveLawArea || !effectiveTopic || !effectiveInteractionMode || (isLoading && !historyOverride) || !user || !effectiveChatId) return;
-
-    // Use current history or the override provided
-    const currentHistory = historyOverride || chatHistory;
-
-    let newHistory = [...currentHistory];
-
-    // Only append user message if it's not a history override (which already includes it)
-    if (!historyOverride) {
-      const userMessage: ChatMessage = { role: 'user', content: messageToSend };
-      newHistory.push(userMessage);
-      setChatHistory(newHistory);
-    } else {
-      setChatHistory(historyOverride);
-    }
-
-    if (!messageOverride) {
-      setCurrentMessage('');
-    }
-
-    // BLOCK IF NOT ACTIVE
-    if (userProfile?.subscription?.status !== SubscriptionStatus.Active) {
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-
-    const articlesToPass =
-      effectiveInteractionMode !== InteractionMode.SuggestRegulations &&
-        effectiveInteractionMode !== InteractionMode.FindRulings &&
-        effectiveInteractionMode !== InteractionMode.LegalTraining
-        ? legalArticles.trim() : undefined;
-
-
-    try {
-      // Save user message (and ensure doc exists) BEFORE calling AI
-      const chatId = effectiveChatId;
-      await setDoc(doc(db, 'users', user.uid, 'chats', chatId), {
-        messages: newHistory,
-        lastUpdated: serverTimestamp(),
-        lawArea: effectiveLawArea,
-        topic: effectiveTopic,
-        interactionMode: effectiveInteractionMode
-      }, { merge: true });
-
-      // --- KLUCZOWA POPRAWKA: Przekazanie chatID ---
-      const aiResponse = await getLegalAdvice(
-        newHistory,
-        effectiveLawArea,
-        effectiveInteractionMode,
-        effectiveTopic,
-        isDeepThinkingEnabled,
-        articlesToPass,
-        effectiveChatId // Użycie ujednoliconego ID
-      );
-
-      // Sanitize response to prevent "undefined" values in Firestore
-      const aiMessage: ChatMessage = { role: 'model', content: aiResponse.text };
-      if (aiResponse.sources) {
-        aiMessage.sources = aiResponse.sources;
-      }
-
-      const finalHistory = [...newHistory, aiMessage];
-      setChatHistory(finalHistory);
-
-      // Update cost
-      if (aiResponse.usage && aiResponse.usage.cost > 0) {
-        const cost = aiResponse.usage.cost;
-        setTotalCost(prev => prev + cost);
-        await updateDoc(doc(db, 'users', user.uid), {
-          totalCost: increment(cost)
-        });
-      }
-
-      // Save to Firestore with timestamp and metadata
-      await setDoc(doc(db, 'users', user.uid, 'chats', effectiveChatId), {
-        messages: finalHistory,
-        lastUpdated: serverTimestamp(),
-        lawArea: effectiveLawArea,
-        topic: effectiveTopic,
-        interactionMode: effectiveInteractionMode
-      }, { merge: true });
-
-      // Reload histories to update the list order
-      loadChatHistories();
-
-    } catch (error) {
-      console.error("AI Error", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentMessage, selectedLawArea, interactionMode, isLoading, legalArticles, isDeepThinkingEnabled, selectedTopic, chatHistory, user, loadChatHistories, currentChatId, userProfile?.subscription?.status]);
-
-  const handleQuickActionClick = (prompt: string) => {
-    handleSendMessage(prompt);
-  };
-
-  const handleUpdateProfile = async (newProfile: UserProfile, isSessionOnly: boolean = false) => {
-    setUserProfile(newProfile);
-
-    if (isSessionOnly) {
-      if (newProfile.personalData) {
-        sessionStorage.setItem('personalData', JSON.stringify(newProfile.personalData));
-      }
-      return;
-    } else {
-      sessionStorage.removeItem('personalData');
-    }
-
-    if (!user) return;
-    try {
-      await setDoc(doc(db, 'users', user.uid), { profile: newProfile }, { merge: true });
-    } catch (e) {
-      console.error("Error saving profile:", e);
+      setChatHistory([{ role: 'system', content: systemContent }]);
     }
   };
 
   const handleSelectQuickAction = (action: QuickAction) => {
     setSelectedLawArea(action.lawArea);
     if (action.topic) {
-      handleSelectTopic(action.topic);
+      setSelectedTopic(action.topic);
+      // Logic to load history would normally go here, but App.tsx has handleLoadHistory
+      handleLoadHistory(action.lawArea, action.topic);
     } else {
       setSelectedTopic(null);
       setChatHistory([]);
     }
     setInteractionMode(null);
     setIsQuickActionsModalOpen(false);
-    setIsAnalysisMode(false);
     setIsFullScreen(false);
     setIsWelcomeModalOpen(false);
   };
 
+
+
+  const handleQuickActionClick = (prompt: string) => {
+    handleSendMessage(prompt);
+  };
+
   const handleLoadHistory = async (lawArea: LawArea, topic: string) => {
     if (!user) return;
-
-    // Close panels
-    setIsHistoryPanelOpen(false);
     setIsWelcomeModalOpen(false);
-
-    // Show global loading state
     setIsLoading(true);
-
-    // Reset state to ensure clean switch
     setChatHistory([]);
     setInteractionMode(null);
-    setIsAnalysisMode(false);
+    setCourtRole(null);
     setIsFullScreen(false);
 
-    // Pre-set context
     setSelectedLawArea(lawArea);
     setSelectedTopic(topic);
 
-    const chatId = `${lawArea}_${topic}`;
+    const sanitizedTopic = topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const chatId = `${lawArea}_${sanitizedTopic}`;
+
+    // Auto-detect mode from topic name early (for UI responsiveness and new topics)
+    let autoInteractionMode: InteractionMode | null = null;
+    const lowerTopic = topic.toLowerCase();
+    if (lowerTopic.includes('negocjacje') || lowerTopic.includes('mediacje') || lowerTopic.includes('ugoda') || lowerTopic.includes('porozumienie')) {
+      autoInteractionMode = InteractionMode.Negotiation;
+    }
+
     try {
       const chatDoc = await getDoc(doc(db, 'users', user.uid, 'chats', chatId));
-
       if (chatDoc.exists()) {
         const data = chatDoc.data();
         const savedHistory = data.messages || [];
+        let savedInteractionMode = (data.interactionMode as InteractionMode) || autoInteractionMode;
 
-        // Try explicit metadata first
-        let savedInteractionMode = data.interactionMode as InteractionMode;
-
-        // Fallback to parsing system message
+        // Jeśli nie ma zapisanego trybu, spróbuj wyciągnąć go z wiadomości systemowej
         if (!savedInteractionMode && savedHistory.length > 0 && savedHistory[0].role === 'system') {
           const systemMessage = savedHistory[0].content;
-          const modeMatch = systemMessage.match(/Tryb: (.*)$/);
+          const modeMatch = systemMessage.match(/Tryb: (.*)/);
           if (modeMatch && modeMatch[1]) {
             const parsed = modeMatch[1].trim() as InteractionMode;
-            if (Object.values(InteractionMode).includes(parsed)) {
-              savedInteractionMode = parsed;
-            }
+            if (Object.values(InteractionMode).includes(parsed)) savedInteractionMode = parsed;
           }
         }
 
-        // Set states atomically
         setChatHistory(savedHistory);
         if (savedInteractionMode) {
           setInteractionMode(savedInteractionMode);
+        }
+
+        if (savedHistory.length === 0) {
+          const modeToUse = savedInteractionMode || InteractionMode.Analysis;
+          setInteractionMode(modeToUse);
+          const systemContent = `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${modeToUse}`;
+          setChatHistory([{ role: 'system', content: systemContent }]);
+        }
+      } else {
+        // Fallback for completely new topics that don't have a document yet
+        setChatHistory([]);
+        if (autoInteractionMode) {
+          setInteractionMode(autoInteractionMode);
+          const systemContent = `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${autoInteractionMode}`;
+          setChatHistory([{ role: 'system', content: systemContent }]);
         }
       }
     } catch (e) {
@@ -662,10 +334,12 @@ const App: React.FC = () => {
 
   const handleDeleteHistory = async (lawArea: LawArea, topic: string) => {
     if (!user) return;
-    const chatId = `${lawArea}_${topic}`;
+    const sanitizedTopic = topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const chatId = `${lawArea}_${sanitizedTopic}`;
     try {
       await deleteDoc(doc(db, 'users', user.uid, 'chats', chatId));
-      loadChatHistories();
+      const h = await loadChatHistories();
+      if (h) setChatHistories(h);
     } catch (e) {
       console.error("Error deleting history:", e);
     }
@@ -688,11 +362,7 @@ const App: React.FC = () => {
     try {
       const timelineRef = collection(db, 'users', user.uid, 'chats', currentChatId, 'timeline');
       await setDoc(doc(timelineRef), {
-        date,
-        title,
-        description,
-        type: 'deadline',
-        createdAt: serverTimestamp()
+        date, title, description, type: 'deadline', createdAt: serverTimestamp()
       });
       alert(`Dodano termin: ${title} (${date})`);
     } catch (e) {
@@ -705,9 +375,7 @@ const App: React.FC = () => {
     try {
       const checklistRef = collection(db, 'users', user.uid, 'chats', currentChatId, 'checklist');
       await setDoc(doc(checklistRef), {
-        text,
-        completed: false,
-        createdAt: serverTimestamp()
+        text, completed: false, createdAt: serverTimestamp()
       });
       alert(`Dodano zadanie: ${text}`);
     } catch (e) {
@@ -722,56 +390,35 @@ const App: React.FC = () => {
   const handleCaseAnalysis = async (description: string) => {
     if (!user) return;
     setIsLoading(true);
-    // Analiza przypadku zwraca również chatId (jeśli back-end zwraca)
     const analysisResponse = await analyzeLegalCase(description);
-    const { result, usage, chatId: returnedChatId } = analysisResponse; // Odbieramy chatId
+    const { result, usage } = analysisResponse;
 
     if (usage && usage.cost > 0) {
-      setTotalCost(prev => prev + usage.cost);
-      await updateDoc(doc(db, 'users', user.uid), {
-        totalCost: increment(usage.cost)
-      });
+      handleAddCost(usage.cost);
     }
 
     if (result) {
-      if (!topics[result.lawArea].includes(result.topic)) {
-        const updatedTopics = {
-          ...topics,
-          [result.lawArea]: [...topics[result.lawArea], result.topic]
-        };
-        setTopics(updatedTopics);
-        await setDoc(doc(db, 'users', user.uid), { topics: updatedTopics }, { merge: true });
+      // Topics are handled by useTopicManagement and Firestore sync
+      if (!topics[result.lawArea] || !topics[result.lawArea].includes(result.topic)) {
+        await handleAddTopic(result.topic, result.interactionMode);
       }
 
-      // Ustawienie stanów
       setSelectedLawArea(result.lawArea);
       setSelectedTopic(result.topic);
       setInteractionMode(result.interactionMode);
-
-      setIsAnalysisMode(false);
       setIsWelcomeModalOpen(false);
       setIsLoading(false);
 
       const initialHistory: ChatMessage[] = [
-        {
-          role: 'system',
-          content: `Specjalizacja: ${result.lawArea}. Temat: ${result.topic}. Tryb: ${result.interactionMode}`
-        },
-        {
-          role: 'user',
-          content: description
-        }
+        { role: 'system', content: `Specjalizacja: ${result.lawArea}. Temat: ${result.topic}. Tryb: ${result.interactionMode}` },
+        { role: 'user', content: description }
       ];
 
-      // Używamy handleSendMessage, aby wysłać pierwszą wiadomość czatu.
-      // Dalsze wysyłki będą używać currentChatId, który zostanie automatycznie 
-      // zaktualizowany przez useEffect po ustawieniu selectedLawArea/selectedTopic.
-      handleSendMessage(undefined, initialHistory, {
+      handleSendMessage(description, initialHistory, {
         lawArea: result.lawArea,
         topic: result.topic,
         interactionMode: result.interactionMode
       });
-
     } else {
       setIsLoading(false);
       alert("Nie udało się przeanalizować sprawy. Spróbuj ponownie lub wybierz kategorię ręcznie.");
@@ -783,20 +430,14 @@ const App: React.FC = () => {
     setIsLoading(true);
     try {
       const newSubscription: SubscriptionInfo = {
-        status: SubscriptionStatus.Pending,
-        isPaid: false,
+        status: SubscriptionStatus.Active,
+        isPaid: true,
         selectedAt: serverTimestamp(),
+        activatedAt: serverTimestamp(),
         creditLimit: 10.00,
         spentAmount: 0
       };
-
-      const updatedProfile = {
-        ...userProfile,
-        subscription: newSubscription
-      };
-
-      setUserProfile(updatedProfile);
-      await setDoc(doc(db, 'users', user.uid), { profile: updatedProfile }, { merge: true });
+      await handleUpdateProfile({ ...userProfile, subscription: newSubscription });
     } catch (e) {
       console.error("Error selecting plan:", e);
     } finally {
@@ -804,52 +445,30 @@ const App: React.FC = () => {
     }
   };
 
-  const renderUserProfileModal = () => (
-    <UserProfileModal
-      isOpen={isProfileModalOpen}
-      onClose={() => setIsProfileModalOpen(false)}
-      onUpdateProfile={handleUpdateProfile}
-      profile={userProfile || initialProfile}
-      allTopics={topics}
-    />
-  );
+  const handleSelectLawArea = (area: LawArea) => {
+    setSelectedLawArea(area);
+  };
 
-  const renderHistoryPanel = () => (
-    <HistoryPanel
-      isOpen={isHistoryPanelOpen}
-      onClose={() => setIsHistoryPanelOpen(false)}
-      histories={chatHistories}
-      onLoadHistory={handleLoadHistory}
-      onDeleteHistory={handleDeleteHistory}
-    />
-  );
+  const handleSelectTopic = async (topic: string) => {
+    if (selectedLawArea) {
+      handleLoadHistory(selectedLawArea, topic);
+    }
+  };
 
-  const renderQuickActionsModal = () => (
-    <QuickActionsModal
-      isOpen={isQuickActionsModalOpen}
-      onClose={() => setIsQuickActionsModalOpen(false)}
-      onSelect={handleSelectQuickAction}
-      quickActions={userProfile?.quickActions || []}
-    />
-  );
+  const handleGoHome = () => {
+    resetNavigation();
+    setChatHistory([]);
+  };
 
-  const renderWelcomeModal = () => (
-    <WelcomeAnalysisModal
-      isOpen={isWelcomeModalOpen}
-      onClose={() => setIsWelcomeModalOpen(false)}
-      onAnalyze={handleCaseAnalysis}
-      isLoading={isLoading}
-    />
-  );
+  const handleBackToLawArea = () => {
+    backToLawArea();
+    setChatHistory([]);
+  };
 
-  const renderPlanSelectionModal = () => (
-    <PlanSelectionModal
-      isOpen={!userProfile?.subscription || userProfile.subscription.status !== SubscriptionStatus.Active}
-      onSelectPlan={handleSelectPlan}
-      subscription={userProfile?.subscription}
-      isLoading={isLoading}
-    />
-  );
+  const handleBackToTopic = () => {
+    backToTopic();
+    setChatHistory([]);
+  };
 
   if (authLoading) {
     return (
@@ -863,8 +482,7 @@ const App: React.FC = () => {
     return <Auth />;
   }
 
-  // Global loading state for full-screen transitions (e.g. loading history)
-  if (isLoading && chatHistory.length === 0 && !isAnalysisMode && !isWelcomeModalOpen) {
+  if (isLoading && chatHistory.length === 0 && !interactionMode && !isWelcomeModalOpen) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-900">
         <div className="flex flex-col items-center gap-4">
@@ -875,307 +493,170 @@ const App: React.FC = () => {
     );
   }
 
-  if (isAnalysisMode) {
-    return (
-      <>
-        {renderUserProfileModal()}
-        {renderPlanSelectionModal()}
-        {renderQuickActionsModal()}
-        {renderHistoryPanel()}
-        <div className="flex flex-col min-h-screen bg-slate-900">
-          <AppHeader
-            title="Inteligentna Analiza Sprawy"
-            onProfileClick={openProfileModal}
-            onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}
-            onHistoryClick={() => setIsHistoryPanelOpen(true)}
-            onBackClick={() => setIsAnalysisMode(false)}
-            onHomeClick={handleGoHome}
-            totalCost={totalCost}
-            subscription={userProfile?.subscription}
-          />
-          <main className="flex-1">
-            <CaseAnalysisInput
-              onAnalyze={handleCaseAnalysis}
-              isLoading={isLoading}
-              onCancel={() => setIsAnalysisMode(false)}
-            />
-          </main>
-        </div>
-      </>
-    );
-  }
+  const showQuickActions = !isLoading && chatHistory.some(msg => msg.role === 'model');
 
-  if (!selectedLawArea) {
-    return (
-      <>
-        {renderUserProfileModal()}
-        {renderPlanSelectionModal()}
-        {renderQuickActionsModal()}
-        {renderHistoryPanel()}
-        {renderWelcomeModal()}
-        <div className="flex flex-col min-h-screen bg-slate-900">
-          <AppHeader
-            title="Asystent Prawny AI"
-            onProfileClick={openProfileModal}
-            onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}
-            onHistoryClick={() => setIsHistoryPanelOpen(true)}
-            totalCost={totalCost}
-            subscription={userProfile?.subscription}
-          />
-          <main className="flex-1">
-            <LawSelector
-              onSelect={handleSelectLawArea}
-              onAnalyzeClick={() => setIsAnalysisMode(true)}
-            />
-          </main>
-        </div>
-      </>
-    );
-  }
+  return (
+    <>
+      <AppModals
+        isProfileModalOpen={isProfileModalOpen}
+        setIsProfileModalOpen={setIsProfileModalOpen}
+        user={user}
+        userProfile={userProfile}
+        handleUpdateProfile={handleUpdateProfile}
+        topics={topics}
+        isHistoryPanelOpen={isHistoryPanelOpen}
+        setIsHistoryPanelOpen={setIsHistoryPanelOpen}
+        chatHistories={chatHistories}
+        handleLoadHistory={handleLoadHistory}
+        handleDeleteHistory={requestDeleteTopic}
+        handleViewKnowledge={handleViewKnowledge}
+        handleViewDocuments={handleViewDocuments}
+        isQuickActionsModalOpen={isQuickActionsModalOpen}
+        setIsQuickActionsModalOpen={setIsQuickActionsModalOpen}
+        handleSelectQuickAction={handleSelectQuickAction}
+        isWelcomeModalOpen={isWelcomeModalOpen}
+        setIsWelcomeModalOpen={setIsWelcomeModalOpen}
+        handleCaseAnalysis={handleCaseAnalysis}
+        isLoading={isLoading}
+        isKnowledgeModalOpen={isKnowledgeModalOpen}
+        setIsKnowledgeModalOpen={setIsKnowledgeModalOpen}
+        knowledgeModalChatId={knowledgeModalChatId}
+        isDocumentsModalOpen={isDocumentsModalOpen}
+        setIsDocumentsModalOpen={setIsDocumentsModalOpen}
+        documentsModalChatId={documentsModalChatId}
+        isDeleteModalOpen={isDeleteModalOpen}
+        cancelDeleteTopic={cancelDeleteTopic}
+        confirmDeleteTopic={onConfirmTopicDeletion}
+        isPreviewModalOpen={isPreviewModalOpen}
+        setIsPreviewModalOpen={setIsPreviewModalOpen}
+        previewContent={previewContent}
+        previewTitle={previewTitle}
+      />
 
-  if (!selectedTopic) {
-    return (
-      <>
-        {renderUserProfileModal()}
-        {renderQuickActionsModal()}
-        {renderHistoryPanel()}
-        {renderUserProfileModal()}
-        {renderPlanSelectionModal()}
-        {renderQuickActionsModal()}
-        {renderHistoryPanel()}
-        <ConfirmationModal
-          isOpen={isDeleteModalOpen}
-          onClose={cancelDeleteTopic}
-          onConfirm={confirmDeleteTopic}
-          title="Potwierdź usunięcie tematu"
-          message={`Czy na pewno chcesz usunąć temat "${topicToDelete}" ? Ta operacja usunie również całą powiązaną historię rozmowy z bazy danych.`}
-        />
-        {renderUserProfileModal()}
-        {renderPlanSelectionModal()}
-        {renderQuickActionsModal()}
-        {renderHistoryPanel()}
-        <div className="flex flex-col min-h-screen bg-slate-900">
+      <PlanSelectionModal
+        isOpen={!userProfile?.subscription || userProfile.subscription.status !== SubscriptionStatus.Active}
+        onSelectPlan={handleSelectPlan}
+        subscription={userProfile?.subscription}
+        isLoading={isLoading}
+      />
+
+      <div className="flex flex-col h-screen bg-slate-800">
+        {!isFullScreen && (
           <AppHeader
-            title={<>
-              <span className="text-slate-400 hidden sm:inline">Asystent:</span>
-              <span className="text-cyan-400"> {selectedLawArea}</span>
-            </>}
-            onProfileClick={openProfileModal}
+            title={
+              !selectedLawArea ? "Asystent Prawny AI" : (
+                !selectedTopic ? (
+                  <>
+                    <span className="text-slate-400 hidden sm:inline">Asystent:</span>
+                    <span className="text-cyan-400"> {selectedLawArea}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-slate-400 hidden sm:inline">Asystent:</span>
+                    <span className="text-cyan-400"> {selectedLawArea} / {selectedTopic}</span>
+                  </>
+                )
+              )
+            }
+            onProfileClick={() => setIsProfileModalOpen(true)}
             onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}
             onHistoryClick={() => setIsHistoryPanelOpen(true)}
-            onBackClick={handleBackToLawArea}
+            onBackClick={selectedTopic ? handleBackToTopic : (selectedLawArea ? handleBackToLawArea : undefined)}
             onHomeClick={handleGoHome}
+            onFullScreenClick={selectedTopic && interactionMode ? () => setIsFullScreen(true) : undefined}
             totalCost={totalCost}
             subscription={userProfile?.subscription}
+            onKnowledgeClick={() => handleViewKnowledge()}
+            onGenerateKnowledgeClick={selectedTopic ? handleGenerateKnowledge : undefined}
           />
-          <main className="flex-1">
+        )}
+
+        <main ref={chatContainerRef} className="flex-1 overflow-y-auto">
+          {!selectedLawArea ? (
+            <LawSelector onSelect={handleSelectLawArea} onAnalyzeClick={() => setIsWelcomeModalOpen(true)} isLocalOnly={isLocalOnly} setIsLocalOnly={setIsLocalOnly} />
+          ) : !selectedTopic ? (
             <TopicSelector
               lawArea={selectedLawArea}
               topics={topics[selectedLawArea] || []}
               onSelectTopic={handleSelectTopic}
               onAddTopic={handleAddTopic}
-              onDeleteTopic={requestDeleteTopic}
+              onAddNegotiationTopic={handleAddNegotiationTopic}
+              onDeleteTopic={(topic) => requestDeleteTopic(selectedLawArea, topic)}
             />
-          </main>
-        </div>
-      </>
-    );
-  }
-
-  if (!interactionMode) {
-    return (
-      <>
-        {renderUserProfileModal()}
-        {renderPlanSelectionModal()}
-        {renderQuickActionsModal()}
-        {renderHistoryPanel()}
-        <div className="flex flex-col min-h-screen bg-slate-900">
-          <AppHeader
-            title={<>
-              <span className="text-slate-400 hidden sm:inline">Asystent:</span>
-              <span className="text-cyan-400"> {selectedLawArea} / {selectedTopic}</span>
-            </>}
-            onProfileClick={openProfileModal}
-            onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}
-            onHistoryClick={() => setIsHistoryPanelOpen(true)}
-            onBackClick={handleBackToTopic}
-            onHomeClick={handleGoHome}
-            totalCost={totalCost}
-            subscription={userProfile?.subscription}
-          />
-          <main className="flex-1">
-            <InteractionModeSelector
-              lawArea={selectedLawArea}
-              onSelect={handleSelectInteractionMode}
-            />
-            <div className="max-w-4xl mx-auto px-4 pb-12">
-              <LegalFAQ lawArea={selectedLawArea} onSelectQuestion={handleSendMessage} />
-            </div>
-          </main>
-        </div>
-      </>
-    );
-  }
-
-  const showQuickActions = !isLoading && chatHistory.some(msg => msg.role === 'model');
-
-  return (
-    <>
-      {renderUserProfileModal()}
-      {renderPlanSelectionModal()}
-      {renderQuickActionsModal()}
-      {renderHistoryPanel()}
-      <div className="flex flex-col h-screen bg-slate-800">
-
-        {!isFullScreen && (
-          <AppHeader
-            title={<>
-              <span className="text-slate-400 hidden sm:inline">Asystent:</span>
-              <span className="text-cyan-400"> {selectedLawArea} / {selectedTopic} / {interactionMode}</span>
-            </>}
-            onProfileClick={openProfileModal}
-            onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}
-            onHistoryClick={() => setIsHistoryPanelOpen(true)}
-            onChangeClick={handleBackToTopic}
-            changeButtonText="Zmień"
-            onHomeClick={handleGoHome}
-            onFullScreenClick={() => setIsFullScreen(true)}
-            totalCost={totalCost}
-            subscription={userProfile?.subscription}
-          />
-        )}
-
-        {isFullScreen && (
-          <button
-            onClick={() => setIsFullScreen(false)}
-            className="fixed top-4 right-4 z-50 p-2 bg-slate-800/80 backdrop-blur-sm rounded-full text-slate-300 hover:text-white hover:bg-slate-700 shadow-lg border border-slate-700 transition-all"
-            title="Wyjdź z pełnego ekranu"
-          >
-            <ArrowsContractIcon className="w-6 h-6" />
-          </button>
-        )}
-
-        {todayDeadlines.length > 0 && (
-          <div className="bg-red-600/20 border-b border-red-500/30 p-2 text-center animate-pulse">
-            <p className="text-xs font-bold text-red-400">
-              ⚠️ MASZ {todayDeadlines.length} TERMINY DZISIAJ! Sprawdź oś czasu.
-            </p>
-          </div>
-        )}
-
-
-
-        {user && currentChatId && (
-          <div className="sticky top-0 z-20 bg-slate-800/95 backdrop-blur-sm border-b border-slate-700/50 shadow-md">
-            <div className="max-w-4xl mx-auto p-4 pb-0">
-              <CaseDashboard userId={user.uid} caseId={currentChatId} />
-            </div>
-          </div>
-        )}
-
-        <main ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 md:p-8">
-          <div className="max-w-4xl mx-auto">
-            {chatHistory.map((msg, index) => (
-              <ChatBubble
-                key={index}
-                message={msg}
-                onPreviewDocument={handlePreviewDocument}
-                onAddDeadline={handleAddDeadline}
-                onAddTask={handleAddTask}
+          ) : !interactionMode ? (
+            <div className="flex flex-col flex-1">
+              <InteractionModeSelector
+                lawArea={selectedLawArea}
+                onSelect={handleSelectInteractionMode}
+                onViewDocuments={() => handleViewDocuments(null)}
+                onViewHistory={() => setIsHistoryPanelOpen(true)}
+                onViewKnowledge={() => handleViewKnowledge(null)}
               />
-            ))}
-            {isLoading && <LoadingSpinner />}
-          </div>
-        </main>
-
-        {showQuickActions && !isFullScreen && (
-          <QuickActions
-            interactionMode={interactionMode}
-            onActionClick={handleQuickActionClick}
-          />
-        )}
-
-        <footer className="bg-slate-900 p-4 border-t border-slate-700/50">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex flex-col gap-3">
-              {!isFullScreen && (
-                <div className="flex items-center justify-end">
-                  <div className="flex items-center">
-                    <label htmlFor="deep-thinking-toggle" className="text-sm font-medium text-slate-300 mr-3 cursor-pointer select-none">
-                      Głębokie Myślenie
-                    </label>
-                    <button
-                      id="deep-thinking-toggle"
-                      type="button"
-                      role="switch"
-                      aria-checked={isDeepThinkingEnabled}
-                      onClick={() => setIsDeepThinkingEnabled(!isDeepThinkingEnabled)}
-                      disabled={isLoading}
-                      className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed ${isDeepThinkingEnabled ? 'bg-cyan-600' : 'bg-slate-600'}`}
-                    >
-                      <span
-                        className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-200 ease-in-out ${isDeepThinkingEnabled ? 'translate-x-6' : 'translate-x-1'}`}
-                      />
-                    </button>
+              <div className="max-w-4xl mx-auto px-4 pb-12">
+                <LegalFAQ lawArea={selectedLawArea} onSelectQuestion={handleSendMessage} />
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col h-full bg-slate-900">
+              {interactionMode === InteractionMode.Court && !courtRole ? (
+                <div className="p-6 h-full overflow-y-auto"><CourtRoleSelector onSelect={handleSelectCourtRole} /></div>
+              ) : (
+                <div className="flex flex-col h-full overflow-hidden">
+                  <div className="sticky top-0 z-20 bg-slate-800/95 backdrop-blur-sm border-b border-slate-700/50 p-4">
+                    <div className="max-w-4xl mx-auto"><CaseDashboard userId={user.uid} caseId={currentChatId!} /></div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+                    <div className="max-w-4xl mx-auto">
+                      {interactionMode === InteractionMode.Analysis && (
+                        <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700/50 mb-4 flex items-center justify-between backdrop-blur-sm">
+                          <div className="flex-1">
+                            <h3 className="text-sm font-semibold text-white mb-1">Faza: Analiza i Gromadzenie Wiedzy</h3>
+                            <p className="text-xs text-slate-400">Dostarcz niezbędne informacje i dokumenty przed uzyskaniem porady.</p>
+                          </div>
+                        </div>
+                      )}
+                      {chatHistory.filter(msg => msg.role !== 'system').map((msg, index) => (
+                        <ChatBubble key={index} message={msg} onPreviewDocument={handlePreviewDocument} onAddDeadline={handleAddDeadline} onAddTask={handleAddTask} />
+                      ))}
+                      {isLoading && <LoadingSpinner />}
+                    </div>
                   </div>
                 </div>
               )}
+            </div>
+          )}
+        </main>
 
-              {!isFullScreen && interactionMode !== InteractionMode.SuggestRegulations && interactionMode !== InteractionMode.FindRulings && interactionMode !== InteractionMode.LegalTraining && (
-                <input
-                  type="text"
-                  value={legalArticles}
-                  onChange={(e) => setLegalArticles(e.target.value)}
-                  placeholder="Podaj konkretne paragrafy (opcjonalnie), np. art. 278 § 1 k.k."
-                  className="w-full bg-slate-800 rounded-xl p-2.5 text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 border border-slate-700/50"
-                  disabled={isLoading}
-                />
-              )}
-              <div className="flex items-end gap-2 bg-slate-800 rounded-xl p-2 border border-slate-700/50 focus-within:ring-2 focus-within:ring-cyan-500 transition-shadow">
-                <textarea
-                  ref={textareaRef}
-                  value={currentMessage}
-                  onChange={(e) => setCurrentMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  placeholder={
-                    interactionMode === InteractionMode.LegalTraining
-                      ? "Opisz zagadnienie, z którego chcesz przejść szkolenie..."
-                      : interactionMode === InteractionMode.FindRulings
-                        ? "Opisz swoją sprawę, aby znaleźć podobne wyroki..."
-                        : interactionMode === InteractionMode.SuggestRegulations
-                          ? "Opisz sytuację, a ja zasugeruję przepisy..."
-                          : "Opisz swoją sytuację lub zadaj pytanie..."
-                  }
-                  className="w-full bg-transparent text-slate-200 placeholder-slate-400 focus:outline-none resize-none max-h-48"
-                  rows={1}
-                  disabled={isLoading}
-                />
-                <button
-                  onClick={() => handleSendMessage()}
-                  disabled={isLoading || !currentMessage.trim()}
-                  className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white p-2.5 rounded-full hover:from-cyan-400 hover:to-blue-500 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed transition-all duration-300 flex-shrink-0 shadow-lg hover:shadow-cyan-500/30"
-                  aria-label="Wyślij wiadomość"
-                >
-                  <SendIcon />
-                </button>
+        {selectedTopic && interactionMode && (
+          <footer className="bg-slate-900 p-4 border-t border-slate-700/50">
+            <div className="max-w-4xl mx-auto">
+              {showQuickActions && !isFullScreen && <QuickActions interactionMode={interactionMode} onActionClick={handleQuickActionClick} />}
+              <div className="flex flex-col gap-3 mt-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <label htmlFor="deep-thinking-toggle" className="text-sm font-medium text-slate-300 mr-3 cursor-pointer">Głębokie Myślenie</label>
+                    <button onClick={() => setIsDeepThinkingEnabled(!isDeepThinkingEnabled)} className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${isDeepThinkingEnabled ? 'bg-cyan-600' : 'bg-slate-600'}`}>
+                      <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isDeepThinkingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+                </div>
+                {!isFullScreen && !([InteractionMode.SuggestRegulations, InteractionMode.FindRulings, InteractionMode.LegalTraining].includes(interactionMode)) && (
+                  <input type="text" value={legalArticles} onChange={(e) => setLegalArticles(e.target.value)} placeholder="Podaj konkretne paragrafy (opcjonalnie)..." className="w-full bg-slate-800 rounded-xl p-2.5 text-sm text-slate-200 border border-slate-700/50" disabled={isLoading} />
+                )}
+                <div className="flex items-end gap-2 bg-slate-800 rounded-xl p-2 border border-slate-700/50">
+                  <button onClick={() => document.getElementById('chat-file-upload')?.click()} className="p-2 text-slate-400 hover:text-cyan-400 rounded-lg"><PaperClipIcon className="w-5 h-5" /></button>
+                  <input id="chat-file-upload" type="file" className="hidden" onChange={async (e) => { const file = e.target.files?.[0]; if (file) await handleFileUpload(file); e.target.value = ''; }} />
+                  <textarea ref={textareaRef} value={currentMessage} onChange={(e) => setCurrentMessage(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }} placeholder="Napisz wiadomość..." className="w-full bg-transparent text-slate-200 placeholder-slate-400 focus:outline-none resize-none max-h-48" rows={1} disabled={isLoading} />
+                  <button onClick={() => handleSendMessage()} disabled={isLoading || !currentMessage.trim()} className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white p-2.5 rounded-full"><SendIcon /></button>
+                </div>
               </div>
             </div>
-          </div>
-        </footer>
-        <DocumentPreviewModal
-          isOpen={isPreviewModalOpen}
-          onClose={() => setIsPreviewModalOpen(false)}
-          content={previewContent}
-          title={previewTitle}
-        />
+          </footer>
+        )}
       </div>
     </>
   );
 };
 
 export default App;
+

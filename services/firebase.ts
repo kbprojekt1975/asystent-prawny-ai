@@ -23,8 +23,7 @@ export const googleProvider = new GoogleAuthProvider();
 
 // Connect to emulators if running locally
 if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-  console.log("Connecting to Firebase Emulators...");
-  // Port 9099 for Auth, 8080 for Firestore, 5001 for Functions, 9199 for Storage
+  console.log("Connecting to Firebase Emulators on 127.0.0.1...");
   connectAuthEmulator(auth, "http://127.0.0.1:9099");
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
   connectFunctionsEmulator(functions, "127.0.0.1", 5001);

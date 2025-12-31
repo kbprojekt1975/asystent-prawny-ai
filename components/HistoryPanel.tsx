@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { LawArea, InteractionMode } from '../types';
-import { XIcon, TrashIcon, CaseIcon } from './Icons';
+import { XIcon, TrashIcon, CaseIcon, BookOpenIcon, DocumentTextIcon } from './Icons';
 import HelpModal from './HelpModal';
 import { InfoIcon } from './InfoIcon';
 import { useState } from 'react';
@@ -12,6 +12,8 @@ interface HistoryPanelProps {
   histories: { lawArea: LawArea, topic: string, interactionMode?: InteractionMode, lastUpdated?: any }[];
   onLoadHistory: (lawArea: LawArea, topic: string) => void;
   onDeleteHistory: (lawArea: LawArea, topic: string) => void;
+  onViewKnowledge?: (lawArea: LawArea, topic: string) => void;
+  onViewDocuments?: (lawArea: LawArea, topic: string) => void;
 }
 
 const HistoryPanel: React.FC<HistoryPanelProps> = ({
@@ -19,7 +21,9 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
   onClose,
   histories,
   onLoadHistory,
-  onDeleteHistory
+  onDeleteHistory,
+  onViewKnowledge,
+  onViewDocuments
 }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
@@ -56,8 +60,8 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
             <p className="text-sm text-slate-400 mb-4">Wybierz sprawę, aby do niej wrócić.</p>
             <div className="space-y-2">
               {histories.length > 0 ? histories.map(({ lawArea, topic, interactionMode }, index) => (
-                <div key={`${lawArea}-${topic}-${index}`} className="flex items-center justify-between bg-slate-700/50 rounded-lg group hover:bg-slate-700 transition-colors">
-                  <button onClick={() => { onLoadHistory(lawArea, topic); onClose(); }} className="flex-grow flex items-center gap-3 p-3 text-left min-w-0">
+                <div key={`${lawArea}-${topic}-${index}`} className="flex items-center justify-between bg-slate-700/50 rounded-lg group hover:bg-slate-700 transition-colors px-3">
+                  <button onClick={() => { onLoadHistory(lawArea, topic); onClose(); }} className="flex-grow flex items-center gap-3 py-3 text-left min-w-0">
                     <div className="w-10 h-10 bg-slate-600 rounded-lg flex items-center justify-center flex-shrink-0 text-cyan-400">
                       <CaseIcon />
                     </div>
@@ -69,13 +73,39 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                       </p>
                     </div>
                   </button>
-                  <button
-                    onClick={() => onDeleteHistory(lawArea, topic)}
-                    className="text-slate-500 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 p-3"
-                    aria-label={`Usuń historię ${topic}`}
-                  >
-                    <TrashIcon />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    {onViewDocuments && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewDocuments(lawArea, topic);
+                        }}
+                        className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-600 rounded-lg transition-all"
+                        title="Dokumenty Sprawy"
+                      >
+                        <DocumentTextIcon className="w-5 h-5" />
+                      </button>
+                    )}
+                    {onViewKnowledge && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewKnowledge(lawArea, topic);
+                        }}
+                        className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-600 rounded-lg transition-all"
+                        title="Baza Wiedzy Sprawy"
+                      >
+                        <BookOpenIcon className="w-5 h-5" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onDeleteHistory(lawArea, topic)}
+                      className="text-slate-500 hover:text-red-500 transition-colors p-2"
+                      aria-label={`Usuń historię ${topic}`}
+                    >
+                      <TrashIcon className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
               )) : (
                 <div className="flex flex-col items-center justify-center py-12 text-slate-500">

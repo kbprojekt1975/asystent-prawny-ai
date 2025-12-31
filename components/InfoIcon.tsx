@@ -9,7 +9,7 @@ export const InfoIcon: React.FC<InfoIconProps> = ({ onClick, className = "" }) =
     return (
         <button
             onClick={onClick}
-            className={`text-slate-500 hover:text-cyan-400 transition-colors p-1 rounded-full hover:bg-slate-800 ${className}`}
+            className={`p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors ${className}`}
             title="Informacje"
         >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">

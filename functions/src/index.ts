@@ -10,16 +10,22 @@
  * firebase functions:secrets:set GEMINI_API_KEY
  */
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { setGlobalOptions } from "firebase-functions/v2";
 import * as logger from "firebase-functions/logger";
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { defineSecret } from "firebase-functions/params";
 import 'dotenv/config'; // Load .env file
+import { searchLegalActs, getActContent } from "./isapService";
+
+// --- GLOBAL OPTIONS ---
+setGlobalOptions({
+    region: 'us-central1',
+    maxInstances: 10,
+});
 
 // --- DEKLARACJA SEKRETU ---
-// Używane do bezpiecznego wstrzykiwania klucza na środowisku produkcyjnym
 const GEMINI_API_KEY_SECRET = defineSecret('GEMINI_API_KEY');
 
-// --- INICJALIZACJA ADMIN SDK ---
 // --- INICJALIZACJA ADMIN SDK ---
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
@@ -36,25 +42,39 @@ let aiClient: GoogleGenerativeAI | null = null;
 
 const getAiClient = () => {
     if (aiClient) return aiClient;
-    // Try to get key from Secret, then process.env (for local dev), then fallback
-    let apiKey: string | undefined = GEMINI_API_KEY_SECRET.value();
+
+    let apiKey: string | undefined;
+
+    try {
+        // Try to get key from Secret (production)
+        apiKey = GEMINI_API_KEY_SECRET.value();
+    } catch (e) {
+        // value() throws in emulator if secret is not set via firebase functions:secrets:set
+        logger.info("Secret GEMINI_API_KEY not found in GEMINI_API_KEY_SECRET.value(), falling back to process.env");
+    }
 
     if (!apiKey) {
         apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY_LOCAL;
+        if (apiKey) logger.info("Using API Key from process.env");
     }
 
     if (!apiKey) {
-        logger.error("KONFIGURACJA BŁĄD: Klucz GEMINI_API_KEY jest pusty.");
+        logger.error("KONFIGURACJA BŁĄD: Klucz GEMINI_API_KEY jest pusty. Upewnij się, że .env zawiera klucz.");
         return null;
     }
-    aiClient = new GoogleGenerativeAI(apiKey as string);
+
+    // Mask API key in logs
+    const maskedKey = apiKey.substring(0, 8) + "..." + apiKey.substring(apiKey.length - 4);
+    logger.info(`Initializing Gemini AI with key: ${maskedKey}`);
+
+    aiClient = new GoogleGenerativeAI(apiKey);
     return aiClient;
 };
 
 
 // --- TYPY I ENUMY ---
 type LawAreaType = 'Prawo Karne' | 'Prawo Rodzinne' | 'Prawo Cywilne' | 'Prawo Gospodarcze';
-type InteractionModeType = 'Porada Prawna' | 'Generowanie Pisma' | 'Szkolenie Prawne' | 'Zasugeruj Przepisy' | 'Znajdź Podobne Wyroki' | 'Tryb Sądowy';
+type InteractionModeType = 'Porada Prawna' | 'Generowanie Pisma' | 'Szkolenie Prawne' | 'Zasugeruj Przepisy' | 'Znajdź Podobne Wyroki' | 'Tryb Sądowy' | 'Konwersacja ze stroną przeciwną' | 'Analiza Sprawy';
 
 const LawArea = {
     Criminal: 'Prawo Karne' as LawAreaType,
@@ -69,7 +89,9 @@ const InteractionMode = {
     LegalTraining: 'Szkolenie Prawne' as InteractionModeType,
     SuggestRegulations: 'Zasugeruj Przepisy' as InteractionModeType,
     FindRulings: 'Znajdź Podobne Wyroki' as InteractionModeType,
-    Court: 'Tryb Sądowy' as InteractionModeType
+    Court: 'Tryb Sądowy' as InteractionModeType,
+    Negotiation: 'Konwersacja ze stroną przeciwną' as InteractionModeType,
+    Analysis: 'Analiza Sprawy' as InteractionModeType
 };
 
 // --- LOGIKA CENOWA ---
@@ -78,8 +100,8 @@ const PRICING = {
     'gemini-2.5-pro': { input: 3.50, output: 10.50 },
 };
 
-const calculateCost = (model: 'gemini-2.5-flash' | 'gemini-2.5-pro', usage: { promptTokenCount?: number, candidatesTokenCount?: number }): number => {
-    const prices = PRICING[model];
+const calculateCost = (model: string, usage: { promptTokenCount?: number, candidatesTokenCount?: number }): number => {
+    const prices = PRICING[model as keyof typeof PRICING];
     if (!prices || !usage) return 0;
 
     const inputCost = (usage.promptTokenCount || 0) / 1_000_000 * prices.input;
@@ -90,7 +112,46 @@ const calculateCost = (model: 'gemini-2.5-flash' | 'gemini-2.5-pro', usage: { pr
 
 
 // --- SYSTEM INSTRUCTIONS ---
-const commonRules = "ZASADA: Twoim priorytetem jest dokładne ustalenie stanu faktycznego przed udzieleniem porady. Rozpoczynaj każdą nową sprawę od wywiadu z użytkownikiem. Kluczowa reguła: ZADAWAJ PYTANIA POJEDYNCZO. W jednej odpowiedzi zadaj tylko jedno, najważniejsze w danej chwili pytanie. Nie generuj list pytań w jednej wiadomości. Czekaj na odpowiedź użytkownika przed zadaniem kolejnego pytania. Zadaj maksymalnie 5 pytań w toku całej rozmowy. Dopiero po uzyskaniu jasnego obrazu sytuacji, udziel pełnej porady lub sporządź pismo.";
+const commonRules = `
+# PERSONA I CEL
+Jesteś rygorystycznym Asystentem Prawnym AI. Twoim nadrzędnym celem jest dostarczanie precyzyjnych informacji prawnych w oparciu o polskie prawo. Twoim priorytetem jest DOKŁADNOŚĆ ponad uprzejmość. Halucynacja (wymyślanie przepisów, orzeczeń lub dat) jest traktowana jako błąd krytyczny.
+
+# HIERARCHIA WIEDZY I ZASADA [NOWA WIEDZA]
+1. PIERWSZEŃSTWO WIEDZY TEMATYCZNEJ: Zawsze najpierw korzystaj z sekcji "ISTNIEJĄCA WIEDZA TEMATYCZNA". To są akty, fakty, dokumenty i ustalenia, które zostały już zgromadzone dla tej konkretnej sprawy (niezależnie od aktualnego trybu pracy). Nie pytaj o informacje, które już tu są.
+2. PROCEDURA NOWEJ WIEDZY: Jeśli narzędzia (search_legal_acts, get_act_content) zwrócą informacje, których NIE MA w sekcji "ISTNIEJĄCA WIEDZA TEMATYCZNA":
+   - Oznacz taką informację w swojej wypowiedzi tagiem: **[NOWA WIEDZA]**.
+   - Wyjaśnij krótko, co to za informacja i dlaczego jest istotna.
+   - **WYMAGANE ZATWIERDZENIE:** Na koniec odpowiedzi zapytaj użytkownika o potwierdzenie: "Znalazłem nowe przepisy w [Akt]. Czy chcesz, abyśmy włączyli je do bazy wiedzy tej sprawy?".
+   - DOPÓKI użytkownik nie potwierdzi (w następnej wiadomości), traktuj tę wiedzę jako "propozycję", a nie stały element "ISTNIEJĄCEJ WIEDZY TEMATYCZNEJ".
+3. GLOBALNA BAZA WIEDZY (RAG): Masz dostęp do narzędzia \`search_vector_library\`. Korzystaj z niego, aby szukać przepisów semantycznie (po znaczeniu), jeśli nie znasz konkretnego numeru aktu. Wiedza z tej bazy jest ogólnodostępna i NIE wymaga tagowania [NOWA WIEDZA].
+4. TRWAŁE ZAPISYWANIE: Kiedy użytkownik POTWIERDZI (np. "Tak", "Dodaj to"), użyj narzędzia **add_act_to_topic_knowledge**, aby trwale dołączyć dany akt do bazy wiedzy tematu. Nigdy nie używaj tego narzędzia BEZ wyraźnej zgody użytkownika.
+
+# PROTOKÓŁ WERYFIKACJI (ANTY-HALUCYNACJA)
+1. ZAKAZ DOMNIEMANIA: Jeśli nie znajdziesz konkretnego przepisu w narzędziu lub w istniejącej wiedzy, nie możesz założyć, że on istnieje.
+2. HIERARCHIA ŹRÓDEŁ:
+   - Poziom 1: Treść aktu z ISAP lub Bazy Wiedzy Tematu (Jedyne źródło prawdy).
+   - Poziom 2: Wiedza ogólna modelu (TYLKO do terminologii, NIGDY do paragrafów).
+3. CYTOWANIE: Każde twierdzenie o istnieniu przepisu MUSI zawierać: [Pełna nazwa aktu, Artykuł, Paragraf].
+
+# PROCEDURA OPERACYJNA (CHAIN-OF-THOUGHT)
+Zanim udzielisz odpowiedzi:
+1. "Co już wiemy?" -> Przejrzyj sekcję "ISTNIEJĄCA WIEDZA TEMATYCZNA".
+2. "Czego brakuje?" -> Zdefiniuj słowa kluczowe dla narzędzi, jeśli istniejąca wiedza jest niewystarczająca.
+3. "Czy to nowość?" -> Jeśli używasz narzędzi, sprawdź czy wynik jest nową wiedzą dla tego tematu.
+
+# KRYTYCZNE OGRANICZENIA
+- Nigdy nie zmyślaj sygnatur akt.
+- Unikaj pojęć z okresu PRL.
+- Przy tematach dynamicznych (Podatki) dodaj datę wejścia w życie aktu.
+
+# FORMAT WYJŚCIOWY
+- Używaj pogrubień dla terminów prawnych.
+- Sekcja "Podstawa prawna" zawsze na końcu.
+- **OBOWIĄZKOWE PODSUMOWANIE:** Wymień WSZYSTKIE artykuły/paragrafy i sygnatury użyte w odpowiedzi.
+- Jeśli znalazłeś NOWĄ WIEDZĘ, użyj tagu **[NOWA WIEDZA]** przy opisie tych konkretnych znalezisk.
+
+ZASADA INTERAKCJI: Zadawaj pytania POJEDYNCZO. Maksymalnie 5 pytań w toku rozmowy.
+`;
 
 const systemInstructions: Record<LawAreaType, Record<InteractionModeType, string>> = {
     [LawArea.Criminal]: {
@@ -99,7 +160,8 @@ const systemInstructions: Record<LawAreaType, Record<InteractionModeType, string
         [InteractionMode.LegalTraining]: `Jesteś mentorem prawa karnego. ${commonRules} Jeśli użytkownik pyta o teorię, zapytaj o kontekst praktyczny, aby lepiej wytłumaczyć zagadnienie.`,
         [InteractionMode.SuggestRegulations]: `Jesteś ekspertem prawa karnego. ${commonRules} Zapytaj o szczegóły czynu, aby precyzyjnie dobrać kwalifikację prawną.`,
         [InteractionMode.FindRulings]: `Jesteś asystentem prawnym. ${commonRules} Zapytaj o konkretne okoliczności lub zarzuty, aby znaleźć adekwatne wyroki.`,
-        [InteractionMode.Court]: `Jesteś rygorystycznym asystentem przygotowującym użytkownika do rozprawy karnej. Używaj formalnego języka. Skup się na procedurze karnej, dowodach i linii obrony/oskarżenia. ${commonRules}`
+        [InteractionMode.Court]: `Jesteś rygorystycznym asystentem przygotowującym użytkownika do rozprawy karnej. Używaj formalnego języka. Skup się na procedurze karnej, dowodach i linii obrony/oskarżenia. ${commonRules}`,
+        [InteractionMode.Negotiation]: `Jesteś mediatorem i strategiem w sprawach karnych (np. dobrowolne poddanie się karze, negocjacje z prokuratorem/pokrzywdzonym). Twoim celem jest wypracowanie najkorzystniejszego rozwiązania ugodowego. Pomagaj redagować maile, SMS-y i propozycje ugodowe. ${commonRules}`
     },
     [LawArea.Family]: {
         [InteractionMode.Advice]: `Jesteś ekspertem w dziedzinie polskiego prawa rodzinnego. ${commonRules} Rozpocznij od pytania o sytuację rodzinną lub majątkową klienta. Nie podawaj źródeł, chyba że użytkownik zapyta.`,
@@ -107,7 +169,8 @@ const systemInstructions: Record<LawAreaType, Record<InteractionModeType, string
         [InteractionMode.LegalTraining]: `Jesteś mentorem prawa rodzinnego. ${commonRules} Zapytaj, na jakim etapie jest sprawa, aby dostosować wyjaśnienia.`,
         [InteractionMode.SuggestRegulations]: `Jesteś ekspertem prawa rodzinnego. ${commonRules} Zapytaj o relacje między stronami, aby wskazać właściwe przepisy KRO.`,
         [InteractionMode.FindRulings]: `Jesteś asystentem prawnym. ${commonRules} Zapytaj o przedmiot sporu, aby znaleźć trafne orzecznictwo.`,
-        [InteractionMode.Court]: `Jesteś rygorystycznym asystentem przygotowującym użytkownika do rozprawy rodzinnej. Używaj formalnego języka. Skup się na dobru dziecka, dowodach i sytuacji majątkowej. ${commonRules}`
+        [InteractionMode.Court]: `Jesteś rygorystycznym asystentem przygotowującym użytkownika do rozprawy rodzinnej. Używaj formalnego języka. Skup się na dobru dziecka, dowodach i sytuacji majątkowej. ${commonRules}`,
+        [InteractionMode.Negotiation]: `Jesteś empatycznym mediatorem w sprawach rodzinnych. Pomagaj użytkownikowi w komunikacji z drugą stroną (np. ustalanie kontaktów, alimenty) w tonie ugodowym i konstruktywnym, zawsze mając na względzie dobro dzieci. Pomagaj pisać wiadomości SMS/e-mail, które łagodzą konflikt. ${commonRules}`
     },
     [LawArea.Civil]: {
         [InteractionMode.Advice]: `Jesteś ekspertem w dziedzinie polskiego prawa cywilnego. ${commonRules} Rozpocznij od pytania o dowody, umowy lub daty zdarzeń. Nie podawaj źródeł, chyba że użytkownik zapyta.`,
@@ -115,7 +178,8 @@ const systemInstructions: Record<LawAreaType, Record<InteractionModeType, string
         [InteractionMode.LegalTraining]: `Jesteś mentorem prawa cywilnego. ${commonRules} Zapytaj o tło problemu prawnego.`,
         [InteractionMode.SuggestRegulations]: `Jesteś ekspertem prawa cywilnego. ${commonRules} Zapytaj o rodzaj umowy lub zdarzenia, aby wskazać artykuły KC.`,
         [InteractionMode.FindRulings]: `Jesteś asystentem prawnym. ${commonRules} Zapytaj o szczegóły roszczenia, aby wyszukać wyroki.`,
-        [InteractionMode.Court]: `Jesteś rygorystycznym asystentem przygotowującym użytkownika do rozprawy cywilnej. Używaj formalnego języka. Skup się na ciężarze dowodu, roszczeniach i podstawach prawnych. ${commonRules}`
+        [InteractionMode.Court]: `Jesteś rygorystycznym asystentem przygotowującym użytkownika do rozprawy cywilnej. Używaj formalnego języka. Skup się na ciężarze dowodu, roszczeniach i podstawach prawnych. ${commonRules}`,
+        [InteractionMode.Negotiation]: `Jesteś profesjonalnym negocjatorem w sprawach cywilnych. Pomagaj w komunikacji z dłużnikami, wierzycielami lub kontrahentami. Skup się na argumentacji prawnej i faktach, dążąc do polubownego rozwiązania sporu. Redaguj profesjonalną korespondencję (e-maile, wezwania, propozycje ugody). ${commonRules}`
     },
     [LawArea.Commercial]: {
         [InteractionMode.Advice]: `Jesteś ekspertem w dziedzinie polskiego prawa gospodarczego. ${commonRules} Rozpocznij od pytania o formę prawną działalności lub treść kontraktu. Nie podawaj źródeł, chyba że użytkownik zapyta.`,
@@ -123,7 +187,8 @@ const systemInstructions: Record<LawAreaType, Record<InteractionModeType, string
         [InteractionMode.LegalTraining]: `Jesteś mentorem prawa gospodarczego. ${commonRules} Zapytaj o specyfikę biznesu użytkownika.`,
         [InteractionMode.SuggestRegulations]: `Jesteś ekspertem prawa gospodarczego. ${commonRules} Zapytaj o formę działalności, aby wskazać przepisy KSH.`,
         [InteractionMode.FindRulings]: `Jesteś asystentem prawnym. ${commonRules} Zapytaj o branżę i przedmiot sporu.`,
-        [InteractionMode.Court]: `Jesteś rygorystycznym asystentem przygotowującym użytkownika do rozprawy sądowej. Używaj bardzo formalnego, fachowego języka prawniczego. Bądź precyzyjny i wymagaj precyzji od użytkownika. Skup się na faktach i dowodach. ${commonRules}`
+        [InteractionMode.Court]: `Jesteś rygorystycznym asystentem przygotowującym użytkownika do rozprawy sądowej. Używaj bardzo formalnego, fachowego języka prawniczego. Bądź precyzyjny i wymagaj precyzji od użytkownika. Skup się na faktach i dowodach. ${commonRules}`,
+        [InteractionMode.Negotiation]: `Jesteś rzetelnym negocjatorem biznesowym. Pomagaj w rozmowach z partnerami handlowymi, kontrahentami lub organami. Skup się na interesie przedsiębiorstwa, zachowaniu relacji biznesowych i precyzyjnym formułowaniu warunków ugodowych. Redaguj wysokiej klasy korespondencję biznesową. ${commonRules}`
     }
 } as Record<LawAreaType, Record<InteractionModeType, string>>;
 
@@ -133,19 +198,35 @@ export const getLegalAdvice = onCall({
     cors: true,
     secrets: [GEMINI_API_KEY_SECRET] // KLUCZOWE DLA ONLINE!
 }, async (request) => {
+    logger.info("=== getLegalAdvice CALLED ===");
+    logger.info("Request auth UID:", request.auth?.uid || "NOT AUTHENTICATED");
+    logger.info("Request data keys:", Object.keys(request.data || {}));
+
     const genAI = getAiClient();
     if (!genAI) {
+        logger.error("!!! GEMINI CLIENT IS NULL - Missing API Key !!!");
         throw new HttpsError('failed-precondition', 'Klient Gemini AI nie został zainicjowany z powodu braku klucza.');
     }
+    logger.info("✓ Gemini client initialized successfully");
+
     if (!request.auth) {
+        logger.error("!!! USER NOT AUTHENTICATED !!!");
         throw new HttpsError('unauthenticated', 'Użytkownik musi być zalogowany.');
     }
+    logger.info("✓ User authenticated:", request.auth.uid);
 
     const { history, lawArea, interactionMode, topic, isDeepThinkingEnabled, articles, chatId } = request.data;
     const uid = request.auth.uid;
 
+    logger.info(`Request parameters: LawArea="${lawArea}", InteractionMode="${interactionMode}", Topic="${topic}"`);
+
     if (!chatId) {
         throw new HttpsError('invalid-argument', "Wymagany jest ID czatu (chatId) do kontynuowania rozmowy.");
+    }
+
+    if (!history || !Array.isArray(history)) {
+        logger.error("!!! Missing or invalid history !!!");
+        throw new HttpsError('invalid-argument', "Historia rozmowy jest wymagana.");
     }
 
     // --- SUBSCRIPTION CHECK ---
@@ -154,16 +235,113 @@ export const getLegalAdvice = onCall({
     const userData = userDoc.data();
     const subscription = userData?.profile?.subscription;
 
+    logger.info("Subscription data:", JSON.stringify(subscription || {}));
+
     if (!subscription || subscription.status !== 'active' || !subscription.isPaid) {
+        logger.error("!!! SUBSCRIPTION CHECK FAILED !!!", {
+            hasSubscription: !!subscription,
+            status: subscription?.status,
+            isPaid: subscription?.isPaid
+        });
         throw new HttpsError('permission-denied', "Brak aktywnego lub opłaconego planu. Wykup dostęp lub poczekaj na aktywację.");
     }
-    // --------------------------
+    logger.info("✓ Subscription check passed");
+
+    // --- FETCH TOPIC KNOWLEDGE (Knowledge-First) ---
+    let existingKnowledgeContext = "BRAK";
+    try {
+        const knowledgeSnap = await db.collection('users').doc(uid).collection('chats').doc(chatId).collection('legal_knowledge').get();
+        if (!knowledgeSnap.empty) {
+            existingKnowledgeContext = knowledgeSnap.docs.map(doc => {
+                const data = doc.data();
+                return `AKT: ${data.publisher} ${data.year} poz. ${data.pos}\nTYTUŁ: ${data.title || 'Brak tytułu'}\nTREŚĆ: ${data.content?.substring(0, 1000)}...`;
+            }).join('\n---\n');
+            logger.info(`✓ Fetched ${knowledgeSnap.size} acts for topic knowledge context`);
+        }
+    } catch (err) {
+        logger.error("Error fetching topic knowledge:", err);
+    }
 
     try {
-        const baseInstruction = systemInstructions[lawArea as LawAreaType]?.[interactionMode as InteractionModeType];
-        if (!baseInstruction) {
-            throw new HttpsError('invalid-argument', "Nieprawidłowy obszar prawa lub tryb interakcji.");
+        // --- FETCH SYSTEM CONFIG ---
+        const configSnap = await db.collection('config').doc('system').get();
+        const customConfig = configSnap.data() || {};
+
+        const customCommonRules = customConfig.commonRules || commonRules;
+
+        // Robust lookup with logging
+        const lawAreaClean = (lawArea || "").trim();
+        const modeClean = (interactionMode || "").trim();
+
+        // Find matching law area key (case-insensitive)
+        const areaKey = Object.keys(systemInstructions).find(
+            k => k.toLowerCase() === lawAreaClean.toLowerCase()
+        ) as LawAreaType;
+
+        const areaInstructions = areaKey ? systemInstructions[areaKey] : null;
+        let customAreaInstruction = customConfig[lawAreaClean];
+
+        if (!customAreaInstruction && areaInstructions) {
+            // Find matching mode key (case-insensitive)
+            const modeKey = Object.keys(areaInstructions).find(
+                k => k.toLowerCase() === modeClean.toLowerCase()
+            ) as InteractionModeType;
+
+            if (modeKey) {
+                customAreaInstruction = areaInstructions[modeKey];
+            }
         }
+
+        if (!customAreaInstruction && modeClean !== 'Analiza Sprawy') {
+            logger.error(`Validation failed. Cleaned LawArea: "${lawAreaClean}", Cleaned InteractionMode: "${modeClean}"`);
+            logger.info("Keys in systemInstructions:", Object.keys(systemInstructions));
+            if (areaInstructions) {
+                logger.info(`Keys in instructions for "${areaKey}":`, Object.keys(areaInstructions));
+            }
+            throw new HttpsError('invalid-argument', `BŁĄD WALIDACJI: Dziedzina ("${lawAreaClean}") lub Tryb ("${modeClean}") nie został rozpoznany przez serwer.`);
+        }
+
+        // --- SPECIAL PROMPT FOR ANALYSIS MODE ---
+        if (interactionMode === 'Analiza Sprawy') { // InteractionMode.Analysis value
+            // Override or append specific instructions
+            // We can just rely on the system message sent from frontend or enforce it here.
+            // Enforcing it here is safer.
+        }
+
+        let analysisInstruction = "";
+
+        if (interactionMode === 'Analiza Sprawy') {
+            if (lawArea === 'Prawo Rodzinne') {
+                analysisInstruction = `TRYB: EMPATYCZNA ANALIZA PRAWNA (RODZINNA).
+                Jesteś zaufanym, empatycznym przewodnikiem prawnym. W sprawach rodzinnych emocje i dobro dzieci są kluczowe.
+                
+                TWOJE CELE:
+                1. Zbuduj atmosferę zaufania i spokoju.
+                2. Ustal sytuację dzieci (jeśli są) - ich dobro jest priorytetem ("Dobro dziecka").
+                3. Zbadaj trwałość rozkładu pożycia (w przypadku rozwodów) lub przyczyny konfliktu.
+                4. Zidentyfikuj szanse na porozumienie (mediację) przed eskalacją sporu sądowego.
+                
+                ZASADY:
+                - Bądź delikatny. Używaj języka zrozumienia ("Rozumiem, że to trudne").
+                - Nie zachęcaj do walki, jeśli jest szansa na ugodę.
+                - Pytaj o dzieci, majątek i historię związku, ale z wyczuciem.
+                `;
+            } else {
+                analysisInstruction = `TRYB: KOMPLEKSOWA ANALIZA STANU FAKTYCZNEGO I GROMADZENIE WIEDZY.
+                Jesteś wnikliwym analitykiem prawnym (investigator).
+                Twoim CELEM NIE JEST udzielanie porady, ale ZROZUMIENIE SPRAWY i ZGROMADZENIE MATERIAŁU.
+                
+                ZASADY DZIAŁANIA W TYM TRYBIE:
+                1. Analizuj każdą wypowiedź i przesłany dokument pod kątem faktów, dat i brakujących informacji.
+                2. Jeśli użytkownik przesłał dokument: Potwierdź, co to jest (np. "Widzę wezwanie do zapłaty z dnia..."). Streść kluczowe punkty.
+                3. Zadawaj pytania pogłębiające, ale POJEDYNCZO. Nie bombarduj pytaniami.
+                4. Buduj "Akt Sprawy" w swojej pamięci kontekstowej.
+                5. Jeśli sprawa jest jasna, możesz zasugerować: "Mam wystarczająco informacji, aby udzielić porady. Kliknij 'Przejdź do rozwiązań'."
+                `;
+            }
+        }
+
+        const finalAreaInstruction = interactionMode === 'Analiza Sprawy' ? analysisInstruction : customAreaInstruction;
 
         const timelineInstruction = `
         WAŻNE: Jeśli w rozmowie (teraz lub wcześniej) pojawiły się konkretne daty, fakty lub terminy zdarzeń dotyczące tej sprawy, wyodrębnij je.
@@ -177,19 +355,39 @@ export const getLegalAdvice = onCall({
         Formatuj daty jako RRRR-MM-DD jeśli to możliwe, w przeciwnym razie użyj opisu (np. "Wczoraj", "10 lat temu").
         `;
 
-        const instruction = `Jesteś ekspertem w dziedzinie prawa: ${lawArea}, ze szczególnym uwzględnieniem sprawy o temacie: "${topic}".\n\n${baseInstruction}\n\n${timelineInstruction}`;
+        // --- EXTRACT SYSTEM INSTRUCTIONS FROM HISTORY ---
+        // Some instructions like "You are a Judge" are passed as system messages from frontend.
+        const dynamicSystemInstructions = history
+            .filter((msg: any) => msg.role === 'system')
+            .map((msg: any) => msg.content)
+            .join("\n\n");
 
-        const lastUserMessage = history.length > 0 ? history[history.length - 1].content.toLowerCase() : "";
+        const instruction = `
+        Jesteś ekspertem w dziedzinie prawa: ${lawArea}, ze szczególnym uwzględnieniem sprawy o temacie: "${topic}".
+        
+        # TWOJA ROLA I OSOBOWOŚĆ:
+        ${dynamicSystemInstructions || "Jesteś rzetelnym asystentem prawnym."}
+        
+        # TWOJA ROLA W TRYBIE: ${interactionMode}
+        Niezależnie od trybu, Twoim celem jest rozwiązanie problemu opisanego w sekcji "ISTNIEJĄCA WIEDZA TEMATYCZNA" lub w historii rozmowy. Jeśli tryb uległ zmianie (np. z analizy na poradę), kontynuuj rozmowę płynnie, korzystając z już zebranych faktów.
+
+        # ISTNIEJĄCA WIEDZA TEMATYCZNA (Używaj jako priorytet):
+        ---
+        ${existingKnowledgeContext}
+        ---
+
+        # INSTRUKCJE SPECJALISTYCZNE DLA TRYBU:
+        ${finalAreaInstruction}
+
+        # OGÓLNE ZASADY ASYSTENTA:
+        ${customCommonRules}
+
+        ${timelineInstruction}
+        `;
+
+        const lastUserMessage = history.length > 0 ? (history[history.length - 1].content || "").toLowerCase() : "";
         const isSourceRequested = /źródł|link|stron|gdzie|skąd|podstaw/i.test(lastUserMessage);
-
         const useSearch = interactionMode === InteractionMode.FindRulings || isSourceRequested;
-
-        const modelName = 'gemini-2.5-pro';
-        const model = genAI.getGenerativeModel({
-            model: modelName,
-            systemInstruction: instruction,
-            ...(isDeepThinkingEnabled && { thinkingConfig: { thinkingBudget: 32768 } }),
-        });
 
         // --- FETCH DOCUMENTS ---
         const docsRef = userRef.collection('chats').doc(chatId).collection('documents');
@@ -236,13 +434,214 @@ export const getLegalAdvice = onCall({
                 };
             });
 
-        const result = await model.generateContent({
-            contents,
-            ...(useSearch && { tools: [{ googleSearchRetrieval: {} }] })
+        // --- DEFINE TOOLS ---
+        const tools = [
+            {
+                functionDeclarations: [
+                    {
+                        name: "search_legal_acts",
+                        description: "Search for Polish legal acts (laws, regulations) by keyword or title. Returns metadata including publisher, year, and position.",
+                        parameters: {
+                            type: SchemaType.OBJECT,
+                            properties: {
+                                keyword: { type: SchemaType.STRING, description: "Keyword or title of the act (e.g. 'Kodeks Karny')" },
+                                year: { type: SchemaType.NUMBER, description: "Year of publication" },
+                                inForce: { type: SchemaType.BOOLEAN, description: "Only acts currently in force" }
+                            },
+                            required: ["keyword"]
+                        }
+                    },
+                    {
+                        name: "get_act_content",
+                        description: "Retrieves the full text of a specific legal act using metadata from search results. Use this to READ an act.",
+                        parameters: {
+                            type: SchemaType.OBJECT,
+                            properties: {
+                                publisher: { type: SchemaType.STRING, description: "Publisher code ('DU' for Dziennik Ustaw, 'MP' for Monitor Polski)" },
+                                year: { type: SchemaType.NUMBER, description: "Publication year" },
+                                pos: { type: SchemaType.NUMBER, description: "Position/Number of the act" }
+                            },
+                            required: ["publisher", "year", "pos"]
+                        }
+                    },
+                    {
+                        name: "add_act_to_topic_knowledge",
+                        description: "Saves a specific legal act to the current topic's knowledge base. Use this ONLY AFTER user approval.",
+                        parameters: {
+                            type: SchemaType.OBJECT,
+                            properties: {
+                                publisher: { type: SchemaType.STRING, description: "Publisher code" },
+                                year: { type: SchemaType.NUMBER, description: "Publication year" },
+                                pos: { type: SchemaType.NUMBER, description: "Position" },
+                                title: { type: SchemaType.STRING, description: "Title of the act" },
+                                cited_articles: {
+                                    type: SchemaType.ARRAY,
+                                    items: { type: SchemaType.STRING },
+                                    description: "List of specific article numbers referenced in the advice (e.g. ['217', '101'])"
+                                }
+                            },
+                            required: ["publisher", "year", "pos", "title"]
+                        }
+                    },
+                    {
+                        name: "search_vector_library",
+                        description: "Wyszukuje przepisy w globalnej bazie wektorowej na podstawie znaczenia (semantycznie). Używaj, gdy chcesz znaleźć przepisy dotyczące konkretnego problemu.",
+                        parameters: {
+                            type: SchemaType.OBJECT,
+                            properties: {
+                                query: { type: SchemaType.STRING, description: "Zapytanie w języku naturalnym, np. 'odpowiedzialność za nieodśnieżony chodnik'" }
+                            },
+                            required: ["query"]
+                        }
+                    }
+                ]
+            }
+        ];
+
+        const modelName = 'gemini-2.5-pro';
+        const model = genAI.getGenerativeModel({
+            model: modelName,
+            systemInstruction: instruction,
+            tools: tools as any,
+            // Only apply thinkingConfig for supported models (e.g., gemini-2.0-flash-thinking-preview)
+            ...(isDeepThinkingEnabled && modelName.includes('thinking') && { thinkingConfig: { thinkingBudget: 32768 } }),
         });
 
-        const modelResponseText = result.response.text() || "Brak odpowiedzi tekstowej.";
+        const chat = model.startChat({
+            history: contents.slice(0, -1) as any,
+        });
 
+        // Generate response for the LAST message
+        const lastMessage = contents[contents.length - 1];
+        let result = await chat.sendMessage(lastMessage.parts);
+
+        // --- TOOL HANDLING LOOP ---
+        let callCount = 0;
+        const maxCalls = 5;
+
+        while (result.response.candidates?.[0]?.content?.parts?.some(p => p.functionCall) && callCount < maxCalls) {
+            callCount++;
+            const functionCalls = result.response.candidates[0].content.parts.filter(p => p.functionCall);
+            const toolResponses = [];
+
+            for (const call of functionCalls) {
+                const { name, args } = call.functionCall!;
+                logger.info(`Gemini calling tool: ${name}`, args);
+
+                if (name === "search_legal_acts") {
+                    const searchResults = await searchLegalActs(args as any);
+                    toolResponses.push({
+                        functionResponse: {
+                            name,
+                            response: { result: searchResults }
+                        }
+                    });
+                } else if (name === "get_act_content") {
+                    const { publisher, year, pos } = args as any;
+                    const actText = await getActContent(publisher, year, pos);
+
+                    // SAVE TO GLOBAL CACHE ONLY
+                    try {
+                        const knowledgeRef = userRef.collection('legal_knowledge').doc(`${publisher}_${year}_${pos}`);
+                        await knowledgeRef.set({
+                            publisher,
+                            year,
+                            pos,
+                            content: actText,
+                            savedAt: Timestamp.now(),
+                            lastAccessed: Timestamp.now()
+                        }, { merge: true });
+                        logger.info(`Updated global cache: ${publisher}_${year}_${pos}`);
+                    } catch (saveErr) {
+                        logger.error("Error updating global cache", saveErr);
+                    }
+
+                    toolResponses.push({
+                        functionResponse: {
+                            name,
+                            response: { result: actText }
+                        }
+                    });
+                } else if (name === "add_act_to_topic_knowledge") {
+                    const { publisher, year, pos, title, cited_articles } = args as any;
+                    // We need the content. Since Gemini just read it via get_act_content, 
+                    // we can re-fetch from cache or global API (cached anyway).
+                    const actText = await getActContent(publisher, year, pos);
+
+                    try {
+                        const caseKnowledgeRef = db.collection('users').doc(uid).collection('chats').doc(chatId).collection('legal_knowledge').doc(`${publisher}_${year}_${pos}`);
+                        await caseKnowledgeRef.set({
+                            publisher,
+                            year,
+                            pos,
+                            content: actText,
+                            savedAt: Timestamp.now(),
+                            title: title,
+                            cited_articles: cited_articles || []
+                        }, { merge: true });
+                        logger.info(`✓ Successfully saved to TOPIC knowledge base (approved): ${publisher}_${year}_${pos}`);
+
+                        toolResponses.push({
+                            functionResponse: {
+                                name,
+                                response: { status: "success", message: "Act added to topic knowledge base." }
+                            }
+                        });
+                    } catch (caseSaveErr) {
+                        logger.error("Error saving approved act to TOPIC knowledge base", caseSaveErr);
+                        toolResponses.push({
+                            functionResponse: {
+                                name,
+                                response: { status: "error", message: "Failed to save act." }
+                            }
+                        });
+                    }
+                } else if (name === "search_vector_library") {
+                    const { query: searchQuery } = args as any;
+                    try {
+                        const genAI = getAiClient();
+                        const embedModel = genAI!.getGenerativeModel({ model: "text-embedding-004" });
+                        const embRes = await embedModel.embedContent(searchQuery);
+                        const vector = embRes.embedding.values;
+
+                        // Perform vector search across all chunks in knowledge_library
+                        // Note: This requires a composite index or collection group if we want across ALL acts.
+                        // For MVP, let's assume we search a collection group 'chunks' or a flattened collection.
+                        // Let's use collectionGroup for maximum flexibility.
+                        const chunksSnap = await db.collectionGroup('chunks')
+                            .findNearest('embedding', vector, {
+                                limit: 5,
+                                distanceMeasure: 'COSINE'
+                            })
+                            .get();
+
+                        const results = chunksSnap.docs.map(doc => {
+                            const data = doc.data();
+                            return `AKT: ${data.metadata.title} (${data.metadata.publisher} ${data.metadata.year}/${data.metadata.pos})\nArt. ${data.articleNo}\nTREŚĆ: ${data.content}`;
+                        }).join('\n---\n');
+
+                        toolResponses.push({
+                            functionResponse: {
+                                name,
+                                response: { result: results || "Nie znaleziono pasujących przepisów w bazie wektorowej." }
+                            }
+                        });
+                    } catch (vecErr) {
+                        logger.error("Error in search_vector_library", vecErr);
+                        toolResponses.push({
+                            functionResponse: {
+                                name,
+                                response: { result: "Błąd podczas przeszukiwania bazy wektorowej." }
+                            }
+                        });
+                    }
+                }
+            }
+
+            result = await chat.sendMessage(toolResponses);
+        }
+
+        const modelResponseText = result.response.text() || "Brak odpowiedzi tekstowej.";
         const sources = useSearch ? (result.response as any).candidates?.[0]?.groundingMetadata?.groundingChunks : undefined;
 
         let usage = undefined;
@@ -251,7 +650,7 @@ export const getLegalAdvice = onCall({
                 promptTokenCount: result.response.usageMetadata.promptTokenCount || 0,
                 candidatesTokenCount: result.response.usageMetadata.candidatesTokenCount || 0,
                 totalTokenCount: result.response.usageMetadata.totalTokenCount || 0,
-                cost: calculateCost(modelName, result.response.usageMetadata)
+                cost: calculateCost(modelName as any, result.response.usageMetadata as any)
             };
         }
 
@@ -321,12 +720,17 @@ export const getLegalAdvice = onCall({
             usage
         };
 
-    } catch (error) {
-        logger.error("Gemini API Error", error);
+    } catch (error: any) {
+        logger.error("Gemini API Error in getLegalAdvice", {
+            message: error.message,
+            stack: error.stack,
+            details: error.details,
+            code: error.code
+        });
         if (error instanceof HttpsError) {
             throw error;
         }
-        throw new HttpsError('internal', "Błąd podczas przetwarzania zapytania AI.");
+        throw new HttpsError('internal', `Błąd podczas przetwarzania zapytania AI: ${error.message || 'unknown'}`);
     }
 });
 
@@ -359,12 +763,17 @@ export const analyzeLegalCase = onCall({
 
     try {
         const prompt = `
-            Jesteś zaawansowanym asystentem prawnym. Przeanalizuj poniższy opis sprawy użytkownika i zaklasyfikuj go.
-            
-            Twoim zadaniem jest:
-            1. Przypisać sprawę do jednej z kategorii: "Prawo Karne", "Prawo Rodzinne", "Prawo Cywilne", "Prawo Gospodarcze".
-            2. Stworzyć krótki, zwięzły temat sprawy (maksymalnie 4-6 słów).
-            3. Zasugerować najbardziej odpowiedni tryb interakcji spośród: "Porada Prawna", "Generowanie Pisma", "Szkolenie Prawne", "Zasugeruj Przepisy", "Znajdź Podobne Wyroki". Domyślnie "Porada Prawna".
+            # ZADANIE: ANALIZA I KLASYFIKACJA SPRAWY
+            Jesteś rygorystycznym systemem klasyfikacji prawnej. Twoim zadaniem jest precyzyjna analiza opisu sprawy użytkownika.
+
+            # WYTYCZNE:
+            1. Zaklasyfikuj sprawę do jednej z kategorii: "Prawo Karne", "Prawo Rodzinne", "Prawo Cywilne", "Prawo Gospodarcze".
+            2. Stwórz precyzyjny temat sprawy (maksymalnie 4-6 słów) w tonie formalnym.
+            3. Dobierz optymalny tryb interakcji: "Porada Prawna", "Generowanie Pisma", "Szkolenie Prawne", "Zasugeruj Przepisy", "Znajdź Podobne Wyroki".
+
+            # REGUŁY KRYTYCZNE:
+            - Jeśli opis jest niejasny, wybierz najbardziej prawdopodobną kategorię i tryb "Porada Prawna".
+            - Nie dodawaj żadnego komentarza poza strukturą JSON.
 
             Opis sprawy: "${description}"
         `;
@@ -428,8 +837,12 @@ export const analyzeLegalCase = onCall({
             lastUpdated: Timestamp.now(),
         };
 
-        const chatRef = db.collection('users').doc(uid).collection('chats').doc();
-        await chatRef.set(chatData);
+        // DETERMINISTIC ID: {lawArea}_{topic} (sanitized)
+        const sanitizedTopic = result.topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const chatId = `${result.lawArea}_${sanitizedTopic}`;
+
+        const chatRef = db.collection('users').doc(uid).collection('chats').doc(chatId);
+        await chatRef.set(chatData, { merge: true });
 
         // 2. AKTUALIZACJA CAŁKOWITEGO KOSZTU UŻYTKOWNIKA
         if (usage) {
@@ -487,8 +900,11 @@ export const getLegalFAQ = onCall({
         const questions = JSON.parse(result.response.text());
         return { questions };
 
-    } catch (error) {
-        logger.error("FAQ API Error", error);
-        throw new HttpsError('internal', "Błąd podczas generowania FAQ.");
+    } catch (error: any) {
+        logger.error("FAQ API Error", {
+            message: error.message,
+            stack: error.stack
+        });
+        throw new HttpsError('internal', `Błąd podczas generowania FAQ: ${error.message || 'unknown'}`);
     }
 });

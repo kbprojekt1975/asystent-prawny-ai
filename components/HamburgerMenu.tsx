@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MenuIcon, ProfileIcon } from './Icons';
+import { MenuIcon, ProfileIcon, BookOpenIcon } from './Icons';
 
 interface HamburgerMenuProps {
     onProfileClick: () => void;
+    onKnowledgeClick: () => void;
 }
 
-const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onProfileClick }) => {
+const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onProfileClick, onKnowledgeClick }) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -32,7 +33,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onProfileClick }) => {
                 <MenuIcon />
             </button>
             {isOpen && (
-                <div 
+                <div
                     className="absolute right-0 mt-2 w-56 origin-top-right bg-slate-800 border border-slate-700 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-20"
                     role="menu"
                     aria-orientation="vertical"
@@ -49,6 +50,17 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onProfileClick }) => {
                         >
                             <ProfileIcon className="h-5 w-5" />
                             <span>Panel Użytkownika</span>
+                        </button>
+                        <button
+                            onClick={() => {
+                                onKnowledgeClick();
+                                setIsOpen(false);
+                            }}
+                            className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700/50"
+                            role="menuitem"
+                        >
+                            <BookOpenIcon className="h-5 w-5" />
+                            <span>Baza Wiedzy</span>
                         </button>
                     </div>
                 </div>
