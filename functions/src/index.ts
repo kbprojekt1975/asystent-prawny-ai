@@ -1,8 +1,8 @@
 /**
- * UŻYTO BIBLIOTEKI @google/genai. 
+ * UŻYTO BIBLIOTEKI @google/generative-ai (wersja ^0.21.0).
  * Pamiętaj o instalacji w folderze /functions: 
  * 1. npm install firebase-admin
- * 2. npm install @google/genai@0.1.0 
+ * 2. npm install @google/generative-ai
  * 3. npm install dotenv (dla testów lokalnych)
  * 4. npm install -D @types/dotenv (dla TypeScript)
  *
@@ -24,7 +24,7 @@ setGlobalOptions({
 });
 
 // --- DEKLARACJA SEKRETU ---
-const GEMINI_API_KEY_SECRET = defineSecret('GEMINI_API_KEY');
+const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 
 // --- INICJALIZACJA ADMIN SDK ---
 import { initializeApp } from "firebase-admin/app";
@@ -46,11 +46,9 @@ const getAiClient = () => {
     let apiKey: string | undefined;
 
     try {
-        // Try to get key from Secret (production)
-        apiKey = GEMINI_API_KEY_SECRET.value();
+        apiKey = GEMINI_API_KEY.value();
     } catch (e) {
-        // value() throws in emulator if secret is not set via firebase functions:secrets:set
-        logger.info("Secret GEMINI_API_KEY not found in GEMINI_API_KEY_SECRET.value(), falling back to process.env");
+        logger.info("Secret GEMINI_API_KEY not found, falling back to process.env");
     }
 
     if (!apiKey) {
@@ -59,15 +57,16 @@ const getAiClient = () => {
     }
 
     if (!apiKey) {
-        logger.error("KONFIGURACJA BŁĄD: Klucz GEMINI_API_KEY jest pusty. Upewnij się, że .env zawiera klucz.");
+        logger.error("KONFIGURACJA BŁĄD: Klucz GEMINI_API_KEY jest pusty.");
         return null;
     }
 
-    // Mask API key in logs
+    apiKey = apiKey.trim();
     const maskedKey = apiKey.substring(0, 8) + "..." + apiKey.substring(apiKey.length - 4);
-    logger.info(`Initializing Gemini AI with key: ${maskedKey}`);
+    logger.info(`Initializing Gemini AI with key: ${maskedKey} (Length: ${apiKey.length})`);
 
     aiClient = new GoogleGenerativeAI(apiKey);
+
     return aiClient;
 };
 
@@ -96,8 +95,7 @@ const InteractionMode = {
 
 // --- LOGIKA CENOWA ---
 const PRICING = {
-    'gemini-2.5-flash': { input: 0.075, output: 0.30 }, // za 1M tokenów w USD
-    'gemini-2.5-pro': { input: 3.50, output: 10.50 },
+    'gemini-2.0-flash-exp': { input: 0, output: 0 }, // Free preview
 };
 
 const calculateCost = (model: string, usage: { promptTokenCount?: number, candidatesTokenCount?: number }): number => {
@@ -196,7 +194,7 @@ const systemInstructions: Record<LawAreaType, Record<InteractionModeType, string
 // --- FUNCTION: getLegalAdvice (GŁÓWNA LOGIKA CZATU) ---
 export const getLegalAdvice = onCall({
     cors: true,
-    secrets: [GEMINI_API_KEY_SECRET] // KLUCZOWE DLA ONLINE!
+    secrets: [GEMINI_API_KEY] // KLUCZOWE DLA ONLINE!
 }, async (request) => {
     logger.info("=== getLegalAdvice CALLED ===");
     logger.info("Request auth UID:", request.auth?.uid || "NOT AUTHENTICATED");
@@ -498,14 +496,18 @@ export const getLegalAdvice = onCall({
             }
         ];
 
-        const modelName = 'gemini-2.5-pro';
+        // DYNAMIC MODEL SELECTION
+        let modelName = 'gemini-2.0-flash-exp';
+        if (isDeepThinkingEnabled) {
+            modelName = 'gemini-2.0-flash-thinking-preview-1219'; // or current valid thinking model
+        }
+
         const model = genAI.getGenerativeModel({
             model: modelName,
             systemInstruction: instruction,
             tools: tools as any,
-            // Only apply thinkingConfig for supported models (e.g., gemini-2.0-flash-thinking-preview)
-            ...(isDeepThinkingEnabled && modelName.includes('thinking') && { thinkingConfig: { thinkingBudget: 32768 } }),
-        });
+            ...(isDeepThinkingEnabled && { thinkingConfig: { thinkingBudget: 16000 } }), // Adjusted budget
+        }, { apiVersion: 'v1beta' });
 
         const chat = model.startChat({
             history: contents.slice(0, -1) as any,
@@ -517,7 +519,7 @@ export const getLegalAdvice = onCall({
 
         // --- TOOL HANDLING LOOP ---
         let callCount = 0;
-        const maxCalls = 5;
+        const maxCalls = 10;
 
         while (result.response.candidates?.[0]?.content?.parts?.some(p => p.functionCall) && callCount < maxCalls) {
             callCount++;
@@ -642,6 +644,7 @@ export const getLegalAdvice = onCall({
         }
 
         const modelResponseText = result.response.text() || "Brak odpowiedzi tekstowej.";
+        logger.info("RAW GEMINI RESPONSE:", modelResponseText); // DEBUG LOG
         const sources = useSearch ? (result.response as any).candidates?.[0]?.groundingMetadata?.groundingChunks : undefined;
 
         let usage = undefined;
@@ -738,7 +741,7 @@ export const getLegalAdvice = onCall({
 // --- FUNCTION: analyzeLegalCase (KLASYFIKACJA SPRAWY) ---
 export const analyzeLegalCase = onCall({
     cors: true,
-    secrets: [GEMINI_API_KEY_SECRET] // KLUCZOWE DLA ONLINE!
+    secrets: [GEMINI_API_KEY] // KLUCZOWE DLA ONLINE!
 }, async (request) => {
     const genAI = getAiClient();
     if (!genAI) {
@@ -778,7 +781,7 @@ export const analyzeLegalCase = onCall({
             Opis sprawy: "${description}"
         `;
 
-        const modelName = 'gemini-2.5-flash';
+        const modelName = 'gemini-2.0-flash-exp';
         const model = genAI.getGenerativeModel({
             model: modelName,
             generationConfig: {
@@ -786,14 +789,14 @@ export const analyzeLegalCase = onCall({
                 responseSchema: {
                     type: SchemaType.OBJECT,
                     properties: {
-                        lawArea: { type: SchemaType.STRING, enum: Object.values(LawArea) },
+                        lawArea: { type: SchemaType.STRING, enum: Object.values(LawArea), format: "enum" },
                         topic: { type: SchemaType.STRING },
-                        interactionMode: { type: SchemaType.STRING, enum: Object.values(InteractionMode) }
+                        interactionMode: { type: SchemaType.STRING, enum: Object.values(InteractionMode), format: "enum" }
                     },
                     required: ["lawArea", "topic", "interactionMode"]
                 }
             }
-        });
+        }, { apiVersion: 'v1beta' });
 
         const resultResponse = await model.generateContent(prompt);
         const responseText = resultResponse.response.text();
@@ -865,7 +868,7 @@ export const analyzeLegalCase = onCall({
 // --- FUNCTION: getLegalFAQ (GENEROWANIE FAQ DLA DZIEDZINY) ---
 export const getLegalFAQ = onCall({
     cors: true,
-    secrets: [GEMINI_API_KEY_SECRET]
+    secrets: [GEMINI_API_KEY]
 }, async (request) => {
     const genAI = getAiClient();
     if (!genAI) {
@@ -886,7 +889,7 @@ export const getLegalFAQ = onCall({
         Pytania powinny być krótkie, intrygujące i zachęcające do zadania ich AI.`;
 
         const model = genAI.getGenerativeModel({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash-exp',
             generationConfig: {
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -894,7 +897,7 @@ export const getLegalFAQ = onCall({
                     items: { type: SchemaType.STRING }
                 }
             }
-        });
+        }, { apiVersion: 'v1beta' });
 
         const result = await model.generateContent(prompt);
         const questions = JSON.parse(result.response.text());
