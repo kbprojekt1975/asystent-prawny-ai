@@ -112,7 +112,12 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose
                     </section>
 
                     <section>
-                        <h3 className="text-lg font-bold text-white mb-3">7. Zmiany w Polityce Prywatności</h3>
+                        <h3 className="text-lg font-bold text-white mb-3">7. Pliki Cookies</h3>
+                        <p>Nasza strona internetowa wykorzystuje pliki cookies. Szczegółowe informacje o rodzajach cookies, celach ich stosowania i sposobach zarządzania nimi znajdziesz w naszej Polityce Cookies.</p>
+                    </section>
+
+                    <section>
+                        <h3 className="text-lg font-bold text-white mb-3">8. Zmiany w Polityce Prywatności</h3>
                         <p>Niniejsza Polityka Prywatności może ulegać zmianom. O wszelkich zmianach będziemy informować użytkowników z odpowiednim wyprzedzeniem.</p>
                     </section>
                 </div>

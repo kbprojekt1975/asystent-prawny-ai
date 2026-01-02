@@ -6,6 +6,8 @@ import { MagicWandIcon } from './Icons';
 import HelpModal from './HelpModal';
 import { InfoIcon } from './InfoIcon';
 
+import PrivacyPolicyModal from './PrivacyPolicyModal';
+
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isResetPassword, setIsResetPassword] = useState(false);
@@ -15,6 +17,7 @@ const Auth: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
 
   const helpContent = (
     <div className="space-y-4">
@@ -190,6 +193,9 @@ const Auth: React.FC = () => {
             >
               {isLoading ? 'Przetwarzanie...' : (isLogin ? 'Zaloguj się' : 'Zarejestruj się')}
             </button>
+            <p className="text-[10px] text-slate-500 text-center mt-2 px-1">
+              Administratorem Twoich danych osobowych jest [Administrator]. Dane przetwarzamy w celu realizacji usługi (założenie i prowadzenie konta). Szczegóły w <button type="button" onClick={() => setIsPrivacyPolicyOpen(true)} className="text-cyan-500 hover:underline">Polityce Prywatności</button>.
+            </p>
           </form>
         )}
 
@@ -260,6 +266,11 @@ const Auth: React.FC = () => {
       >
         {helpContent}
       </HelpModal>
+
+      <PrivacyPolicyModal
+        isOpen={isPrivacyPolicyOpen}
+        onClose={() => setIsPrivacyPolicyOpen(false)}
+      />
     </div>
   );
 };

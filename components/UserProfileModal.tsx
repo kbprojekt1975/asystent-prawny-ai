@@ -362,6 +362,9 @@ return (
                             >
                                 Zapisz Dane Osobowe
                             </button>
+                            <p className="text-[10px] text-slate-500 text-center mt-2 px-2">
+                                Podanie tych danych jest dobrowolne, ale niezbędne do wygenerowania pisma procesowego. Administratorem danych jest [Administrator]. Szczegóły w <button onClick={() => setIsPrivacyPolicyOpen(true)} className="text-cyan-500 hover:underline">Polityce Prywatności</button>.
+                            </p>
 
                             <div className="mt-10 pt-6 border-t border-slate-700/50">
                                 <div className="flex items-center gap-2 mb-4">
