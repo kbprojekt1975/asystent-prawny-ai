@@ -21,15 +21,20 @@ export interface ActMetadata {
 export async function searchLegalActs(params: ActSearchParams): Promise<ActMetadata[]> {
     const url = new URL("https://api.sejm.gov.pl/eli/acts/search");
 
-    let query = params.keyword || "";
-    // REVERT: Searching for "Tekst jednolity Kodeks..." yields 0 results.
-    // We will search for just "Kodeks..." and filter client-side.
+    // Intelligent keyword sanitization: remove metadata words that break ISAP search
+    let query = (params.keyword || "")
+        .replace(/tekst jednolity/gi, '')
+        .replace(/obwieszczenie/gi, '')
+        .replace(/\bustawa\b/gi, '') // Only whole word "ustawa"
+        .replace(/\bo\b/gi, '') // "o" like "o zmianie"
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    // Fallback: If stripping leaves nothing (e.g. user just searched "Ustawa"), revert to original
+    if (query.length < 3) query = params.keyword || "";
 
     url.searchParams.append('keyword', query);
     if (params.year) url.searchParams.append('year', params.year.toString());
-    if (params.publisher) url.searchParams.append('publisher', params.publisher);
-    if (params.inForce) url.searchParams.append('inForce', '1');
-
     if (params.publisher) url.searchParams.append('publisher', params.publisher);
     if (params.inForce) url.searchParams.append('inForce', '1');
 

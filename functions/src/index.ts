@@ -448,7 +448,7 @@ export const getLegalAdvice = onCall({
                 functionDeclarations: [
                     {
                         name: "search_legal_acts",
-                        description: "Wyszukuje polskie akty prawne (ustawy, rozporządzenia). Zwraca metadane. Wskazówka: aby znaleźć pełny tekst kodeksu, szukaj 'Tekst jednolity [Nazwa]' i wybieraj Obwieszczenia Marszałka (najnowszy rok/pozycja).",
+                        description: "Wyszukuje polskie akty prawne. Wpisz TYLKO główną nazwę (np. 'Kodeks cywilny'). NIE wpisuj 'Tekst jednolity', 'Ustawa' ani dat w słowie kluczowym. System sam znajdzie najnowszą wersję.",
                         parameters: {
                             type: SchemaType.OBJECT,
                             properties: {
