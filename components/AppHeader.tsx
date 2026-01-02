@@ -45,7 +45,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   return (
-    <header className="bg-slate-900/70 backdrop-blur-md p-4 border-b border-slate-700 flex justify-between items-center z-10 flex-shrink-0 gap-4 w-full">
+    <header className="bg-slate-900/70 backdrop-blur-md p-4 border-b border-slate-700 flex justify-between items-center z-40 flex-shrink-0 gap-4 w-full">
       <h1 className="text-sm md:text-lg font-bold text-white truncate mr-auto">
         {title}
       </h1>
@@ -95,7 +95,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         {onHomeClick && (
           <button
             onClick={onHomeClick}
-            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors"
+            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden sm:block"
             aria-label="Strona główna"
             title="Strona główna"
           >
@@ -115,7 +115,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         {onKnowledgeClick && (
           <button
             onClick={onKnowledgeClick}
-            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors"
+            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden sm:block"
             aria-label="Baza Wiedzy"
             title="Baza Wiedzy"
           >
@@ -125,7 +125,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         {onHistoryClick && (
           <button
             onClick={onHistoryClick}
-            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors"
+            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden sm:block"
             aria-label="Historia Spraw"
             title="Historia Spraw"
           >
@@ -135,7 +135,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         {onQuickActionsClick && (
           <button
             onClick={onQuickActionsClick}
-            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors"
+            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden sm:block"
             aria-label="Szybkie Akcje"
             title="Szybkie Akcje"
           >
@@ -145,7 +145,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         {onFullScreenClick && (
           <button
             onClick={onFullScreenClick}
-            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors"
+            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden md:block"
             aria-label="Pełny Ekran"
             title="Pełny Ekran"
           >
@@ -154,7 +154,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         )}
         <button
           onClick={onProfileClick}
-          className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors order-first md:order-none relative"
+          className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors relative hidden xs:block"
           aria-label="Panel Użytkownika"
           title="Panel Użytkownika"
         >
@@ -176,6 +176,10 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         <HamburgerMenu
           onProfileClick={onProfileClick}
           onKnowledgeClick={onKnowledgeClick || (() => { })}
+          onHomeClick={onHomeClick}
+          onHistoryClick={onHistoryClick}
+          onQuickActionsClick={onQuickActionsClick}
+          onFullScreenClick={onFullScreenClick}
           subscription={subscription}
           totalCost={totalCost}
         />

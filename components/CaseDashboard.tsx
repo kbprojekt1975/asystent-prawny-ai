@@ -21,25 +21,25 @@ const CaseDashboard: React.FC<CaseDashboardProps> = ({ userId, caseId }) => {
                 className="w-full flex items-center justify-center p-0 bg-slate-800 hover:bg-slate-700/80 transition-colors relative"
             >
                 <div
-                    className="flex-1 flex items-center justify-between p-4 cursor-pointer"
+                    className="flex-1 flex items-center justify-between p-3 md:p-4 cursor-pointer"
                     onClick={() => setIsExpanded(!isExpanded)}
                 >
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg border border-cyan-500/20">
-                            <BriefcaseIcon className="w-5 h-5 text-cyan-400" />
+                        <div className="p-1.5 md:p-2 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg border border-cyan-500/20">
+                            <BriefcaseIcon className="w-4 h-4 md:w-5 md:h-5 text-cyan-400" />
                         </div>
                         <div className="text-left">
-                            <h3 className="font-semibold text-slate-200">Panel Zarządzania Sprawą</h3>
-                            <p className="text-xs text-slate-400">
+                            <h3 className="font-semibold text-slate-200 text-sm md:text-base">Panel Zarządzania Sprawą</h3>
+                            <p className="text-[10px] md:text-xs text-slate-400">
                                 {isExpanded ? "Kliknij, aby zwinąć" : "Dokumenty, Oś czasu, Zadania"}
                             </p>
                         </div>
                     </div>
                     <div className={`transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-                        <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+                        <ChevronDownIcon className="w-4 h-4 md:w-5 md:h-5 text-slate-400" />
                     </div>
                 </div>
-                <div className="absolute right-20 top-1/2 -translate-y-1/2 z-10">
+                <div className="absolute right-12 md:right-20 top-1/2 -translate-y-1/2 z-10">
                     <InfoIcon onClick={() => setIsHelpOpen(true)} />
                 </div>
             </div>
