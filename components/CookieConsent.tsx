@@ -21,13 +21,11 @@ const CookieConsent: React.FC = () => {
     return (
         <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 bg-slate-900/95 backdrop-blur-md border-t border-slate-700 shadow-2xl animate-in slide-in-from-bottom duration-500">
             <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="text-sm text-slate-300 text-center md:text-left">
-                    <p>
-                        Ta strona korzysta z ciasteczek (cookies) w celu realizacji usług, personalizacji reklam oraz analizy ruchu.
-                        Możesz określić warunki przechowywania lub dostępu do cookies w Twojej przeglądarce.
-                        Korzystając ze strony, wyrażasz zgodę na ich używanie.
-                    </p>
-                </div>
+                <p>
+                    Ta strona korzysta z ciasteczek (cookies). Wszelkie dane wprowadzasz na własną odpowiedzialność i w każdej chwili możesz je usunąć.
+                    Twoje dane są przechowywane w bazie wiedzy z zachowaniem najwyższych standardów bezpieczeństwa.
+                    Korzystając ze strony, wyrażasz zgodę na używanie cookies.
+                </p>
                 <div className="flex items-center gap-3 flex-shrink-0">
                     <button
                         onClick={handleAccept}
