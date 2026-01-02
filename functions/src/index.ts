@@ -10,6 +10,7 @@
  * firebase functions:secrets:set GEMINI_API_KEY
  */
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+// import { onObjectFinalized } from "firebase-functions/v2/storage";
 import { setGlobalOptions } from "firebase-functions/v2";
 import * as logger from "firebase-functions/logger";
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
@@ -93,9 +94,12 @@ const InteractionMode = {
     Analysis: 'Analiza Sprawy' as InteractionModeType
 };
 
-// --- LOGIKA CENOWA ---
+// --- LOGIKA CENOWA (Z marżą ok. 70%) ---
 const PRICING = {
-    'gemini-2.0-flash-exp': { input: 0, output: 0 }, // Free preview
+    'gemini-2.0-flash-exp': { input: 0.25, output: 1.0 }, // USD za 1M tokenów
+    'gemini-2.0-flash-thinking-preview-1219': { input: 4.2, output: 16.7 }, // Wyższa cena dla "Thinking" (bezpieczeństwo)
+    'gemini-1.5-flash': { input: 0.25, output: 1.0 },
+    'gemini-1.5-pro': { input: 4.2, output: 16.7 },
 };
 
 const calculateCost = (model: string, usage: { promptTokenCount?: number, candidatesTokenCount?: number }): number => {
@@ -134,7 +138,7 @@ Jesteś rygorystycznym Asystentem Prawnym AI. Twoim nadrzędnym celem jest dosta
 # PROCEDURA OPERACYJNA (CHAIN-OF-THOUGHT)
 Zanim udzielisz odpowiedzi:
 1. "Co już wiemy?" -> Przejrzyj sekcję "ISTNIEJĄCA WIEDZA TEMATYCZNA".
-2. "Czego brakuje?" -> Zdefiniuj słowa kluczowe dla narzędzi, jeśli istniejąca wiedza jest niewystarczająca.
+2. "Czego brakuje?" -> Zdefiniuj słowa kluczowe. Jeśli szukasz głównego Kodeksu/Ustawy, szukaj "Tekst jednolity [Nazwa]" lub wybieraj wyniki typu "Obwieszczenie... w sprawie ogłoszenia jednolitego tekstu".
 3. "Czy to nowość?" -> Jeśli używasz narzędzi, sprawdź czy wynik jest nową wiedzą dla tego tematu.
 
 # KRYTYCZNE OGRANICZENIA
@@ -244,6 +248,12 @@ export const getLegalAdvice = onCall({
         throw new HttpsError('permission-denied', "Brak aktywnego lub opłaconego planu. Wykup dostęp lub poczekaj na aktywację.");
     }
     logger.info("✓ Subscription check passed");
+
+    // --- ACTIVE STATUS CHECK ---
+    if (userData?.isActive === false) {
+        logger.error("!!! ACCOUNT INACTIVE !!!");
+        throw new HttpsError('permission-denied', "Twoje konto nie zostało jeszcze aktywowane przez administratora.");
+    }
 
     // --- FETCH TOPIC KNOWLEDGE (Knowledge-First) ---
     let existingKnowledgeContext = "BRAK";
@@ -438,13 +448,13 @@ export const getLegalAdvice = onCall({
                 functionDeclarations: [
                     {
                         name: "search_legal_acts",
-                        description: "Search for Polish legal acts (laws, regulations) by keyword or title. Returns metadata including publisher, year, and position.",
+                        description: "Wyszukuje polskie akty prawne (ustawy, rozporządzenia). Zwraca metadane. Wskazówka: aby znaleźć pełny tekst kodeksu, szukaj 'Tekst jednolity [Nazwa]' i wybieraj Obwieszczenia Marszałka (najnowszy rok/pozycja).",
                         parameters: {
                             type: SchemaType.OBJECT,
                             properties: {
-                                keyword: { type: SchemaType.STRING, description: "Keyword or title of the act (e.g. 'Kodeks Karny')" },
-                                year: { type: SchemaType.NUMBER, description: "Year of publication" },
-                                inForce: { type: SchemaType.BOOLEAN, description: "Only acts currently in force" }
+                                keyword: { type: SchemaType.STRING, description: "Słowo kluczowe lub tytuł aktu (np. 'Kodeks Karny')" },
+                                year: { type: SchemaType.NUMBER, description: "Rok publikacji" },
+                                inForce: { type: SchemaType.BOOLEAN, description: "Tylko akty obecnie obowiązujące" }
                             },
                             required: ["keyword"]
                         }
@@ -606,34 +616,63 @@ export const getLegalAdvice = onCall({
                         const embRes = await embedModel.embedContent(searchQuery);
                         const vector = embRes.embedding.values;
 
-                        // Perform vector search across all chunks in knowledge_library
-                        // Note: This requires a composite index or collection group if we want across ALL acts.
-                        // For MVP, let's assume we search a collection group 'chunks' or a flattened collection.
-                        // Let's use collectionGroup for maximum flexibility.
-                        const chunksSnap = await db.collectionGroup('chunks')
-                            .findNearest('embedding', vector, {
-                                limit: 5,
-                                distanceMeasure: 'COSINE'
-                            })
-                            .get();
+                        logger.info(`Vector search initiated for: ${searchQuery}`);
 
-                        const results = chunksSnap.docs.map(doc => {
-                            const data = doc.data();
-                            return `AKT: ${data.metadata.title} (${data.metadata.publisher} ${data.metadata.year}/${data.metadata.pos})\nArt. ${data.articleNo}\nTREŚĆ: ${data.content}`;
-                        }).join('\n---\n');
+                        try {
+                            const chunksSnap = await db.collectionGroup('chunks')
+                                .where('userId', 'in', ['GLOBAL', uid]) // ISOLATION: Public + User Private
+                                .findNearest('embedding', vector, {
+                                    limit: 5,
+                                    distanceMeasure: 'COSINE'
+                                })
+                                .get();
 
-                        toolResponses.push({
-                            functionResponse: {
-                                name,
-                                response: { result: results || "Nie znaleziono pasujących przepisów w bazie wektorowej." }
+                            const results = chunksSnap.docs.map(doc => {
+                                const data = doc.data();
+                                return `AKT: ${data.metadata?.title || 'Brak tytułu'} (${data.metadata?.publisher} ${data.metadata?.year}/${data.metadata?.pos})\nArt. ${data.articleNo}\nTREŚĆ: ${data.content}`;
+                            }).join('\n---\n');
+
+                            let finalResult = results;
+                            if (!results) {
+                                logger.info("Vector search returned no results. Attempting on-demand ingestion.");
+                                finalResult = await ingestAndSearchISAP(searchQuery, vector);
                             }
-                        });
+
+                            toolResponses.push({
+                                functionResponse: {
+                                    name,
+                                    response: { result: finalResult || "Nie znaleziono pasujących przepisów w bazie wektorowej ani w ISAP." }
+                                }
+                            });
+                        } catch (emulatorErr: any) {
+                            logger.warn("Vector search failed (likely emulator). Falling back to basic search.", emulatorErr.message);
+
+                            // HYBRID FALLBACK: Basic keyword search (simulated)
+                            // Since we don't have full-text, we fetch the most relevantly titled or recent chunks
+                            const fallbackSnap = await db.collectionGroup('chunks')
+                                .limit(3)
+                                .get();
+
+                            const fallbackResults = fallbackSnap.docs.map(doc => {
+                                const data = doc.data();
+                                return `[TRYB LOKALNY] AKT: ${data.metadata?.title} (Art. ${data.articleNo})\nTREŚĆ: ${data.content}`;
+                            }).join('\n---\n');
+
+                            toolResponses.push({
+                                functionResponse: {
+                                    name,
+                                    response: {
+                                        result: "UWAGA: Działasz w trybie lokalnym/emulatora. Wyniki mogą być mniej precyzyjne.\n\n" + (fallbackResults || "Brak danych w lokalnej bazie.")
+                                    }
+                                }
+                            });
+                        }
                     } catch (vecErr) {
-                        logger.error("Error in search_vector_library", vecErr);
+                        logger.error("Error in search_vector_library module", vecErr);
                         toolResponses.push({
                             functionResponse: {
                                 name,
-                                response: { result: "Błąd podczas przeszukiwania bazy wektorowej." }
+                                response: { result: "Wystąpił błąd krytyczny podczas przetwarzania zapytania wektorowego." }
                             }
                         });
                     }
@@ -679,6 +718,7 @@ export const getLegalAdvice = onCall({
                         await timelineRef.doc(eventId).set({
                             ...event,
                             id: eventId,
+                            userId: uid,
                             createdAt: Timestamp.now()
                         });
                     }
@@ -761,6 +801,10 @@ export const analyzeLegalCase = onCall({
 
     if (!subscription || subscription.status !== 'active' || !subscription.isPaid) {
         throw new HttpsError('permission-denied', "Brak aktywnego lub opłaconego planu. Wykup dostęp lub poczekaj na aktywację.");
+    }
+
+    if (userData?.isActive === false) {
+        throw new HttpsError('permission-denied', "Twoje konto oczekuje na aktywację.");
     }
     // --------------------------
 
@@ -852,6 +896,11 @@ export const analyzeLegalCase = onCall({
             const userRef = db.collection('users').doc(uid);
             await userRef.set({
                 totalCost: FieldValue.increment(usage.cost),
+                profile: {
+                    subscription: {
+                        spentAmount: FieldValue.increment(usage.cost)
+                    }
+                }
             }, { merge: true });
         }
         // ---------------------------
@@ -904,10 +953,301 @@ export const getLegalFAQ = onCall({
         return { questions };
 
     } catch (error: any) {
-        logger.error("FAQ API Error", {
-            message: error.message,
-            stack: error.stack
-        });
+        logger.error("FAQ API Error", { message: error.message });
         throw new HttpsError('internal', `Błąd podczas generowania FAQ: ${error.message || 'unknown'}`);
     }
 });
+
+// --- DATA MANAGEMENT HELPERS ---
+
+const isMasterAdmin = (auth: any): boolean => {
+    if (!auth) return false;
+    const uid = auth.uid;
+    const email = auth.token?.email || "";
+
+    return uid === "Yb23rXe0JdOvieB3grdaN0Brmkjh" ||
+        email.includes("kbprojekt1975@gmail.com") ||
+        email.includes("konrad@example.com");
+};
+
+async function deleteCollection(collectionRef: any) {
+    const snapshot = await collectionRef.get();
+    if (snapshot.empty) return;
+
+    // Process in batches of 500
+    const chunks = [];
+    for (let i = 0; i < snapshot.docs.length; i += 500) {
+        chunks.push(snapshot.docs.slice(i, i + 500));
+    }
+
+    for (const chunk of chunks) {
+        const batch = db.batch();
+        chunk.forEach((doc: any) => batch.delete(doc.ref));
+        await batch.commit();
+    }
+}
+
+async function wipeUserData(uid: string, deleteUserDoc: boolean) {
+    const userRef = db.collection('users').doc(uid);
+
+    try {
+        // 1. Delete all files from Storage
+        const bucket = getStorage().bucket();
+        await bucket.deleteFiles({ prefix: `users/${uid}/` });
+        logger.info(`✓ Storage files deleted for user: ${uid}`);
+
+        // 2. Delete Firestore collections
+        // Top-level subcollections to wipe
+        const topSubs = ['legal_knowledge', 'reminders', 'timeline', 'chats', 'knowledge_bases'];
+        for (const sub of topSubs) {
+            const subRef = userRef.collection(sub);
+            if (sub === 'chats') {
+                const chatsSnap = await subRef.get();
+                for (const chatDoc of chatsSnap.docs) {
+                    const chatRef = chatDoc.ref;
+                    const chatSubs = ['legal_knowledge', 'documents', 'timeline', 'checklist'];
+                    for (const cSub of chatSubs) {
+                        await deleteCollection(chatRef.collection(cSub));
+                    }
+                    await chatRef.delete();
+                }
+            } else {
+                await deleteCollection(subRef);
+            }
+        }
+
+        if (deleteUserDoc) {
+            await userRef.delete();
+        } else {
+            // Just clear personal data and reset costs
+            await userRef.update({
+                personalData: FieldValue.delete(),
+                totalCost: 0,
+                "profile.personalData": FieldValue.delete(),
+                topics: {
+                    [LawArea.Criminal]: [],
+                    [LawArea.Family]: [],
+                    [LawArea.Civil]: [],
+                    [LawArea.Commercial]: []
+                }
+            });
+        }
+        logger.info(`✓ Firestore data wiped for user: ${uid}`);
+    } catch (error) {
+        logger.error(`Error wiping data for user ${uid}:`, error);
+        throw error;
+    }
+}
+
+// --- DATA MANAGEMENT FUNCTIONS ---
+
+export const deleteMyPersonalData = onCall({ cors: true }, async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Musisz być zalogowany.');
+    const uid = request.auth.uid;
+    logger.info(`Deleting personal data for user: ${uid}`);
+    try {
+        await wipeUserData(uid, false);
+        return { success: true };
+    } catch (error: any) {
+        logger.error(`Error deleting personal data for ${uid}:`, error);
+        throw new HttpsError('internal', 'Wystąpił błąd podczas usuwania danych.');
+    }
+});
+
+export const deleteMyAccount = onCall({ cors: true }, async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Musisz być zalogowany.');
+    const uid = request.auth.uid;
+    logger.info(`Deleting account and data for user: ${uid}`);
+    try {
+        await wipeUserData(uid, true);
+        return { success: true };
+    } catch (error: any) {
+        logger.error(`Error deleting account for ${uid}:`, error);
+        throw new HttpsError('internal', 'Wystąpił błąd podczas usuwania konta.');
+    }
+});
+
+export const resetGlobalDatabase = onCall({ cors: true }, async (request) => {
+    if (!isMasterAdmin(request.auth)) {
+        logger.warn(`Unauthorized attempt to reset database by: ${request.auth?.uid}`);
+        throw new HttpsError('permission-denied', 'Tylko administrator może zrestartować bazę danych.');
+    }
+
+    logger.info("!!! GLOBAL DATABASE RESET INITIATED !!!");
+    try {
+        const usersSnap = await db.collection('users').get();
+        for (const userDoc of usersSnap.docs) {
+            await wipeUserData(userDoc.id, false);
+        }
+        logger.info("✓ Global database reset completed.");
+        return { success: true };
+    } catch (error: any) {
+        logger.error("Global database reset error:", error);
+        throw new HttpsError('internal', 'Błąd podczas restartu bazy danych.');
+    }
+});
+
+/**
+ * Simple chunking for general documents.
+ */
+/*
+function chunkText(text: string): string[] {
+    const doubleNewlineChunks = text.split(/\n\s*\n/);
+    const finalChunks: string[] = [];
+
+    for (const chunk of doubleNewlineChunks) {
+        const trimmed = chunk.trim();
+        if (trimmed.length < 50) continue;
+        if (trimmed.length > 2000) {
+            for (let i = 0; i < trimmed.length; i += 2000) {
+                finalChunks.push(trimmed.substring(i, i + 2000));
+            }
+        } else {
+            finalChunks.push(trimmed);
+        }
+    }
+    return finalChunks;
+}
+*/
+
+/*
+export const vectorizeOnUpload = onObjectFinalized({
+    secrets: [GEMINI_API_KEY],
+    memory: '512MiB'
+}, async (event) => {
+    const fileBucket = event.data.bucket;
+    const filePath = event.data.name;
+
+    if (!filePath || (!filePath.endsWith(".txt") && !filePath.endsWith(".md"))) {
+        return;
+    }
+
+    logger.info(`Vectorizing uploaded file: ${filePath}`);
+
+    try {
+        const bucket = getStorage().bucket(fileBucket);
+        const file = bucket.file(filePath);
+        const [content] = await file.download();
+        const textStr = content.toString('utf-8');
+
+        const chunks = chunkText(textStr);
+        const genAI = getAiClient();
+        if (!genAI) return;
+
+        // Extract UID from path: users/{uid}/cases/{caseId}/documents/...
+        const pathParts = filePath.split('/');
+        const ownerUid = pathParts[1] || "UNKNOWN";
+
+        const embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+        const fileName = filePath.split('/').pop() || filePath;
+        const libraryDocRef = db.collection('knowledge_library').doc(fileName.replace(/\./g, '_'));
+
+        await libraryDocRef.set({
+            title: fileName,
+            source: "upload",
+            path: filePath,
+            userId: ownerUid, // ISOLATION: Tag as private
+            updatedAt: Timestamp.now()
+        }, { merge: true });
+
+        for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
+            const result = await embedModel.embedContent(chunk);
+            const vector = result.embedding.values;
+
+            await libraryDocRef.collection('chunks').doc(`upload_${i}`).set({
+                content: chunk,
+                articleNo: `p_${i}`,
+                embedding: vector,
+                userId: ownerUid, // ISOLATION: Tag as private
+                metadata: {
+                    title: fileName,
+                    source: "upload",
+                    year: new Date().getFullYear(),
+                    publisher: "UPLOAD"
+                }
+            });
+        }
+        logger.info(`✓ Successfully indexed ${chunks.length} chunks from: ${filePath}`);
+    } catch (err: any) {
+        logger.error(`Error vectorizing ${filePath}:`, err);
+    }
+});
+
+/**
+ * Helper for On-Demand Vector Ingestion.
+ * Searches ISAP, fetches, and indexes the first few articles to unblock the AI immediately.
+ */
+async function ingestAndSearchISAP(query: string, vector: number[]): Promise<string> {
+    logger.info(`On-Demand Ingestion triggered for: ${query}`);
+
+    try {
+        // 1. Search ISAP for candidates
+        const acts = await searchLegalActs({ keyword: query, inForce: true });
+        if (acts.length === 0) {
+            logger.info("No candidates found in ISAP for on-demand ingestion.");
+            return "";
+        }
+
+        const candidate = acts[0];
+        const actId = `${candidate.publisher}_${candidate.year}_${candidate.pos}`;
+        logger.info(`Found candidate act in ISAP: ${candidate.title} (${actId})`);
+
+        // 2. Fetch content
+        const content = await getActContent(candidate.publisher, candidate.year, candidate.pos);
+        if (!content || content.length < 100) return "";
+
+        // 3. Simple chunking (splits by Art.)
+        const chunks = content.split(/(?=Art\.\s*\d+[a-z]?\.)/g).map(c => c.trim()).filter(c => c.length > 50);
+
+        const genAI = getAiClient();
+        if (!genAI) return "";
+
+        const embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+        const libraryDocRef = db.collection('knowledge_library').doc(actId);
+
+        // Save metadata
+        await libraryDocRef.set({
+            title: candidate.title,
+            source: "ISAP_AUTO",
+            publisher: candidate.publisher,
+            year: candidate.year,
+            pos: candidate.pos,
+            userId: "GLOBAL", // ISOLATION: Official acts are global
+            updatedAt: Timestamp.now()
+        }, { merge: true });
+
+        // 4. Index FIRST 10 chunks synchronously
+        const firstChunks = chunks.slice(0, 10);
+        const results: string[] = [];
+
+        for (let i = 0; i < firstChunks.length; i++) {
+            const chunk = firstChunks[i];
+            try {
+                const res = await embedModel.embedContent(chunk);
+                const emb = res.embedding.values;
+
+                await libraryDocRef.collection('chunks').doc(`auto_${i}`).set({
+                    content: chunk,
+                    articleNo: chunk.match(/Art\.\s*(\d+[a-z]?)\./i)?.[1] || `p_${i}`,
+                    embedding: emb,
+                    userId: "GLOBAL", // ISOLATION: Official acts are global
+                    metadata: {
+                        title: candidate.title,
+                        source: "ISAP_AUTO",
+                        year: candidate.year,
+                        publisher: candidate.publisher
+                    }
+                });
+                results.push(`[SYSTEM: AUTO-INGEST] AKT: ${candidate.title} (Frag. ${i + 1})\nTREŚĆ: ${chunk}`);
+            } catch (e: any) {
+                logger.error(`Error embedding chunk ${i} during auto-ingest`, e.message);
+            }
+        }
+
+        return results.join('\n---\n');
+    } catch (err: any) {
+        logger.error("Error in ingestAndSearchISAP", err.message);
+        return "";
+    }
+}

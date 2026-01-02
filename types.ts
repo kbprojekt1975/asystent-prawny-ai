@@ -92,6 +92,7 @@ export interface UserProfile {
   totalCost?: number;
   subscription?: SubscriptionInfo;
   personalData?: PersonalData;
+  isActive?: boolean;
 }
 
 export interface LegalAct {

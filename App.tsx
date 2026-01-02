@@ -10,7 +10,17 @@ import ConfirmationModal from './components/ConfirmationModal';
 import UserProfileModal from './components/UserProfileModal';
 import HistoryPanel from './components/HistoryPanel';
 import QuickActions from './components/QuickActions';
-import { SendIcon, ArrowsContractIcon, SparklesIcon, PaperClipIcon, ScaleIcon } from './components/Icons';
+import {
+  PaperClipIcon,
+  SendIcon,
+  SparklesIcon,
+  ArrowsExpandIcon,
+  ArrowsContractIcon,
+  ClockIcon,
+  HomeIcon,
+  ProfileIcon,
+  ScaleIcon
+} from './components/Icons';
 import AppHeader from './components/AppHeader';
 import CourtRoleSelector from './components/CourtRoleSelector';
 import LegalKnowledgeModal from './components/LegalKnowledgeModal';
@@ -34,6 +44,8 @@ import { useChatLogic } from './hooks/useChatLogic';
 import AppModals from './components/AppModals';
 import { useUserSession } from './hooks/useUserSession';
 import { useTopicManagement } from './hooks/useTopicManagement';
+import RemindersWidget from './components/RemindersWidget';
+import { useUserCalendar } from './hooks/useUserCalendar';
 
 const initialProfile: UserProfile = {
   quickActions: [],
@@ -103,7 +115,7 @@ const App: React.FC = () => {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewContent, setPreviewContent] = useState('');
   const [previewTitle, setPreviewTitle] = useState('');
-  const [todayDeadlines, setTodayDeadlines] = useState<any[]>([]);
+  // const [todayDeadlines, setTodayDeadlines] = useState<any[]>([]); // Removed: Handled globally by RemindersWidget
   const [isKnowledgeModalOpen, setIsKnowledgeModalOpen] = useState(false);
   const [knowledgeModalChatId, setKnowledgeModalChatId] = useState<string | null>(null);
   const [isDocumentsModalOpen, setIsDocumentsModalOpen] = useState(false);
@@ -145,6 +157,12 @@ const App: React.FC = () => {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const { allEvents } = useUserCalendar(user);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const activeRemindersCount = useMemo(() =>
+    allEvents.filter(e => !e.completed && e.date === todayStr).length,
+    [allEvents, todayStr]);
+
   // --- OPTYMALIZACJA: Użycie useMemo dla chatId ---
 
 
@@ -155,42 +173,8 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Monitor upcoming deadlines across all chats
-  useEffect(() => {
-    if (!user) return;
-
-    if (!currentChatId) {
-      setTodayDeadlines([]);
-      return;
-    }
-
-    const timelineRef = collection(db, 'users', user.uid, 'chats', currentChatId, 'timeline');
-    const q = query(timelineRef, orderBy('date', 'asc'));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const todayStr = new Date().toISOString().split('T')[0];
-      const dueEvents = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() } as any))
-        .filter(ev => ev.type === 'deadline' && ev.date === todayStr);
-
-      setTodayDeadlines(dueEvents);
-
-      if (dueEvents.length > 0 && Notification.permission === "granted") {
-        dueEvents.forEach(ev => {
-          const notifiedKey = `notified_${ev.id}`;
-          if (!sessionStorage.getItem(notifiedKey)) {
-            new Notification("TERMIN UPŁYWA DZISIAJ!", {
-              body: `${ev.title}: ${ev.description || ''}`,
-              icon: "/favicon.ico"
-            });
-            sessionStorage.setItem(notifiedKey, "true");
-          }
-        });
-      }
-    });
-
-    return () => unsubscribe();
-  }, [user, currentChatId]);
+  // Removed old useEffect for chat-specific timeline notifications
+  // RemindersWidget now handles global notifications for all reminders and deadlines
 
 
   useEffect(() => {
@@ -430,10 +414,10 @@ const App: React.FC = () => {
     setIsLoading(true);
     try {
       const newSubscription: SubscriptionInfo = {
-        status: SubscriptionStatus.Active,
-        isPaid: true,
+        status: SubscriptionStatus.Pending,
+        isPaid: false,
         selectedAt: serverTimestamp(),
-        activatedAt: serverTimestamp(),
+        activatedAt: null,
         creditLimit: 10.00,
         spentAmount: 0
       };
@@ -493,6 +477,41 @@ const App: React.FC = () => {
     );
   }
 
+  // Check if account is active and paid
+  const isAwaitingActivation = userProfile?.subscription && userProfile.subscription.isPaid === false;
+
+  if (isAwaitingActivation) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-900 px-4">
+        <div className="max-w-md w-full bg-slate-800 border border-slate-700/50 p-8 rounded-2xl text-center shadow-2xl backdrop-blur-sm">
+          <div className="w-16 h-16 bg-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ClockIcon className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4">Oczekiwanie na aktywację</h2>
+          <p className="text-slate-400 mb-8 leading-relaxed">
+            Twój plan został wybrany. Dostęp do asystenta zostanie odblokowany natychmiast po zaksięgowaniu wpłaty i aktywacji przez administratora.
+          </p>
+          <div className="space-y-4">
+            <div className="bg-slate-700/30 p-4 rounded-xl text-xs text-slate-500 text-left">
+              <p className="font-semibold text-slate-400 mb-1">Status zgłoszenia:</p>
+              <ul className="list-disc pl-4 space-y-1">
+                <li>Plan: Pakiet Startowy (10 PLN)</li>
+                <li>Status płatności: <span className="text-amber-500">Oczekiwanie</span></li>
+                <li>Czas weryfikacji: zazwyczaj do 24h</li>
+              </ul>
+            </div>
+            <button
+              onClick={() => auth.signOut()}
+              className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-colors font-medium"
+            >
+              Wyloguj się
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const showQuickActions = !isLoading && chatHistory.some(msg => msg.role === 'model');
 
   return (
@@ -534,13 +553,23 @@ const App: React.FC = () => {
       />
 
       <PlanSelectionModal
-        isOpen={!userProfile?.subscription || userProfile.subscription.status !== SubscriptionStatus.Active}
+        isOpen={!userProfile?.subscription || userProfile.subscription.status === SubscriptionStatus.Expired}
         onSelectPlan={handleSelectPlan}
         subscription={userProfile?.subscription}
         isLoading={isLoading}
       />
 
-      <div className="flex flex-col h-screen bg-slate-800">
+      {isFullScreen && (
+        <button
+          onClick={() => setIsFullScreen(false)}
+          className="fixed top-4 right-4 z-[100] bg-slate-800/90 hover:bg-slate-700 text-slate-200 p-3 rounded-full shadow-2xl border border-slate-600 transition-all group active:scale-95"
+          title="Wyjdź z pełnego ekranu"
+        >
+          <ArrowsContractIcon className="h-6 w-6 group-hover:text-cyan-400 transition-colors" />
+        </button>
+      )}
+
+      <div className="flex flex-col h-[100dvh] bg-slate-800">
         {!isFullScreen && (
           <AppHeader
             title={
@@ -568,6 +597,7 @@ const App: React.FC = () => {
             subscription={userProfile?.subscription}
             onKnowledgeClick={() => handleViewKnowledge()}
             onGenerateKnowledgeClick={selectedTopic ? handleGenerateKnowledge : undefined}
+            remindersCount={activeRemindersCount}
           />
         )}
 
@@ -627,6 +657,8 @@ const App: React.FC = () => {
           )}
         </main>
 
+        <RemindersWidget user={user} />
+
         {selectedTopic && interactionMode && (
           <footer className="bg-slate-900 p-4 border-t border-slate-700/50">
             <div className="max-w-4xl mx-auto">
@@ -635,7 +667,11 @@ const App: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <label htmlFor="deep-thinking-toggle" className="text-sm font-medium text-slate-300 mr-3 cursor-pointer">Głębokie Myślenie</label>
-                    <button onClick={() => setIsDeepThinkingEnabled(!isDeepThinkingEnabled)} className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${isDeepThinkingEnabled ? 'bg-cyan-600' : 'bg-slate-600'}`}>
+                    <button
+                      id="deep-thinking-toggle"
+                      onClick={() => setIsDeepThinkingEnabled(!isDeepThinkingEnabled)}
+                      className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${isDeepThinkingEnabled ? 'bg-cyan-600' : 'bg-slate-600'}`}
+                    >
                       <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isDeepThinkingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                   </div>

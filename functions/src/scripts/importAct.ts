@@ -90,9 +90,8 @@ async function importToVector(publisher: string, year: number, pos: number) {
                 await chunksCollection.doc(`art_${articleNo}`).set({
                     content: chunkText,
                     articleNo,
-                    embedding: embeddingVector, // For simple Firestore, you might need a specific field name for Vector Search
-                    // Note: If using the new Vector Search in Firestore, the field name matters.
-                    // Usually it's 'embedding' or similar.
+                    embedding: embeddingVector,
+                    userId: "GLOBAL", // ISOLATION: Official acts are global
                     metadata: {
                         publisher,
                         year,

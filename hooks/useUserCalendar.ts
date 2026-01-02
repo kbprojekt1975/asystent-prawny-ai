@@ -52,6 +52,7 @@ export const useUserCalendar = (user: User | null) => {
 
         const timelineQuery = query(
             collectionGroup(db, 'timeline'),
+            where('userId', '==', user.uid),
             where('type', '==', 'deadline'),
             orderBy('date', 'asc')
         );

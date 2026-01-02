@@ -1,12 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MenuIcon, ProfileIcon, BookOpenIcon } from './Icons';
+import { SubscriptionInfo } from '../types';
 
 interface HamburgerMenuProps {
     onProfileClick: () => void;
     onKnowledgeClick: () => void;
+    subscription?: SubscriptionInfo;
+    totalCost?: number;
 }
 
-const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onProfileClick, onKnowledgeClick }) => {
+const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
+    onProfileClick,
+    onKnowledgeClick,
+    subscription,
+    totalCost
+}) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -40,6 +48,19 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onProfileClick, onKnowled
                     aria-labelledby="menu-button"
                 >
                     <div className="py-1" role="none">
+                        {subscription && (
+                            <div className="px-4 py-3 border-b border-slate-700 sm:hidden">
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Mój Plan</span>
+                                    <span className="text-[10px] text-emerald-400 font-mono font-bold">
+                                        {Math.max(0, ((subscription.creditLimit - subscription.spentAmount) / subscription.creditLimit) * 100).toFixed(1)}%
+                                    </span>
+                                </div>
+                                <div className="text-xs text-white font-semibold truncate">
+                                    Saldo: {(subscription.creditLimit - subscription.spentAmount).toFixed(2)} PLN
+                                </div>
+                            </div>
+                        )}
                         <button
                             onClick={() => {
                                 onProfileClick();

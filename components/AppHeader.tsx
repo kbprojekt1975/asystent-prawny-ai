@@ -1,6 +1,6 @@
 import React from 'react';
 import HamburgerMenu from './HamburgerMenu';
-import { SparklesIcon, ClockIcon, HomeIcon, ArrowsExpandIcon, CreditCardIcon, ProfileIcon, BookOpenIcon } from './Icons';
+import { SparklesIcon, ClockIcon, HomeIcon, ArrowsExpandIcon, CreditCardIcon, ProfileIcon, BookOpenIcon, DownloadIcon } from './Icons';
 import CostCounter from './CostCounter';
 import { SubscriptionInfo, SubscriptionStatus } from '../types';
 import HelpModal from './HelpModal';
@@ -22,6 +22,7 @@ interface AppHeaderProps {
   subscription?: SubscriptionInfo;
   onKnowledgeClick?: () => void;
   onGenerateKnowledgeClick?: () => void;
+  remindersCount?: number;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({
@@ -38,7 +39,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   totalCost = 0,
   subscription,
   onKnowledgeClick,
-  onGenerateKnowledgeClick
+  onGenerateKnowledgeClick,
+  remindersCount = 0
 }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
@@ -48,16 +50,30 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         {title}
       </h1>
       <div className="flex items-center gap-2">
-
-        <CostCounter cost={totalCost} />
-
-        {subscription?.status === SubscriptionStatus.Active && (
-          <div className="flex items-center gap-1 bg-cyan-500/10 border border-cyan-500/20 px-2 py-1 rounded-md hidden sm:flex">
-            <CreditCardIcon className="h-3 w-3 text-cyan-400" />
-            <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-tighter">
-              AKTUALNY PLAN: {(subscription.creditLimit - subscription.spentAmount).toFixed(2)} PLN
-            </span>
-          </div>
+        {subscription && subscription.creditLimit > 0 && (
+          <>
+            <div className="hidden sm:block">
+              <CostCounter
+                percentage={Math.max(0, ((subscription.creditLimit - subscription.spentAmount) / subscription.creditLimit) * 100)}
+              />
+            </div>
+            {((subscription.creditLimit - subscription.spentAmount) / subscription.creditLimit) <= 0.1 && (
+              <div className="flex items-center gap-2 bg-red-500/20 border border-red-500/50 px-3 py-2 rounded-xl animate-pulse hidden xs:flex">
+                <CreditCardIcon className="h-4 w-4 text-red-500" />
+                <span className="text-xs font-bold text-red-500 uppercase tracking-tight">
+                  WYKUP NOWY PLAN
+                </span>
+              </div>
+            )}
+            {subscription.status === SubscriptionStatus.Active && ((subscription.creditLimit - subscription.spentAmount) / subscription.creditLimit) > 0.1 && (
+              <div className="flex items-center gap-2 bg-cyan-950/40 border border-cyan-500/30 px-3 py-2 rounded-xl hidden lg:flex">
+                <CreditCardIcon className="h-4 w-4 text-cyan-400" />
+                <span className="text-xs font-bold text-cyan-400 uppercase tracking-tight">
+                  AKTUALNY PLAN: {(subscription.creditLimit - subscription.spentAmount).toFixed(2)} PLN
+                </span>
+              </div>
+            )}
+          </>
         )}
 
         {onBackClick && (
@@ -93,7 +109,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             aria-label="Generuj Bazę Wiedzy"
             title="Generuj Bazę Wiedzy (Pobierz Akty i Wyroki)"
           >
-            <BookOpenIcon className="h-6 w-6 text-green-400" /> {/* Use green or distinct color */}
+            <DownloadIcon className="h-6 w-6 text-green-400" />
           </button>
         )}
         {onKnowledgeClick && (
@@ -138,11 +154,16 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         )}
         <button
           onClick={onProfileClick}
-          className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors order-first md:order-none"
+          className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors order-first md:order-none relative"
           aria-label="Panel Użytkownika"
           title="Panel Użytkownika"
         >
           <ProfileIcon className="h-6 w-6" />
+          {remindersCount > 0 && (
+            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-slate-900">
+              {remindersCount}
+            </span>
+          )}
         </button>
 
         <div className="border-l border-slate-700 h-6 mx-1 hidden md:block"></div>
@@ -155,6 +176,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         <HamburgerMenu
           onProfileClick={onProfileClick}
           onKnowledgeClick={onKnowledgeClick || (() => { })}
+          subscription={subscription}
+          totalCost={totalCost}
         />
       </div>
 

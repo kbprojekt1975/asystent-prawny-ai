@@ -6,7 +6,8 @@ import { UserProfile, LawArea } from '../types';
 
 const initialProfile: UserProfile = {
     quickActions: [],
-    totalCost: 0
+    totalCost: 0,
+    isActive: false
 };
 
 export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelcome: () => void) => {
@@ -48,7 +49,10 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
                         email: user.email,
                         displayName: user.displayName,
                         topics: initialTopics,
-                        profile: initialProfile,
+                        profile: {
+                            ...initialProfile,
+                            isActive: true // User is active, but isPaid will block until plan is selected & paid
+                        },
                         totalCost: 0,
                         createdAt: serverTimestamp(),
                         lastLogin: serverTimestamp()
@@ -81,12 +85,15 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
         const userDocRef = doc(db, 'users', user.uid);
         const unsubscribe = onSnapshot(userDocRef, (userDoc) => {
             try {
-                if (!userDoc.exists()) return;
+                if (!userDoc.exists()) {
+                    console.log("User doc does not exist yet");
+                    return;
+                }
                 const data = userDoc.data();
 
-                if (data.totalCost !== undefined && data.totalCost !== totalCost) {
-                    setTotalCost(data.totalCost);
-                }
+                // Explicit fallback to 0 if totalCost is missing
+                const backendCost = data.totalCost ?? 0;
+                setTotalCost(backendCost);
 
                 let profile = data.profile || initialProfile;
                 const sessionData = sessionStorage.getItem('personalData');
@@ -99,16 +106,14 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
                     }
                 }
 
-                if (JSON.stringify(profile) !== JSON.stringify(userProfile)) {
-                    setUserProfile(profile);
-                }
+                setUserProfile(profile);
             } catch (e) {
                 console.error("Error handling user profile snapshot:", e);
             }
         });
 
         return () => unsubscribe();
-    }, [user, totalCost, userProfile]);
+    }, [user, isLocalOnly]); // Removed totalCost and userProfile from deps to prevent sync loops
 
     const handleUpdateProfile = useCallback(async (newProfile: UserProfile, isSessionOnly: boolean = false) => {
         setUserProfile(newProfile);

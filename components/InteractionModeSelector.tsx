@@ -34,8 +34,8 @@ const InteractionModeSelector: React.FC<InteractionModeSelectorProps> = ({
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-4">
-      <div className="text-center mb-10 flex items-center justify-center gap-2">
+    <div className="flex flex-col items-center min-h-full p-4 w-full">
+      <div className="text-center mb-10 flex items-center justify-center gap-2 mt-8 md:mt-0">
         <p className="text-lg text-slate-400">Wybierz rodzaj pomocy, której potrzebujesz.</p>
         <InfoIcon onClick={() => setIsHelpOpen(true)} />
       </div>

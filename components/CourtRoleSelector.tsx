@@ -36,7 +36,7 @@ const CourtRoleSelector: React.FC<CourtRoleSelectorProps> = ({ onSelect }) => {
     ];
 
     return (
-        <div className="flex flex-col items-center justify-center p-6 h-full anim-fade-in">
+        <div className="flex flex-col items-center min-h-full p-6 w-full anim-fade-in pt-12 md:pt-6">
             <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-white mb-2">Wybierz stronę symulacji</h2>
                 <p className="text-slate-400">W kogo mam się wcielić podczas tego przesłuchania?</p>

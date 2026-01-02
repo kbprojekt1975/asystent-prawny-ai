@@ -24,8 +24,8 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isL
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-4">
-      <div className="text-center mb-10 flex items-center justify-center gap-2">
+    <div className="flex flex-col items-center min-h-full p-4 w-full">
+      <div className="text-center mb-10 flex items-center justify-center gap-2 my-auto md:mt-0 pt-8 md:pt-0">
         <p className="text-lg text-slate-400">Wybierz dziedzinę prawa lub skorzystaj z inteligentnej analizy.</p>
         <InfoIcon onClick={() => setIsHelpOpen(true)} />
       </div>

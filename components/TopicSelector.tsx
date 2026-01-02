@@ -38,12 +38,12 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-4">
-      <div className="text-center mb-10 flex items-center justify-center gap-2">
+    <div className="flex flex-col items-center min-h-full p-4 w-full">
+      <div className="text-center mb-10 flex items-center justify-center gap-2 mt-4 md:mt-0">
         <p className="text-lg text-slate-400">Wybierz lub utwórz temat sprawy.</p>
         <InfoIcon onClick={() => setIsHelpOpen(true)} />
       </div>
-      <div className="w-full max-w-2xl space-y-8">
+      <div className="w-full max-w-2xl space-y-8 my-auto pb-8">
         {/* Lista tematów */}
         <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 shadow-xl backdrop-blur-sm">
           <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
@@ -141,7 +141,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
               <PlusCircleIcon className="text-cyan-400 w-5 h-5" />
               Nowa Sprawa
             </h2>
-            <div className="flex gap-3">
+            <div className="flex flex-col md:flex-row gap-3">
               <input
                 type="text"
                 value={newTopic}
@@ -153,7 +153,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
               <button
                 onClick={handleAddClick}
                 disabled={!newTopic.trim()}
-                className="bg-cyan-600 text-white px-6 rounded-lg hover:bg-cyan-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed transition-all flex items-center gap-2 font-medium"
+                className="bg-cyan-600 text-white px-6 py-3 md:py-0 rounded-lg hover:bg-cyan-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 font-medium shrink-0"
               >
                 Analizuj
               </button>
@@ -167,7 +167,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
               Nowa Konwersacja
             </h2>
             <p className="text-xs text-slate-400 mb-4 uppercase tracking-tighter">Mediacje i Negocjacje</p>
-            <div className="flex gap-3">
+            <div className="flex flex-col md:flex-row gap-3">
               <input
                 type="text"
                 value={newNegotiationTopic}
@@ -179,7 +179,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
               <button
                 onClick={handleAddNegotiationClick}
                 disabled={!newNegotiationTopic.trim()}
-                className="bg-purple-600 text-white px-6 rounded-lg hover:bg-purple-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed transition-all flex items-center gap-2 font-medium"
+                className="bg-purple-600 text-white px-6 py-3 md:py-0 rounded-lg hover:bg-purple-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 font-medium shrink-0"
               >
                 Rozpocznij
               </button>

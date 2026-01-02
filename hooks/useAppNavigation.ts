@@ -2,10 +2,10 @@ import { useState, useMemo } from 'react';
 import { LawArea, InteractionMode, CourtRole } from '../types';
 
 const initialTopics: Record<LawArea, string[]> = {
-    [LawArea.Criminal]: ["Obrona w sprawie o kradzież", "Jazda pod wpływem alkoholu", "Zniesławienie"],
-    [LawArea.Family]: ["Rozwód", "Alimenty na dziecko", "Ustalenie kontaktów z dzieckiem"],
-    [LawArea.Civil]: ["Sprawa o spadek", "Niewykonanie umowy", "Odszkodowanie za wypadek"],
-    [LawArea.Commercial]: ["Założenie spółki z o.o.", "Spór z kontrahentem", "Rejestracja znaku towarowego"],
+    [LawArea.Criminal]: [],
+    [LawArea.Family]: [],
+    [LawArea.Civil]: [],
+    [LawArea.Commercial]: [],
 };
 
 export const useAppNavigation = () => {

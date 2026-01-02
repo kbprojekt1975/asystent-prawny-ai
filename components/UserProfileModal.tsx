@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserProfile, QuickAction, LawArea, InteractionMode } from '../types';
-import { XIcon, PlusCircleIcon, TrashIcon, UserIcon, CalendarIcon, ListIcon } from './Icons';
+import { XIcon, PlusCircleIcon, TrashIcon, UserIcon, CalendarIcon, ListIcon, ExclamationIcon, CaseIcon } from './Icons';
 import { signOut, User } from 'firebase/auth';
-import { auth } from '../services/firebase';
+import { auth, functions } from '../services/firebase';
 import HelpModal from './HelpModal';
 import { InfoIcon } from './InfoIcon';
 import UserCalendar from './UserCalendar';
 import { useUserCalendar } from '../hooks/useUserCalendar';
+import { httpsCallable } from 'firebase/functions';
 
 interface UserProfileModalProps {
     isOpen: boolean;
@@ -34,6 +35,19 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
     const [newActionTopic, setNewActionTopic] = useState<string>('');
     const [isSessionOnly, setIsSessionOnly] = useState<boolean>(false);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{
+        type: 'wipe' | 'delete' | 'reset',
+        title: string,
+        message: string,
+        confirmText: string,
+        confirmColor: string
+    } | null>(null);
+
+    const isMasterAdmin =
+        user?.uid === "Yb23rXe0JdOvieB3grdaN0Brmkjh" ||
+        user?.email?.includes("kbprojekt1975@gmail.com") ||
+        user?.email?.includes("konrad@example.com");
 
     const {
         allEvents,
@@ -89,6 +103,69 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
             onClose();
         } catch (error) {
             console.error("Logout error", error);
+        }
+    };
+
+    const handleDeletePersonalData = () => {
+        setConfirmAction({
+            type: 'wipe',
+            title: 'Wyczyścić wszystko?',
+            message: 'Ta operacja TRWALE usunie: całą historię czatów, wszystkie wgrane pliki, Twoje zapisane sprawy oraz dane profilowe. Twoje powiązane konto i subskrypcja pozostaną aktywne.',
+            confirmText: 'Tak, wyczyść wszystko',
+            confirmColor: 'bg-red-500 hover:bg-red-600'
+        });
+    };
+
+    const handleDeleteAccount = () => {
+        setConfirmAction({
+            type: 'delete',
+            title: 'Trwale usunąć konto?',
+            message: 'UWAGA: To działanie jest NIEODWRACALNE. Wszystkie Twoje dane, pliki i historia zostaną bezpowrotnie usunięte, a dostęp do systemu zostanie zamknięty.',
+            confirmText: 'Tak, usuń moje konto',
+            confirmColor: 'bg-red-600 hover:bg-red-700'
+        });
+    };
+
+    const handleResetDatabase = () => {
+        setConfirmAction({
+            type: 'reset',
+            title: 'ZRESTARTOWAĆ CAŁĄ BAZĘ?',
+            message: 'KRYTYCZNE: Operacja usunie dane WSZYSTKICH użytkowników systemu. To narzędzie wyłącznie dla głównego administratora.',
+            confirmText: 'TAK, RESTARTUJ WSZYSTKO',
+            confirmColor: 'bg-orange-600 hover:bg-orange-700'
+        });
+    };
+
+    const executeConfirmAction = async () => {
+        if (!confirmAction) return;
+        const actionType = confirmAction.type;
+        setConfirmAction(null);
+        setIsDeleting(true);
+
+        try {
+            if (actionType === 'wipe') {
+                const deleteDataFn = httpsCallable(functions, 'deleteMyPersonalData');
+                await deleteDataFn();
+                alert("Twoje dane osobowe i historia zostały usunięte.");
+                onClose();
+                window.location.reload();
+            } else if (actionType === 'delete') {
+                const deleteAccountFn = httpsCallable(functions, 'deleteMyAccount');
+                await deleteAccountFn();
+                await signOut(auth);
+                alert("Twoje konto zostało usunięte.");
+                onClose();
+            } else if (actionType === 'reset') {
+                const resetDbFn = httpsCallable(functions, 'resetGlobalDatabase');
+                await resetDbFn();
+                alert("Baza danych została zrestartowana pomyślnie.");
+                onClose();
+            }
+        } catch (err) {
+            console.error(`${actionType} error:`, err);
+            alert("Wystąpił błąd podczas wykonywania operacji.");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -167,8 +244,9 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                                 <p className="text-sm text-slate-400 mb-4">Uzupełnij swoje dane, aby automatycznie wstawiać je do generowanych dokumentów.</p>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Imię i Nazwisko</label>
+                                    <label htmlFor="fullName" className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Imię i Nazwisko</label>
                                     <input
+                                        id="fullName"
                                         type="text"
                                         value={currentProfile.personalData?.fullName || ''}
                                         onChange={e => setCurrentProfile({
@@ -182,8 +260,9 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="col-span-2">
-                                        <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Adres zamieszkania</label>
+                                        <label htmlFor="address" className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Adres zamieszkania</label>
                                         <input
+                                            id="address"
                                             type="text"
                                             value={currentProfile.personalData?.address || ''}
                                             onChange={e => setCurrentProfile({
@@ -195,8 +274,9 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Kod pocztowy</label>
+                                        <label htmlFor="postalCode" className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Kod pocztowy</label>
                                         <input
+                                            id="postalCode"
                                             type="text"
                                             value={currentProfile.personalData?.postalCode || ''}
                                             onChange={e => setCurrentProfile({
@@ -208,8 +288,9 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Miejscowość</label>
+                                        <label htmlFor="city" className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Miejscowość</label>
                                         <input
+                                            id="city"
                                             type="text"
                                             value={currentProfile.personalData?.city || ''}
                                             onChange={e => setCurrentProfile({
@@ -224,8 +305,9 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">PESEL</label>
+                                        <label htmlFor="pesel" className="block text-xs font-semibold text-slate-400 mb-1 uppercase">PESEL</label>
                                         <input
+                                            id="pesel"
                                             type="text"
                                             value={currentProfile.personalData?.pesel || ''}
                                             onChange={e => setCurrentProfile({
@@ -237,8 +319,9 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Nr Dowodu</label>
+                                        <label htmlFor="idNumber" className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Nr Dowodu</label>
                                         <input
+                                            id="idNumber"
                                             type="text"
                                             value={currentProfile.personalData?.idNumber || ''}
                                             onChange={e => setCurrentProfile({
@@ -270,6 +353,57 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                                 >
                                     Zapisz Dane Osobowe
                                 </button>
+
+                                <div className="mt-10 pt-6 border-t border-slate-700/50">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <ExclamationIcon className="w-5 h-5 text-red-500" />
+                                        <h5 className="text-sm font-bold text-red-500 uppercase tracking-wider">Strefa Zagrożenia</h5>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div className="flex flex-col gap-1">
+                                            <button
+                                                onClick={handleDeletePersonalData}
+                                                disabled={isDeleting}
+                                                className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg p-3 text-sm font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                            >
+                                                <TrashIcon className="w-4 h-4" />
+                                                Wyczyść wszystko (Czaty, Pliki, Dane)
+                                            </button>
+                                            <p className="text-[10px] text-slate-500 px-1 text-center">UWAGA: Czyści wszystkie czaty, wgrane pliki i dane profilu, zachowując samo konto.</p>
+                                        </div>
+
+                                        <div className="flex flex-col gap-1">
+                                            <button
+                                                onClick={handleDeleteAccount}
+                                                disabled={isDeleting}
+                                                className="w-full bg-red-600 hover:bg-red-700 text-white rounded-lg p-3 text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 disabled:opacity-50"
+                                            >
+                                                <TrashIcon className="w-4 h-4" />
+                                                Trwale usuń moje konto
+                                            </button>
+                                            <p className="text-[10px] text-slate-500 px-1">Całkowite usunięcie profilu i dostępu do systemu.</p>
+                                        </div>
+
+                                        {isMasterAdmin && (
+                                            <div className="mt-6 p-4 bg-orange-500/5 border border-orange-500/20 rounded-xl">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <ExclamationIcon className="w-4 h-4 text-orange-500" />
+                                                    <span className="text-xs font-bold text-orange-500">OPCJE ADMINISTRATORA</span>
+                                                </div>
+                                                <button
+                                                    onClick={handleResetDatabase}
+                                                    disabled={isDeleting}
+                                                    className="w-full bg-orange-600 hover:bg-orange-700 text-white rounded-lg p-3 text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-900/20 disabled:opacity-50"
+                                                >
+                                                    <CaseIcon className="w-4 h-4" />
+                                                    RESTARTUJ CAŁĄ BAZĘ DANYCH (RESET)
+                                                </button>
+                                                <p className="text-[10px] text-orange-500/70 mt-2 text-center">UWAGA: Usuwa dane wszystkich użytkowników! Aktywne konta zostaną zachowane.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -375,6 +509,35 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     </ul>
                 </div>
             </HelpModal>
+
+            {/* Confirmation Modal */}
+            {confirmAction && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full shadow-2xl animate-in zoom-in duration-200">
+                        <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mb-4 mx-auto text-red-500">
+                            <ExclamationIcon className="w-6 h-6" />
+                        </div>
+                        <h3 className="text-xl font-bold text-white text-center mb-2">{confirmAction.title}</h3>
+                        <p className="text-sm text-slate-400 text-center mb-6 leading-relaxed">
+                            {confirmAction.message}
+                        </p>
+                        <div className="flex flex-col gap-2">
+                            <button
+                                onClick={executeConfirmAction}
+                                className={`w-full py-3 rounded-xl text-white font-bold transition-all shadow-lg ${confirmAction.confirmColor}`}
+                            >
+                                {confirmAction.confirmText}
+                            </button>
+                            <button
+                                onClick={() => setConfirmAction(null)}
+                                className="w-full py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-medium transition-colors"
+                            >
+                                Anuluj
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
