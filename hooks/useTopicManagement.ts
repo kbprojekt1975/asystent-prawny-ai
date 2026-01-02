@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { InteractionMode, LawArea } from '../types';
 import { User } from 'firebase/auth';
@@ -53,10 +53,21 @@ export const useTopicManagement = (
         setInteractionMode(mode);
         setSelectedTopic(trimmedTopic); // Use trimmedTopic
 
-        if (isLocalOnly || !user) return; // No return value needed as per new signature
+        if (isLocalOnly || !user) return;
 
         try {
             await setDoc(doc(db, 'users', user.uid), { topics: updatedTopics }, { merge: true });
+
+            // Also create the initial chat document so it appears in history immediately
+            const chatId = `${selectedLawArea}_${trimmedTopic.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
+            await setDoc(doc(db, 'users', user.uid, 'chats', chatId), {
+                messages: [],
+                lastUpdated: serverTimestamp(),
+                lawArea: selectedLawArea,
+                topic: trimmedTopic,
+                interactionMode: mode
+            }, { merge: true });
+
         } catch (e) {
             console.error("Error saving topics:", e);
         }

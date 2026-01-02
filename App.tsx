@@ -95,9 +95,7 @@ const App: React.FC = () => {
     confirmDeleteTopic
   } = useTopicManagement(user, initialTopics, selectedLawArea, setInteractionMode, setSelectedTopic, isLocalOnly);
 
-  const handleAddNegotiationTopic = (topic: string) => {
-    handleAddTopic(topic, InteractionMode.Negotiation);
-  };
+
 
   const onConfirmTopicDeletion = async () => {
     if (topicToDelete) {
@@ -613,8 +611,16 @@ const App: React.FC = () => {
               lawArea={selectedLawArea}
               topics={topics[selectedLawArea] || []}
               onSelectTopic={handleSelectTopic}
-              onAddTopic={handleAddTopic}
-              onAddNegotiationTopic={handleAddNegotiationTopic}
+              onAddTopic={async (topic) => {
+                await handleAddTopic(topic);
+                const h = await loadChatHistories();
+                if (h) setChatHistories(h);
+              }}
+              onAddNegotiationTopic={async (topic) => {
+                await handleAddTopic(topic, InteractionMode.Negotiation);
+                const h = await loadChatHistories();
+                if (h) setChatHistories(h);
+              }}
               onDeleteTopic={(topic) => requestDeleteTopic(selectedLawArea, topic)}
             />
           ) : !interactionMode ? (
