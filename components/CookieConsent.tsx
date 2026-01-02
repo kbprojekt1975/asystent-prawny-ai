@@ -37,14 +37,14 @@ const CookieConsent: React.FC = () => {
 
                     {showDetails && (
                         <div className="mt-4 p-4 bg-slate-800/50 rounded-lg text-sm text-slate-400 space-y-2 border border-slate-700">
-                            <h4 className="font-semibold text-slate-200">Jakie dane przechowujemy i dlaczego?</h4>
-                            <ul className="list-disc pl-4 space-y-1">
-                                <li><strong className="text-slate-300">Dane logowania (e-mail, ID):</strong> Niezbędne do identyfikacji użytkownika i bezpiecznego dostępu do konta.</li>
-                                <li><strong className="text-slate-300">Dane osobowe (Imię, Nazwisko, Adres):</strong> Wykorzystywane <strong>wyłącznie</strong> do automatycznego generowania pism procesowych na Twoje wyraźne rządanie.</li>
-                                <li><strong className="text-slate-300">Historie rozmów i spraw:</strong> Przechowywane, aby Asystent AI znał kontekst Twojej sprawy i mógł udzielać precyzyjnych, spersonalizowanych porad.</li>
-                                <li><strong className="text-slate-300">Pamięć przeglądarki (LocalStorage):</strong> Służy do zapamiętywania Twoich preferencji, takich jak zgoda na ten komunikat.</li>
+                            <h4 className="font-semibold text-slate-200">Co dokładnie i po co przechowujemy?</h4>
+                            <ul className="list-disc pl-4 space-y-2 mt-2">
+                                <li><strong className="text-slate-300">Dostęp do konta:</strong> Twój e-mail, żebyś miał bezpieczny dostęp do swoich spraw i nikt inny ich nie widział.</li>
+                                <li><strong className="text-slate-300">Dane do pism:</strong> Imię, nazwisko, adres. Używamy ich <strong>tylko i wyłącznie</strong> wtedy, gdy poprosisz o napisanie oficjalnego dokumentu (np. pozwu), który musi te dane zawierać.</li>
+                                <li><strong className="text-slate-300">Pamięć Asystenta:</strong> Historia rozmowy. Dzięki niej Asystent pamięta o czym rozmawialiście 5 minut temu i nie musisz mu wszystkiego powtarzać.</li>
+                                <li><strong className="text-slate-300">Wygoda:</strong> Zapamiętujemy Twoje wybory, np. to, że już zamknąłeś to okienko.</li>
                             </ul>
-                            <p className="text-xs mt-2 text-slate-500">Pamiętaj: Jesteś administratorem swoich danych. Możesz usunąć historię czatu lub całe konto w dowolnym momencie w ustawieniach.</p>
+                            <p className="text-xs mt-3 text-slate-500 italic">Pamiętaj: To Twoje dane. W panelu użytkownika możesz w każdej chwili usunąć historię czatu lub całe konto.</p>
                         </div>
                     )}
                 </div>
