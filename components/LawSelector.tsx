@@ -11,6 +11,7 @@ interface LawSelectorProps {
   onAnalyzeClick: () => void;
   isLocalOnly: boolean;
   setIsLocalOnly: (val: boolean) => void;
+  hasConsent?: boolean;
 }
 
 const lawOptions = [
@@ -20,7 +21,7 @@ const lawOptions = [
   { area: LawArea.Commercial, icon: <BuildingIcon />, description: "Spółki, kontrakty, działalność gospodarcza." },
 ];
 
-const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isLocalOnly, setIsLocalOnly }) => {
+const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isLocalOnly, setIsLocalOnly, hasConsent = false }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   return (
@@ -69,6 +70,9 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isL
             <h3 className="text-lg font-semibold text-white mb-1">Tryb "Zapisuj tylko lokalnie"</h3>
             <p className="text-sm text-slate-400">
               Twoje dane nie zostaną przesłane do chmury (Firestore). Otrzymasz poradę, ale historia i dokumenty znikną bezpowrotnie po zamknięciu strony lub odświeżeniu przeglądarki.
+              <span className="block mt-1 text-xs text-slate-500 italic">
+                Wyłączenie tego trybu jest możliwe po wyrażeniu zgody na RODO w panelu użytkownika.
+              </span>
             </p>
           </div>
           <div className="flex items-center gap-3 bg-slate-700/50 px-4 py-2 rounded-lg">
@@ -76,8 +80,10 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isL
               {isLocalOnly ? 'WŁĄCZONE' : 'WYŁĄCZONE'}
             </span>
             <button
-              onClick={() => setIsLocalOnly(!isLocalOnly)}
-              className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${isLocalOnly ? 'bg-cyan-600' : 'bg-slate-600'}`}
+              onClick={() => hasConsent && setIsLocalOnly(!isLocalOnly)}
+              disabled={!hasConsent}
+              className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${!hasConsent ? 'opacity-50 cursor-not-allowed bg-cyan-600' : (isLocalOnly ? 'bg-cyan-600' : 'bg-slate-600')}`}
+              title={!hasConsent ? "Wymagana zgoda RODO w panelu użytkownika" : ""}
             >
               <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isLocalOnly ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>

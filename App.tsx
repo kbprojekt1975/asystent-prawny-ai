@@ -606,7 +606,13 @@ const App: React.FC = () => {
 
         <main ref={chatContainerRef} className="flex-1 overflow-y-auto">
           {!selectedLawArea ? (
-            <LawSelector onSelect={handleSelectLawArea} onAnalyzeClick={() => setIsWelcomeModalOpen(true)} isLocalOnly={isLocalOnly} setIsLocalOnly={setIsLocalOnly} />
+            <LawSelector
+              onSelect={handleSelectLawArea}
+              onAnalyzeClick={() => setIsWelcomeModalOpen(true)}
+              isLocalOnly={isLocalOnly}
+              setIsLocalOnly={setIsLocalOnly}
+              hasConsent={userProfile.dataProcessingConsent}
+            />
           ) : !selectedTopic ? (
             <TopicSelector
               lawArea={selectedLawArea}
