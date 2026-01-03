@@ -600,6 +600,7 @@ const App: React.FC = () => {
             onKnowledgeClick={() => handleViewKnowledge()}
             onGenerateKnowledgeClick={selectedTopic ? handleGenerateKnowledge : undefined}
             remindersCount={activeRemindersCount}
+            isLocalOnly={isLocalOnly}
           />
         )}
 

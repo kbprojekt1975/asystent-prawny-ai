@@ -45,18 +45,26 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
                 const userDoc = await getDoc(userDocRef);
 
                 if (!userDoc.exists()) {
+                    const pendingConsent = sessionStorage.getItem('pendingConsent') === 'true';
+
                     await setDoc(userDocRef, {
                         email: user.email,
                         displayName: user.displayName,
                         topics: initialTopics,
                         profile: {
                             ...initialProfile,
-                            isActive: true // User is active, but isPaid will block until plan is selected & paid
+                            isActive: true,
+                            dataProcessingConsent: pendingConsent,
+                            consentDate: pendingConsent ? serverTimestamp() : null
                         },
                         totalCost: 0,
                         createdAt: serverTimestamp(),
                         lastLogin: serverTimestamp()
                     }, { merge: true });
+
+                    if (pendingConsent) {
+                        sessionStorage.removeItem('pendingConsent');
+                    }
                 } else {
                     const data = userDoc.data();
                     const now = Date.now();
@@ -96,6 +104,14 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
                 setTotalCost(backendCost);
 
                 let profile = data.profile || initialProfile;
+
+                // Derive Local Only state from consent
+                if (!profile.dataProcessingConsent) {
+                    setIsLocalOnly(true);
+                } else {
+                    setIsLocalOnly(false);
+                }
+
                 const sessionData = sessionStorage.getItem('personalData');
                 if (sessionData) {
                     try {
@@ -127,9 +143,15 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
             sessionStorage.removeItem('personalData');
         }
 
-        if (!user || isLocalOnly) return;
+        // If we are in local mod and new profile still has no consent - do not sync to cloud
+        if (!user || (isLocalOnly && !newProfile.dataProcessingConsent)) return;
+
         try {
             await setDoc(doc(db, 'users', user.uid), { profile: newProfile }, { merge: true });
+            // If consent was just granted, update state immediately for snappy UI
+            if (newProfile.dataProcessingConsent) {
+                setIsLocalOnly(false);
+            }
         } catch (e) {
             console.error("Error saving profile:", e);
         }

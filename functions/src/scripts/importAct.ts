@@ -1,6 +1,6 @@
 
 import * as admin from 'firebase-admin';
-import { getActContent, searchLegalActs } from '../isapService';
+import { getFullActContent, searchLegalActs } from '../isapService';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
@@ -20,6 +20,9 @@ const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" })
 
 // Initialize Admin SDK for local usage (requires service account or default credentials)
 // For local usage with emulator or direct access:
+if (process.env.FIRESTORE_EMULATOR_HOST) {
+    console.log(`Connecting to Firestore Emulator at ${process.env.FIRESTORE_EMULATOR_HOST}`);
+}
 admin.initializeApp({
     projectId: 'low-assit' // Replace with your project ID if different
 });
@@ -31,24 +34,43 @@ const db = admin.firestore();
  * Splits by "Art. X." pattern.
  */
 function chunkActContent(text: string): string[] {
+    // Decode common HTML entities first
+    const decoded = text
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"');
+
     // Regex matches patterns like "Art. 1.", "Art. 2a.", "Art. 123.", etc.
-    const chunks = text.split(/(?=Art\.\s*\d+[a-z]?\.)/g);
+    // Added 'i' flag for case-insensitive matching (Art. vs art.)
+    const chunks = decoded.split(/(?=Art\.\s*\d+[a-z]?\.)/gi);
     return chunks.map(c => c.trim()).filter(c => c.length > 50); // Filter out very small fragments
 }
 
-async function importToVector(publisher: string, year: number, pos: number) {
+async function importToVector(publisher: string, year: number, pos: number, manualTitle?: string) {
     console.log(`\n--- Rozpoczynam proces dla: ${publisher} ${year} poz. ${pos} ---`);
 
+    let title = manualTitle || "Nieznany tytuł";
+
     try {
-        // 1. Get Metadata to have the title
-        console.log("1. Pobieram metadane...");
-        const searchResults = await searchLegalActs({ year, publisher: publisher as any });
-        const actInfo = searchResults.find(a => a.pos === pos);
-        const title = actInfo?.title || "Nieznany tytuł";
+        // 1. Get Metadata (SKIP if manual title provided)
+        if (!manualTitle) {
+            console.log("1. Pobieram metadane...");
+            try {
+                const searchResults = await searchLegalActs({ year, publisher: publisher as any });
+                const actInfo = searchResults.find(a => a.pos === pos);
+                if (actInfo) title = actInfo.title;
+            } catch (err) {
+                console.warn("   [WARN] Nie udało się pobrać metadanych (tytułu). Używam domyślnego.", err);
+            }
+        } else {
+            console.log(`1. Używam podanego tytułu: "${title}" (pomijam wyszukiwanie)`);
+        }
 
         // 2. Fetch full content
         console.log("2. Pobieram treść aktu...");
-        const fullContent = await getActContent(publisher, year, pos);
+        const fullContent = await getFullActContent(publisher, year, pos);
 
         // 3. Chunking
         console.log("3. Dzielę treść na artykuły...");
@@ -81,26 +103,44 @@ async function importToVector(publisher: string, year: number, pos: number) {
 
             console.log(`   [${i + 1}/${chunks.length}] Przetwarzam Art. ${articleNo}...`);
 
-            try {
-                // Generate Embedding
-                const result = await embeddingModel.embedContent(chunkText);
-                const embeddingVector = result.embedding.values;
+            let embedded = false;
+            let retries = 0;
+            const maxRetries = 3;
 
-                // Save to Firestore
-                await chunksCollection.doc(`art_${articleNo}`).set({
-                    content: chunkText,
-                    articleNo,
-                    embedding: embeddingVector,
-                    userId: "GLOBAL", // ISOLATION: Official acts are global
-                    metadata: {
-                        publisher,
-                        year,
-                        pos,
-                        title
+            while (!embedded && retries < maxRetries) {
+                try {
+                    // Rate limiting delay for free tier API key
+                    if (i > 0 || retries > 0) await new Promise(resolve => setTimeout(resolve, 3000));
+
+                    // Generate Embedding
+                    const result = await embeddingModel.embedContent(chunkText);
+                    const embeddingVector = result.embedding.values;
+
+                    // Save to Firestore
+                    // The original code used `new (admin.firestore as any).VectorValue(embeddingVector)`.
+                    // The provided snippet adds `const { VectorValue } = require('firebase-admin/firestore');`
+                    // but then still uses the `admin.firestore` path.
+                    // We'll stick to the original `admin.firestore` path for consistency and to avoid redundant `require`.
+                    await chunksCollection.doc(`art_${articleNo}`).set({
+                        content: chunkText,
+                        articleNo,
+                        embedding: new (admin.firestore as any).VectorValue(embeddingVector),
+                        userId: "GLOBAL", // ISOLATION: Official acts are global
+                        metadata: {
+                            publisher,
+                            year,
+                            pos,
+                            title
+                        }
+                    });
+                    embedded = true;
+                } catch (err: any) {
+                    retries++;
+                    console.warn(`      [WARN] Błąd przy Art. ${articleNo} (próba ${retries}/${maxRetries}): ${err.message}`);
+                    if (retries >= maxRetries) {
+                        console.error(`      [ERROR] Nie udało się przetworzyć Art. ${articleNo} po ${maxRetries} próbach.`);
                     }
-                });
-            } catch (embedErr) {
-                console.error(`   Błąd przy Art. ${articleNo}:`, embedErr);
+                }
             }
         }
 
@@ -112,10 +152,10 @@ async function importToVector(publisher: string, year: number, pos: number) {
 }
 
 // Example usage: 
-// importToVector('DU', 2024, 1); // Replace with real act details
+// importToVector('DU', 2024, 1, "Tytuł");
 const args = process.argv.slice(2);
-if (args.length === 3) {
-    importToVector(args[0], parseInt(args[1]), parseInt(args[2]));
+if (args.length >= 3) {
+    importToVector(args[0], parseInt(args[1]), parseInt(args[2]), args[3]);
 } else {
-    console.log("Użycie: ts-node importAct.ts [DU/MP] [ROK] [POZYCJA]");
+    console.log("Użycie: ts-node importAct.ts [DU/MP] [ROK] [POZYCJA] [TYTUŁ_OPCJONALNY]");
 }

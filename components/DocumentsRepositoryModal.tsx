@@ -20,6 +20,8 @@ const DocumentsRepositoryModal: React.FC<DocumentsRepositoryModalProps> = ({ isO
     useEffect(() => {
         if (!isOpen || !userId) return;
 
+        setIsLoading(true);
+
         let q;
 
         if (chatId) {

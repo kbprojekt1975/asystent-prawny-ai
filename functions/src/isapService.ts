@@ -25,8 +25,11 @@ export async function searchLegalActs(params: ActSearchParams): Promise<ActMetad
     let query = (params.keyword || "")
         .replace(/tekst jednolity/gi, '')
         .replace(/obwieszczenie/gi, '')
-        .replace(/\bustawa\b/gi, '') // Only whole word "ustawa"
-        .replace(/\bo\b/gi, '') // "o" like "o zmianie"
+        .replace(/\bustawa\b/gi, '')
+        .replace(/\bo\b/gi, '')
+        .replace(/art\.?\s*\d+[a-z]*/gi, '') // Remove Art. 123
+        .replace(/artykuł\s*\d+/gi, '')
+        .replace(/paragraf\s*\d+/gi, '')
         .replace(/\s+/g, ' ')
         .trim();
 
@@ -133,6 +136,36 @@ export async function getActContent(publisher: string, year: number, pos: number
         return text.substring(0, 15000);
     } catch (error) {
         logger.error(`Error fetching act content: ${publisher}/${year}/${pos}`, error);
+        return "Błąd podczas pobierania treści aktu prawnego.";
+    }
+}
+
+/**
+ * Fetches the FULL text content of a specific act (no character limit).
+ * Use this for ingestion purposes only.
+ */
+export async function getFullActContent(publisher: string, year: number, pos: number): Promise<string> {
+    const url = `https://api.sejm.gov.pl/eli/acts/${publisher}/${year}/${pos}/text.html`;
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`ISAP Text API Error: ${response.statusText}`);
+        }
+
+        const html = await response.text();
+
+        // Basic HTML cleaning
+        let text = html
+            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        return text; // NO LIMIT
+    } catch (error) {
+        logger.error(`Error fetching full act content: ${publisher}/${year}/${pos}`, error);
         return "Błąd podczas pobierania treści aktu prawnego.";
     }
 }

@@ -356,6 +356,39 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                                 >
                                     Zapisz Dane Osobowe
                                 </button>
+                                <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-700/50 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-semibold text-slate-400 uppercase">Zgoda na przetwarzanie danych</span>
+                                        {currentProfile.dataProcessingConsent ? (
+                                            <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-[10px] font-bold rounded-full border border-green-500/30">UDZIELONA</span>
+                                        ) : (
+                                            <div className="flex flex-col items-end gap-2">
+                                                <span className="px-2 py-0.5 bg-red-500/20 text-red-400 text-[10px] font-bold rounded-full border border-red-500/30">BRAK</span>
+                                                <button
+                                                    onClick={() => {
+                                                        const updated = { ...currentProfile, dataProcessingConsent: true, consentDate: new Date().toISOString() };
+                                                        setCurrentProfile(updated);
+                                                        onUpdateProfile(updated, isSessionOnly);
+                                                    }}
+                                                    className="text-[10px] bg-cyan-600 hover:bg-cyan-500 text-white px-2 py-1 rounded font-bold transition-colors"
+                                                >
+                                                    WYRAŹ ZGODĘ
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-slate-500 leading-relaxed">
+                                        {currentProfile.dataProcessingConsent
+                                            ? "Zgoda została udzielona. Twoje dane są bezpiecznie przechowywane w chmurze i synchronizowane między urządzeniami."
+                                            : "Obecnie pracujesz w trybie lokalnym. Twoje dane są zapisywane tylko w tej przeglądarce i znikną po wyczyszczeniu jej pamięci."}
+                                        {currentProfile.consentDate && (
+                                            <span className="block mt-1 text-slate-600">
+                                                Data udzielenia: {currentProfile.consentDate.toDate ? currentProfile.consentDate.toDate().toLocaleString() : new Date(currentProfile.consentDate).toLocaleString()}
+                                            </span>
+                                        )}
+                                    </p>
+                                </div>
+
                                 <p className="text-[10px] text-slate-500 text-center mt-2 px-2">
                                     Podanie tych danych jest dobrowolne, ale niezbędne do wygenerowania pisma procesowego. Administratorem danych jest [Administrator]. Szczegóły w <button onClick={() => setIsPrivacyPolicyOpen(true)} className="text-cyan-500 hover:underline">Polityce Prywatności</button>.
                                 </p>

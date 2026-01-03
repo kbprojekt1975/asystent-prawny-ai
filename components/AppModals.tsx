@@ -104,12 +104,14 @@ const AppModals: React.FC<AppModalsProps> = ({
             <LegalKnowledgeModal
                 isOpen={isKnowledgeModalOpen}
                 onClose={() => setIsKnowledgeModalOpen(false)}
+                userId={user?.uid}
                 chatId={knowledgeModalChatId}
             />
 
             <DocumentsRepositoryModal
                 isOpen={isDocumentsModalOpen}
                 onClose={() => setIsDocumentsModalOpen(false)}
+                userId={user?.uid}
                 chatId={documentsModalChatId}
             />
 

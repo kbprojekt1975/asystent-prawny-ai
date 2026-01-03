@@ -9,14 +9,14 @@
  * Konfiguracja klucza Gemini (w głównym folderze projektu):
  * firebase functions:secrets:set GEMINI_API_KEY
  */
-import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 // import { onObjectFinalized } from "firebase-functions/v2/storage";
 import { setGlobalOptions } from "firebase-functions/v2";
 import * as logger from "firebase-functions/logger";
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { defineSecret } from "firebase-functions/params";
 import 'dotenv/config'; // Load .env file
-import { searchLegalActs, getActContent } from "./isapService";
+import { searchLegalActs, getActContent, getFullActContent } from "./isapService";
 
 // --- GLOBAL OPTIONS ---
 setGlobalOptions({
@@ -619,9 +619,10 @@ export const getLegalAdvice = onCall({
                         logger.info(`Vector search initiated for: ${searchQuery}`);
 
                         try {
+                            const { VectorValue } = require("firebase-admin/firestore");
                             const chunksSnap = await db.collectionGroup('chunks')
                                 .where('userId', 'in', ['GLOBAL', uid]) // ISOLATION: Public + User Private
-                                .findNearest('embedding', vector, {
+                                .findNearest('embedding', VectorValue.create(vector), {
                                     limit: 5,
                                     distanceMeasure: 'COSINE'
                                 })
@@ -1171,6 +1172,144 @@ export const vectorizeOnUpload = onObjectFinalized({
         logger.info(`✓ Successfully indexed ${chunks.length} chunks from: ${filePath}`);
     } catch (err: any) {
         logger.error(`Error vectorizing ${filePath}:`, err);
+    }
+});
+
+
+/**
+ * Admin utility to ingest a legal act into the vector database.
+ * Usage: /ingestLegalAct?publisher=DU&year=2023&pos=2809
+ */
+export const ingestLegalAct = onRequest({
+    secrets: [GEMINI_API_KEY],
+    timeoutSeconds: 540,
+    memory: '1GiB'
+}, async (req, res) => {
+    const publisher = req.query.publisher as string;
+    const year = parseInt(req.query.year as string);
+    const pos = parseInt(req.query.pos as string);
+    const manualTitle = req.query.title as string;
+
+    if (!publisher || !year || !pos) {
+        res.status(400).send("Missing parameters: publisher, year, pos");
+        return;
+    }
+
+    try {
+        const genAI = getAiClient();
+        if (!genAI) {
+            res.status(500).send("AI Client not initialized");
+            return;
+        }
+        const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+
+        // 0. Resolve Title
+        let title = manualTitle;
+        if (!title) {
+            try {
+                const searchResults = await searchLegalActs({ year, publisher: publisher as any });
+                const actInfo = searchResults.find(a => a.pos === pos);
+                if (actInfo) title = actInfo.title;
+            } catch (err) {
+                logger.warn("Failed to fetch title from ISAP, using placeholder", err);
+            }
+        }
+        if (!title) title = `Act ${publisher} ${year}/${pos}`;
+
+        // 1. Fetch FULL content (no character limit)
+        const fullContent = await getFullActContent(publisher, year, pos);
+
+        // 2. Decode HTML entities
+        let decoded = fullContent
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"');
+
+        // 3. Intelligent Chunking - try multiple patterns
+        let chunks: string[] = [];
+
+        // Try Pattern 1: "Art. 123."
+        chunks = decoded.split(/(?=Art\.\s*\d+[a-z]?\.)/gi)
+            .map(c => c.trim())
+            .filter(c => c.length > 50);
+
+        if (chunks.length < 5) {
+            // Try Pattern 2: "Artykuł 123"
+            chunks = decoded.split(/(?=Artykuł\s+\d+[a-z]?)/gi)
+                .map(c => c.trim())
+                .filter(c => c.length > 50);
+        }
+
+        if (chunks.length < 5) {
+            // Try Pattern 3: "§ 1."
+            chunks = decoded.split(/(?=§\s*\d+\.)/g)
+                .map(c => c.trim())
+                .filter(c => c.length > 50);
+        }
+
+        if (chunks.length < 5) {
+            // Fallback: Fixed-size chunks (2000 chars)
+            logger.warn("All regex patterns failed, using fixed-size chunking");
+            chunks = decoded.match(/.{1,2000}/gs) || [decoded];
+        }
+
+        logger.info(`Chunking complete: ${chunks.length} chunks found`);
+
+        const actDocumentId = `${publisher}_${year}_${pos}`;
+        const actRef = db.collection('knowledge_library').doc(actDocumentId);
+        const chunksCollection = actRef.collection('chunks');
+
+        // 3. Save Metadata
+        await actRef.set({
+            publisher,
+            year,
+            pos,
+            title,
+            updatedAt: FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // 4. Generate Embeddings & Save
+        let savedCount = 0;
+        const batchSize = 10;
+
+        for (let i = 0; i < chunks.length; i += batchSize) {
+            const batch = chunks.slice(i, i + batchSize);
+            await Promise.all(batch.map(async (chunkText, idx) => {
+                try {
+                    const result = await embeddingModel.embedContent(chunkText);
+                    const embeddingVector = result.embedding.values;
+
+                    const globalIdx = i + idx;
+                    const artMatch = chunkText.match(/Art\.\s*(\d+[a-z]?)\./i);
+                    const articleNo = artMatch ? artMatch[1] : `part_${globalIdx}`;
+
+                    await chunksCollection.doc(`art_${articleNo}`).set({
+                        content: chunkText,
+                        articleNo,
+                        embedding: embeddingVector,
+                        userId: "GLOBAL",
+                        metadata: {
+                            publisher,
+                            year,
+                            pos,
+                            title
+                        }
+                    });
+                    savedCount++;
+                } catch (e) {
+                    logger.error("Embedding error", e);
+                }
+            }));
+            logger.info(`Batch ${Math.floor(i / batchSize) + 1} complete. Saved ${savedCount} chunks so far.`);
+        }
+
+        res.status(200).send(`Success. Ingested ${savedCount} chunks for ${publisher} ${year}/${pos}.`);
+
+    } catch (error: any) {
+        logger.error("Ingestion failed", error);
+        res.status(500).send(`Error: ${error.message}`);
     }
 });
 

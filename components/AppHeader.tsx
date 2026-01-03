@@ -23,6 +23,7 @@ interface AppHeaderProps {
   onKnowledgeClick?: () => void;
   onGenerateKnowledgeClick?: () => void;
   remindersCount?: number;
+  isLocalOnly?: boolean;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({
@@ -40,7 +41,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   subscription,
   onKnowledgeClick,
   onGenerateKnowledgeClick,
-  remindersCount = 0
+  remindersCount = 0,
+  isLocalOnly = false
 }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
@@ -50,6 +52,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         {title}
       </h1>
       <div className="flex items-center gap-2">
+        {isLocalOnly && (
+          <div className="flex items-center gap-2 bg-red-500/20 border border-red-500/50 px-3 py-2 rounded-xl animate-pulse whitespace-nowrap">
+            <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
+            <span className="text-[10px] font-bold text-red-500 uppercase tracking-tight">
+              BRAK ZGODY RODO
+            </span>
+          </div>
+        )}
         {subscription && subscription.creditLimit > 0 && (
           <>
             <div className="hidden sm:block">

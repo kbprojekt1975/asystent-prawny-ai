@@ -93,6 +93,8 @@ export interface UserProfile {
   subscription?: SubscriptionInfo;
   personalData?: PersonalData;
   isActive?: boolean;
+  dataProcessingConsent?: boolean;
+  consentDate?: any;
 }
 
 export interface LegalAct {

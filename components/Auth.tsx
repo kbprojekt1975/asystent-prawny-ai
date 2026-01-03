@@ -18,6 +18,7 @@ const Auth: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
 
   const helpContent = (
     <div className="space-y-4">
@@ -45,6 +46,9 @@ const Auth: React.FC = () => {
     try {
       setError(null);
       setIsLoading(true);
+      if (consentChecked) {
+        sessionStorage.setItem('pendingConsent', 'true');
+      }
       await signInWithPopup(auth, googleProvider);
     } catch (err: any) {
       console.error(err);
@@ -86,6 +90,10 @@ const Auth: React.FC = () => {
 
     setError(null);
     setIsLoading(true);
+
+    if (consentChecked) {
+      sessionStorage.setItem('pendingConsent', 'true');
+    }
 
     try {
       if (isLogin) {
@@ -186,16 +194,36 @@ const Auth: React.FC = () => {
                 </button>
               )}
             </div>
+            <div className="flex flex-col gap-3 py-2">
+              <label className="flex items-start gap-3 cursor-pointer group text-left">
+                <div className="flex items-center h-5">
+                  <input
+                    type="checkbox"
+                    checked={consentChecked}
+                    onChange={(e) => setConsentChecked(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-slate-800"
+                  />
+                </div>
+                <div className="text-xs leading-relaxed">
+                  <span className="text-slate-300 group-hover:text-white transition-colors">
+                    Akceptuję <button type="button" onClick={() => setIsPrivacyPolicyOpen(true)} className="text-cyan-400 hover:underline">Politykę Prywatności</button> oraz wyrażam zgodę na zapisywanie moich danych w chmurze.
+                  </span>
+                  {!consentChecked && (
+                    <span className="block mt-1 text-amber-500 font-semibold">
+                      (Brak zgody = dane tylko w pamięci przeglądarki)
+                    </span>
+                  )}
+                </div>
+              </label>
+            </div>
+
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-cyan-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-cyan-500 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Przetwarzanie...' : (isLogin ? 'Zaloguj się' : 'Zarejestruj się')}
             </button>
-            <p className="text-[10px] text-slate-500 text-center mt-2 px-1">
-              Administratorem Twoich danych osobowych jest [Administrator]. Dane przetwarzamy w celu realizacji usługi (założenie i prowadzenie konta). Szczegóły w <button type="button" onClick={() => setIsPrivacyPolicyOpen(true)} className="text-cyan-500 hover:underline">Polityce Prywatności</button>.
-            </p>
           </form>
         )}
 
