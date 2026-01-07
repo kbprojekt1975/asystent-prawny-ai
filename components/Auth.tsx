@@ -117,7 +117,10 @@ const Auth: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-slate-900 p-4">
+    <div
+      className="flex flex-col items-center justify-center min-h-[100dvh] bg-slate-900 p-4"
+      onKeyDown={(e) => e.stopPropagation()}
+    >
       <div className="bg-slate-800 border border-slate-700 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center relative">
         <div className="absolute top-4 right-4">
           <InfoIcon onClick={() => setIsHelpOpen(true)} />

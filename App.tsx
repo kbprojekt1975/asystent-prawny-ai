@@ -47,6 +47,7 @@ import { useTopicManagement } from './hooks/useTopicManagement';
 import RemindersWidget from './components/RemindersWidget';
 import CookieConsent from './components/CookieConsent';
 import { useUserCalendar } from './hooks/useUserCalendar';
+import AlimonyCalculator from './components/AlimonyCalculator';
 
 const initialProfile: UserProfile = {
   quickActions: [],
@@ -69,6 +70,8 @@ const App: React.FC = () => {
     initialTopics
   } = useAppNavigation();
 
+  const [isAlimonyModalOpen, setIsAlimonyModalOpen] = useState(false);
+
   const handleWelcome = useCallback(() => {
     if (!selectedLawArea) setIsWelcomeModalOpen(true);
   }, [selectedLawArea, setIsWelcomeModalOpen]);
@@ -76,6 +79,7 @@ const App: React.FC = () => {
   const {
     user,
     authLoading,
+    profileLoading,
     userProfile,
     totalCost,
     setTotalCost,
@@ -423,7 +427,12 @@ const App: React.FC = () => {
         creditLimit: 10.00,
         spentAmount: 0
       };
-      await handleUpdateProfile({ ...userProfile, subscription: newSubscription });
+      await handleUpdateProfile({
+        ...userProfile,
+        subscription: newSubscription,
+        dataProcessingConsent: true,
+        consentDate: serverTimestamp()
+      });
     } catch (e) {
       console.error("Error selecting plan:", e);
     } finally {
@@ -555,7 +564,7 @@ const App: React.FC = () => {
       />
 
       <PlanSelectionModal
-        isOpen={!userProfile?.subscription || userProfile.subscription.status === SubscriptionStatus.Expired}
+        isOpen={!profileLoading && (!userProfile?.subscription || userProfile.subscription.status === SubscriptionStatus.Expired)}
         onSelectPlan={handleSelectPlan}
         subscription={userProfile?.subscription}
         isLoading={isLoading}
@@ -569,6 +578,33 @@ const App: React.FC = () => {
         >
           <ArrowsContractIcon className="h-6 w-6 group-hover:text-cyan-400 transition-colors" />
         </button>
+      )}
+
+
+
+      {/* MODULAR FEATURE: Alimony Calculator (Only for Family Law) */}
+      {selectedLawArea === LawArea.Family && !isLoading && !isWelcomeModalOpen && (
+        <>
+          <button
+            onClick={() => setIsAlimonyModalOpen(true)}
+            className="fixed bottom-24 right-4 z-40 bg-pink-600 hover:bg-pink-500 text-white p-4 rounded-full shadow-2xl border border-pink-400/50 transition-all group hover:scale-105 active:scale-95 animate-bounce-in"
+            title="Kalkulator Alimentów"
+          >
+            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-900">
+              NEW
+            </div>
+            {/* Simple Calculator Icon SVG inline if not imported */}
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          </button>
+
+          <AlimonyCalculator
+            isOpen={isAlimonyModalOpen}
+            onClose={() => setIsAlimonyModalOpen(false)}
+            lawArea={selectedLawArea}
+          />
+        </>
       )}
 
       <div className="flex flex-col h-[100dvh] bg-slate-800">
@@ -598,6 +634,7 @@ const App: React.FC = () => {
             totalCost={totalCost}
             subscription={userProfile?.subscription}
             onKnowledgeClick={() => handleViewKnowledge()}
+
             onGenerateKnowledgeClick={selectedTopic ? handleGenerateKnowledge : undefined}
             remindersCount={activeRemindersCount}
             isLocalOnly={isLocalOnly}

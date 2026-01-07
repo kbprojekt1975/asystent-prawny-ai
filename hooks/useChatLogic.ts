@@ -122,8 +122,9 @@ export const useChatLogic = ({
             setCurrentMessage('');
         }
 
-        // BLOCK IF NOT ACTIVE
-        if (userProfile?.subscription?.status !== SubscriptionStatus.Active) {
+        // BLOCK IF NOT ACTIVE (Check isPaid as source of truth)
+        if (userProfile?.subscription && !userProfile.subscription.isPaid) {
+            console.warn("Blocked: Subscription not paid");
             setIsLoading(false);
             return;
         }

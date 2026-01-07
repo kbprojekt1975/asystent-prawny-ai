@@ -740,10 +740,10 @@ export const getLegalAdvice = onCall({
         };
 
         // 2. Aktualizacja czatu i daty
-        await chatRef.update({
+        await chatRef.set({
             messages: FieldValue.arrayUnion(newMessage),
             lastUpdated: Timestamp.now()
-        });
+        }, { merge: true });
 
         // 3. Aktualizacja kosztów i limitu w profilu użytkownika
         if (usage) {

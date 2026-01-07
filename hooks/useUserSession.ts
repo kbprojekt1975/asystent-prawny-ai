@@ -22,6 +22,9 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            if (currentUser) {
+                setProfileLoading(true);
+            }
             setUser(currentUser);
             setAuthLoading(false);
             if (currentUser && welcomeTriggered.current !== currentUser.uid) {
@@ -86,18 +89,26 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
         initializeUser();
     }, [user, initialTopics]);
 
+    const [profileLoading, setProfileLoading] = useState(true);
+
     // Sync Profile and Cost
     useEffect(() => {
-        if (!user || isLocalOnly) return;
+        if (!user || isLocalOnly) {
+            setProfileLoading(false);
+            return;
+        }
 
         const userDocRef = doc(db, 'users', user.uid);
         const unsubscribe = onSnapshot(userDocRef, (userDoc) => {
             try {
+                // ... existing logic ...
                 if (!userDoc.exists()) {
-                    console.log("User doc does not exist yet");
+                    // If doc doesn't exist yet, we stick with initial. profileLoading done.
+                    setProfileLoading(false);
                     return;
                 }
                 const data = userDoc.data();
+                // ... processing data ...
 
                 // Explicit fallback to 0 if totalCost is missing
                 const backendCost = data.totalCost ?? 0;
@@ -125,13 +136,16 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
                 setUserProfile(profile);
             } catch (e) {
                 console.error("Error handling user profile snapshot:", e);
+            } finally {
+                setProfileLoading(false);
             }
         });
 
         return () => unsubscribe();
-    }, [user, isLocalOnly]); // Removed totalCost and userProfile from deps to prevent sync loops
+    }, [user, isLocalOnly]);
 
     const handleUpdateProfile = useCallback(async (newProfile: UserProfile, isSessionOnly: boolean = false) => {
+        // ... existing handleUpdateProfile ...
         setUserProfile(newProfile);
 
         if (isSessionOnly) {
@@ -160,6 +174,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
     return {
         user,
         authLoading,
+        profileLoading, // Export this
         userProfile,
         setUserProfile,
         totalCost,
