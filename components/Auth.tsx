@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, googleProvider } from '../services/firebase';
-import { MagicWandIcon } from './Icons';
+import { MagicWandIcon, SparklesIcon } from './Icons';
 import HelpModal from './HelpModal';
 import { InfoIcon } from './InfoIcon';
+import AppGuide from './AppGuide';
 
 import PrivacyPolicyModal from './PrivacyPolicyModal';
 
@@ -20,27 +21,7 @@ const Auth: React.FC = () => {
   const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
 
-  const helpContent = (
-    <div className="space-y-4">
-      <p>
-        <strong>Asystent Prawny AI</strong> to innowacyjne narzędzie, które pomaga Ci w rozwiązywaniu problemów prawnych.
-      </p>
-      <ul className="list-disc pl-5 space-y-2">
-        <li>
-          <strong>Szybkie porady:</strong> Uzyskaj natychmiastowe wyjaśnienie przepisów i procedur.
-        </li>
-        <li>
-          <strong>Generowanie pism:</strong> Twórz profesjonalne projekty pism, pozwów i wniosków.
-        </li>
-        <li>
-          <strong>Analiza spraw:</strong> Opisz swój problem, a AI pomoże Ci go zaklasyfikować i wskaże dalsze kroki.
-        </li>
-        <li>
-          <strong>Baza wiedzy:</strong> Przeglądaj historię swoich spraw i generuj podsumowania.
-        </li>
-      </ul>
-    </div>
-  );
+
 
   const handleGoogleLogin = async () => {
     try {
@@ -288,6 +269,17 @@ const Auth: React.FC = () => {
             </button>
           </p>
         )}
+
+        <div className="mt-8 pt-6 border-t border-slate-700/50">
+          <p className="text-slate-500 text-xs mb-3">Nowy w Asystencie?</p>
+          <button
+            onClick={() => setIsHelpOpen(true)}
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-dashed border-slate-700 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all text-sm group animate-guide-pulse"
+          >
+            <SparklesIcon className="w-4 h-4 text-cyan-500/50 group-hover:text-cyan-400" />
+            <span>Zobacz jak działa aplikacja</span>
+          </button>
+        </div>
       </div>
 
       <HelpModal
@@ -295,7 +287,7 @@ const Auth: React.FC = () => {
         onClose={() => setIsHelpOpen(false)}
         title="O aplikacji"
       >
-        {helpContent}
+        <AppGuide showStartButton={false} />
       </HelpModal>
 
       <PrivacyPolicyModal

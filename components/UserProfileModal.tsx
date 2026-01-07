@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserProfile, QuickAction, LawArea, InteractionMode } from '../types';
-import { XIcon, PlusCircleIcon, TrashIcon, UserIcon, CalendarIcon, ListIcon, ExclamationIcon, CaseIcon } from './Icons';
+import { XIcon, PlusCircleIcon, TrashIcon, UserIcon, CalendarIcon, ListIcon, ExclamationIcon, CaseIcon, SparklesIcon } from './Icons';
+import AppGuide from './AppGuide';
 import { signOut, User } from 'firebase/auth';
 import { auth, functions } from '../services/firebase';
 import HelpModal from './HelpModal';
@@ -20,7 +21,7 @@ interface UserProfileModalProps {
     allTopics: Record<LawArea, string[]>;
 }
 
-type ProfileTab = 'personal' | 'quickActions' | 'calendar';
+type ProfileTab = 'personal' | 'quickActions' | 'calendar' | 'guide';
 
 const UserProfileModal: React.FC<UserProfileModalProps> = ({
     isOpen,
@@ -221,6 +222,13 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     >
                         <CalendarIcon className="w-4 h-4" />
                         <span>Kalendarz</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('guide')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'guide' ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/20' : 'text-slate-400 hover:text-slate-200'}`}
+                    >
+                        <SparklesIcon className="w-4 h-4" />
+                        <span>Przewodnik</span>
                     </button>
                 </div>
 
@@ -509,6 +517,10 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                             onDeleteReminder={deleteReminder}
                             onToggleReminder={toggleReminder}
                         />
+                    )}
+
+                    {activeTab === 'guide' && (
+                        <AppGuide onClose={onClose} />
                     )}
                 </main>
 
