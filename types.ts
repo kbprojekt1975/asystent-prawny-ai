@@ -95,6 +95,7 @@ export interface UserProfile {
   isActive?: boolean;
   dataProcessingConsent?: boolean;
   consentDate?: any;
+  manualLocalMode?: boolean;
 }
 
 export interface LegalAct {
@@ -119,4 +120,13 @@ export interface Reminder {
   type?: 'personal' | 'deadline';
   lawArea?: string;
   topic?: string;
+}
+
+export interface ExportedChat {
+  version: string;
+  lawArea: LawArea;
+  topic: string;
+  interactionMode: InteractionMode;
+  messages: ChatMessage[];
+  exportedAt: string;
 }

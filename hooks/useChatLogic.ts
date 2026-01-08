@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { doc, updateDoc, setDoc, serverTimestamp, increment, collection, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { getLegalAdvice } from '../services/geminiService';
-import { LawArea, ChatMessage, InteractionMode, UserProfile, SubscriptionStatus, CourtRole } from '../types';
+import { LawArea, ChatMessage, InteractionMode, UserProfile, SubscriptionStatus, CourtRole, ExportedChat } from '../types';
 import { User } from 'firebase/auth';
 
 interface UseChatLogicProps {
@@ -307,6 +307,78 @@ export const useChatLogic = ({
         }
     }, [user, onAddCost, isLocalOnly]);
 
+    const handleExportChat = useCallback(() => {
+        if (!selectedLawArea || !selectedTopic || !interactionMode || chatHistory.length === 0) {
+            alert("Brak aktywnego czatu do wyeksportowania.");
+            return;
+        }
+
+        const exportData: ExportedChat = {
+            version: "1.0",
+            lawArea: selectedLawArea,
+            topic: selectedTopic,
+            interactionMode: interactionMode,
+            messages: chatHistory,
+            exportedAt: new Date().toISOString()
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const safeTopic = selectedTopic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        a.download = `asystent_ai_${safeTopic}_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, [selectedLawArea, selectedTopic, interactionMode, chatHistory]);
+
+    const handleImportChat = useCallback(async (file: File, onSuccess: (data: ExportedChat) => void) => {
+        setIsLoading(true);
+        try {
+            const text = await file.text();
+            const data: ExportedChat = JSON.parse(text);
+
+            if (!data.messages || !Array.isArray(data.messages) || !data.lawArea || !data.topic) {
+                throw new Error("Nieprawidłowy format pliku kopii zapasowej.");
+            }
+
+            // Restore history
+            const restoredHistory = data.messages;
+            setChatHistory(restoredHistory);
+
+            // Notify caller to update navigation
+            onSuccess(data);
+
+            // Priming message to Gemini
+            const primingPrompt = `
+                [SYSTEM: IMPORT HISTORII]
+                Użytkownik właśnie wczytał historię rozmowy z pliku zewnętrznego.
+                TEMAT: ${data.topic} (${data.lawArea})
+                TRYB: ${data.interactionMode}
+
+                TWOJE ZADANIE: Zapoznaj się z powyższą historią wiadomości. Potwierdź użytkownikowi, że jesteś gotowy do kontynuacji sprawy na podstawie wczytanych danych. Streść krótko ostatni etap rozmowy, aby użytkownik wiedział, że masz kontekst.
+            `;
+
+            const historyWithPriming = [...restoredHistory, { role: 'user', content: primingPrompt } as ChatMessage];
+
+            // We call handleSendMessage with the full history and priming prompt
+            // Note: handleSendMessage will save to Firestore if not localOnly
+            await handleSendMessage(undefined, historyWithPriming, {
+                lawArea: data.lawArea,
+                topic: data.topic,
+                interactionMode: data.interactionMode
+            });
+
+        } catch (err: any) {
+            console.error("Import error:", err);
+            alert("Błąd podczas importu: " + err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [handleSendMessage]);
+
     return {
         chatHistory, setChatHistory,
         currentMessage, setCurrentMessage,
@@ -318,6 +390,8 @@ export const useChatLogic = ({
         handleGenerateKnowledge,
         handleFileUpload,
         loadChatHistories,
-        handleAddCost
+        handleAddCost,
+        handleExportChat,
+        handleImportChat
     };
 };

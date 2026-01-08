@@ -4,9 +4,13 @@ import { XIcon } from './Icons';
 interface PrivacyPolicyModalProps {
     isOpen: boolean;
     onClose: () => void;
+    showAcceptance?: boolean;
+    onAccept?: () => void;
 }
 
-const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose }) => {
+const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose, showAcceptance, onAccept }) => {
+    const [hasRead, setHasRead] = React.useState(false);
+
     if (!isOpen) return null;
 
     return (
@@ -33,7 +37,7 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose
                         <h3 className="text-lg font-bold text-white mb-3">1. Wprowadzenie</h3>
                         <p>Niniejsza Polityka Prywatności opisuje zasady przetwarzania danych osobowych użytkowników aplikacji Asystent Prawny AI. Dbamy o Twoją prywatność i dokładamy wszelkich starań, aby Twoje dane były bezpieczne.</p>
                     </section>
-
+                    {/* ... (rest of the sections remain the same) ... */}
                     <section>
                         <h3 className="text-lg font-bold text-white mb-3">2. Administrator Danych Osobowych</h3>
                         <p>Administratorem Twoich danych osobowych jest [Nazwa Twojej Firmy/Imię i Nazwisko], [Adres], [Kontakt: adres e-mail].</p>
@@ -122,13 +126,43 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose
                     </section>
                 </div>
 
-                <footer className="p-6 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl flex justify-end">
-                    <button
-                        onClick={onClose}
-                        className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
-                    >
-                        Zamknij
-                    </button>
+                <footer className="p-6 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+                    {showAcceptance && (
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="accept-policy"
+                                checked={hasRead}
+                                onChange={e => setHasRead(e.target.checked)}
+                                className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-slate-900"
+                            />
+                            <label htmlFor="accept-policy" className="text-sm text-slate-300 font-medium cursor-pointer">
+                                Zapoznałem się z Polityką Prywatności i akceptuję jej postanowienia
+                            </label>
+                        </div>
+                    )}
+                    <div className="flex gap-3 w-full md:w-auto">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 md:flex-none px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors border border-slate-600"
+                        >
+                            {showAcceptance ? 'Anuluj' : 'Zamknij'}
+                        </button>
+                        {showAcceptance && (
+                            <button
+                                onClick={() => {
+                                    if (hasRead && onAccept) {
+                                        onAccept();
+                                        onClose();
+                                    }
+                                }}
+                                disabled={!hasRead}
+                                className="flex-1 md:flex-none px-8 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all shadow-lg shadow-cyan-600/20"
+                            >
+                                Kontynuuj
+                            </button>
+                        )}
+                    </div>
                 </footer>
             </div>
         </div>

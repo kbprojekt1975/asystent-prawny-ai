@@ -146,7 +146,9 @@ const App: React.FC = () => {
     handleGenerateKnowledge,
     handleFileUpload,
     loadChatHistories,
-    handleAddCost
+    handleAddCost,
+    handleExportChat,
+    handleImportChat
   } = useChatLogic({
     user,
     userProfile,
@@ -638,6 +640,14 @@ const App: React.FC = () => {
             onGenerateKnowledgeClick={selectedTopic ? handleGenerateKnowledge : undefined}
             remindersCount={activeRemindersCount}
             isLocalOnly={isLocalOnly}
+            onExportChat={selectedTopic && interactionMode ? handleExportChat : undefined}
+            onImportChat={selectedTopic && interactionMode ? (file) => {
+              handleImportChat(file, (data) => {
+                setSelectedLawArea(data.lawArea);
+                setSelectedTopic(data.topic);
+                setInteractionMode(data.interactionMode);
+              });
+            } : undefined}
           />
         )}
 

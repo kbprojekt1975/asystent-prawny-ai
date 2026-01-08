@@ -40,7 +40,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
 
     // Initialize User in Firestore
     useEffect(() => {
-        if (!user || isLocalOnly) return;
+        if (!user) return;
 
         const initializeUser = async () => {
             const userDocRef = doc(db, 'users', user.uid);
@@ -48,24 +48,31 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
                 const userDoc = await getDoc(userDocRef);
 
                 if (!userDoc.exists()) {
-                    const pendingConsent = sessionStorage.getItem('pendingConsent') === 'true';
+                    const pendingConsentValue = sessionStorage.getItem('pendingConsent');
+                    const isConsentDefaulted = pendingConsentValue === 'true';
+
+                    let finalDisplayName = user.displayName;
+                    if (!finalDisplayName && user.email?.endsWith('@internal.asystent-ai.pl')) {
+                        finalDisplayName = user.email.split('@')[0];
+                    }
 
                     await setDoc(userDocRef, {
                         email: user.email,
-                        displayName: user.displayName,
+                        displayName: finalDisplayName,
                         topics: initialTopics,
                         profile: {
                             ...initialProfile,
+                            displayName: finalDisplayName,
                             isActive: true,
-                            dataProcessingConsent: pendingConsent,
-                            consentDate: pendingConsent ? serverTimestamp() : null
+                            dataProcessingConsent: isConsentDefaulted,
+                            consentDate: isConsentDefaulted ? serverTimestamp() : null
                         },
                         totalCost: 0,
                         createdAt: serverTimestamp(),
                         lastLogin: serverTimestamp()
                     }, { merge: true });
 
-                    if (pendingConsent) {
+                    if (pendingConsentValue !== null) {
                         sessionStorage.removeItem('pendingConsent');
                     }
                 } else {
@@ -73,12 +80,36 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
                     const now = Date.now();
                     const lastUpdate = data.lastLogin?.toMillis() || 0;
 
-                    if (now - lastUpdate > 3600000) {
+                    const pendingConsentValue = sessionStorage.getItem('pendingConsent');
+                    const isConsentFromAuth = pendingConsentValue === 'true';
+
+                    // Ensure displayName is synced if it's missing but it's a dummy email
+                    let finalDisplayName = data.displayName || data.profile?.displayName;
+                    let needsUpdate = false;
+
+                    if (!finalDisplayName && user.email?.endsWith('@internal.asystent-ai.pl')) {
+                        finalDisplayName = user.email.split('@')[0];
+                        needsUpdate = true;
+                    }
+
+                    // Also check if we need to update consent (e.g. user toggled it at login)
+                    if (pendingConsentValue !== null && data.profile?.dataProcessingConsent !== isConsentFromAuth) {
+                        needsUpdate = true;
+                    }
+
+                    if (now - lastUpdate > 3600000 || needsUpdate) {
                         await updateDoc(userDocRef, {
                             email: user.email,
-                            displayName: user.displayName,
+                            displayName: finalDisplayName || user.displayName,
+                            "profile.displayName": finalDisplayName || user.displayName,
+                            "profile.dataProcessingConsent": pendingConsentValue !== null ? isConsentFromAuth : (data.profile?.dataProcessingConsent ?? false),
+                            "profile.consentDate": (pendingConsentValue !== null && isConsentFromAuth) ? serverTimestamp() : (data.profile?.consentDate ?? null),
                             lastLogin: serverTimestamp()
                         });
+                    }
+
+                    if (pendingConsentValue !== null) {
+                        sessionStorage.removeItem('pendingConsent');
                     }
                 }
             } catch (e) {
@@ -93,7 +124,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
 
     // Sync Profile and Cost
     useEffect(() => {
-        if (!user || isLocalOnly) {
+        if (!user) {
             setProfileLoading(false);
             return;
         }
@@ -116,11 +147,12 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
 
                 let profile = data.profile || initialProfile;
 
-                // Derive Local Only state from consent
-                if (!profile.dataProcessingConsent) {
-                    setIsLocalOnly(true);
+                // Derive Local Only state from consent OR manual preference
+                // FORCE Local Only if no consent. Allow preference if consent granted.
+                if (profile.dataProcessingConsent === true) {
+                    setIsLocalOnly(profile.manualLocalMode === true);
                 } else {
-                    setIsLocalOnly(false);
+                    setIsLocalOnly(true);
                 }
 
                 const sessionData = sessionStorage.getItem('personalData');
@@ -142,10 +174,9 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
         });
 
         return () => unsubscribe();
-    }, [user, isLocalOnly]);
+    }, [user]);
 
     const handleUpdateProfile = useCallback(async (newProfile: UserProfile, isSessionOnly: boolean = false) => {
-        // ... existing handleUpdateProfile ...
         setUserProfile(newProfile);
 
         if (isSessionOnly) {
@@ -157,19 +188,17 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
             sessionStorage.removeItem('personalData');
         }
 
-        // If we are in local mod and new profile still has no consent - do not sync to cloud
-        if (!user || (isLocalOnly && !newProfile.dataProcessingConsent)) return;
+        // BLOCK if no consent.
+        if (!user || !newProfile.dataProcessingConsent) return;
 
         try {
             await setDoc(doc(db, 'users', user.uid), { profile: newProfile }, { merge: true });
-            // If consent was just granted, update state immediately for snappy UI
-            if (newProfile.dataProcessingConsent) {
-                setIsLocalOnly(false);
-            }
+            // Update effective state immediately for snappy UI
+            setIsLocalOnly(newProfile.manualLocalMode === true);
         } catch (e) {
             console.error("Error saving profile:", e);
         }
-    }, [user, isLocalOnly]);
+    }, [user]);
 
     return {
         user,

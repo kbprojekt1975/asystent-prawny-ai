@@ -47,6 +47,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
     } | null>(null);
 
     const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
+    const [isAcceptingPrivacyPolicy, setIsAcceptingPrivacyPolicy] = useState(false);
 
     const isMasterAdmin =
         user?.uid === "Yb23rXe0JdOvieB3grdaN0Brmkjh" ||
@@ -237,10 +238,10 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                         <div className="space-y-6">
                             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-700">
                                 <div className="w-12 h-12 rounded-full bg-cyan-600 flex items-center justify-center text-xl font-bold text-white">
-                                    {auth.currentUser?.email?.charAt(0).toUpperCase() || "U"}
+                                    {(currentProfile.displayName || user?.displayName || user?.email)?.charAt(0).toUpperCase() || "U"}
                                 </div>
                                 <div className="flex-1 overflow-hidden">
-                                    <p className="text-white font-medium truncate">{auth.currentUser?.email}</p>
+                                    <p className="text-white font-medium truncate">{currentProfile.displayName || user?.displayName || user?.email}</p>
                                     <button
                                         onClick={handleLogout}
                                         className="text-sm text-red-400 hover:text-red-300 transition-colors"
@@ -374,9 +375,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                                                 <span className="px-2 py-0.5 bg-red-500/20 text-red-400 text-[10px] font-bold rounded-full border border-red-500/30">BRAK</span>
                                                 <button
                                                     onClick={() => {
-                                                        const updated = { ...currentProfile, dataProcessingConsent: true, consentDate: new Date().toISOString() };
-                                                        setCurrentProfile(updated);
-                                                        onUpdateProfile(updated, isSessionOnly);
+                                                        setIsAcceptingPrivacyPolicy(true);
                                                     }}
                                                     className="text-[10px] bg-cyan-600 hover:bg-cyan-500 text-white px-2 py-1 rounded font-bold transition-colors"
                                                 >
@@ -396,6 +395,38 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                                         )}
                                     </p>
                                 </div>
+
+                                {currentProfile.dataProcessingConsent && (
+                                    <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-700/50 space-y-3 mt-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <h5 className="text-xs font-semibold text-slate-400 uppercase mb-1">Tryb "Zapisuj tylko lokalnie"</h5>
+                                                <p className="text-[10px] text-slate-500 leading-relaxed">
+                                                    Twoje dane nie zostaną przesłane do chmury (Firestore). Otrzymujesz poradę, ale historia i dokumenty znikną po zamknięciu przeglądarki.
+                                                </p>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer ml-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={currentProfile.manualLocalMode === true}
+                                                    onChange={(e) => {
+                                                        const updated = { ...currentProfile, manualLocalMode: e.target.checked };
+                                                        setCurrentProfile(updated);
+                                                        onUpdateProfile(updated, isSessionOnly);
+                                                    }}
+                                                    className="sr-only peer"
+                                                />
+                                                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-cyan-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                                                <span className="ml-3 text-xs font-medium text-slate-300">
+                                                    {currentProfile.manualLocalMode ? 'WŁĄCZONE' : 'WYŁĄCZONE'}
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <p className="text-[10px] text-slate-500 italic">
+                                            Wyłączenie tego trybu jest dostępne tylko po wyrażeniu zgody na przetwarzanie danych powyżej.
+                                        </p>
+                                    </div>
+                                )}
 
                                 <p className="text-[10px] text-slate-500 text-center mt-2 px-2">
                                     Podanie tych danych jest dobrowolne, ale niezbędne do wygenerowania pisma procesowego. Administratorem danych jest [Administrator]. Szczegóły w <button onClick={() => setIsPrivacyPolicyOpen(true)} className="text-cyan-500 hover:underline">Polityce Prywatności</button>.
@@ -568,8 +599,18 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </HelpModal>
 
             <PrivacyPolicyModal
-                isOpen={isPrivacyPolicyOpen}
-                onClose={() => setIsPrivacyPolicyOpen(false)}
+                isOpen={isPrivacyPolicyOpen || isAcceptingPrivacyPolicy}
+                onClose={() => {
+                    setIsPrivacyPolicyOpen(false);
+                    setIsAcceptingPrivacyPolicy(false);
+                }}
+                showAcceptance={isAcceptingPrivacyPolicy}
+                onAccept={() => {
+                    const updated = { ...currentProfile, dataProcessingConsent: true, consentDate: new Date().toISOString() };
+                    setCurrentProfile(updated);
+                    onUpdateProfile(updated, isSessionOnly);
+                    setIsAcceptingPrivacyPolicy(false);
+                }}
             />
 
             {/* Confirmation Modal */}

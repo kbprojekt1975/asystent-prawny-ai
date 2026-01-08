@@ -1,6 +1,6 @@
 import React from 'react';
 import HamburgerMenu from './HamburgerMenu';
-import { SparklesIcon, ClockIcon, HomeIcon, ArrowsExpandIcon, CreditCardIcon, ProfileIcon, BookOpenIcon, DownloadIcon } from './Icons';
+import { SparklesIcon, ClockIcon, HomeIcon, ArrowsExpandIcon, CreditCardIcon, ProfileIcon, BookOpenIcon, DownloadIcon, UploadIcon } from './Icons';
 import CostCounter from './CostCounter';
 import { SubscriptionInfo, SubscriptionStatus } from '../types';
 import HelpModal from './HelpModal';
@@ -24,6 +24,8 @@ interface AppHeaderProps {
   onGenerateKnowledgeClick?: () => void;
   remindersCount?: number;
   isLocalOnly?: boolean;
+  onExportChat?: () => void;
+  onImportChat?: (file: File) => void;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({
@@ -42,7 +44,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   onKnowledgeClick,
   onGenerateKnowledgeClick,
   remindersCount = 0,
-  isLocalOnly = false
+  isLocalOnly = false,
+  onExportChat,
+  onImportChat
 }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
@@ -131,6 +135,37 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           >
             <BookOpenIcon className="h-6 w-6" />
           </button>
+        )}
+        {onExportChat && (
+          <button
+            onClick={onExportChat}
+            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden sm:block"
+            aria-label="Eksportuj Rozmowę"
+            title="Pobierz rozmowę na urządzenie"
+          >
+            <DownloadIcon className="h-6 w-6 text-blue-400" />
+          </button>
+        )}
+        {onImportChat && (
+          <label
+            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors cursor-pointer hidden sm:block"
+            title="Wgraj rozmowę z pliku JSON"
+          >
+            <input
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  onImportChat(file);
+                  e.target.value = ''; // Reset input
+                }
+              }}
+            />
+            <UploadIcon className="h-6 w-6 text-purple-400" />
+            <span className="sr-only">Importuj Rozmowę</span>
+          </label>
         )}
         {onHistoryClick && (
           <button

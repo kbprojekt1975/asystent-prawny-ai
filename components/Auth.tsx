@@ -20,6 +20,8 @@ const Auth: React.FC = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
+  const [authMethod, setAuthMethod] = useState<'email' | 'nickname'>('email');
+  const [nickname, setNickname] = useState('');
 
 
 
@@ -27,9 +29,7 @@ const Auth: React.FC = () => {
     try {
       setError(null);
       setIsLoading(true);
-      if (consentChecked) {
-        sessionStorage.setItem('pendingConsent', 'true');
-      }
+      sessionStorage.setItem('pendingConsent', consentChecked ? 'true' : 'false');
       await signInWithPopup(auth, googleProvider);
     } catch (err: any) {
       console.error(err);
@@ -67,30 +67,35 @@ const Auth: React.FC = () => {
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+
+    let effectiveEmail = email;
+    if (authMethod === 'nickname') {
+      if (!nickname || !password) return;
+      effectiveEmail = `${nickname.trim().toLowerCase()}@internal.asystent-ai.pl`;
+    } else {
+      if (!email || !password) return;
+    }
 
     setError(null);
     setIsLoading(true);
 
-    if (consentChecked) {
-      sessionStorage.setItem('pendingConsent', 'true');
-    }
+    sessionStorage.setItem('pendingConsent', consentChecked ? 'true' : 'false');
 
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmailAndPassword(auth, effectiveEmail, password);
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        await createUserWithEmailAndPassword(auth, effectiveEmail, password);
       }
     } catch (err: any) {
       console.error(err);
       let msg = "Wystąpił błąd.";
-      if (err.code === 'auth/invalid-credential') msg = "Nieprawidłowy email lub hasło.";
-      else if (err.code === 'auth/user-not-found') msg = "Nie znaleziono użytkownika.";
+      if (err.code === 'auth/invalid-credential') msg = "Nieprawidłowe dane logowania.";
+      else if (err.code === 'auth/user-not-found') msg = authMethod === 'nickname' ? "Nie znaleziono użytkownika o takim nicku." : "Nie znaleziono użytkownika.";
       else if (err.code === 'auth/wrong-password') msg = "Nieprawidłowe hasło.";
-      else if (err.code === 'auth/email-already-in-use') msg = "Ten email jest już zarejestrowany.";
+      else if (err.code === 'auth/email-already-in-use') msg = authMethod === 'nickname' ? "Ten nick jest już zajęty." : "Ten email jest już zarejestrowany.";
       else if (err.code === 'auth/weak-password') msg = "Hasło musi mieć co najmniej 6 znaków.";
-      else if (err.code === 'auth/invalid-email') msg = "Nieprawidłowy format adresu email.";
+      else if (err.code === 'auth/invalid-email') msg = authMethod === 'nickname' ? "Nieprawidłowy format nicku." : "Nieprawidłowy format adresu email.";
       setError(msg);
     } finally {
       setIsLoading(false);
@@ -147,14 +152,44 @@ const Auth: React.FC = () => {
           </form>
         ) : (
           <form onSubmit={handleEmailAuth} className="space-y-4 mb-6">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Adres email"
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              required
-            />
+            <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-700 mb-2">
+              <button
+                type="button"
+                onClick={() => setAuthMethod('email')}
+                className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${authMethod === 'email' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+              >
+                E-mail
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthMethod('nickname')}
+                className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${authMethod === 'nickname' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+              >
+                Nick
+              </button>
+            </div>
+
+            {authMethod === 'email' ? (
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Adres email"
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                required
+              />
+            ) : (
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="Twój Nick"
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                required
+                pattern="^[a-zA-Z0-9_-]+$"
+                title="Nick może zawierać tylko litery, cyfry, podkreślniki i myślniki."
+              />
+            )}
             <div className="flex flex-col items-end gap-1">
               <input
                 type="password"
