@@ -9,11 +9,22 @@ import { InfoIcon } from './InfoIcon';
 interface CaseDashboardProps {
     userId: string;
     caseId: string;
+    initialExpanded?: boolean;
 }
 
-const CaseDashboard: React.FC<CaseDashboardProps> = ({ userId, caseId }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
+export interface CaseDashboardRef {
+    toggleExpansion: () => void;
+    setExpanded: (expanded: boolean) => void;
+}
+
+const CaseDashboard = React.forwardRef<CaseDashboardRef, CaseDashboardProps>(({ userId, caseId, initialExpanded = false }, ref) => {
+    const [isExpanded, setIsExpanded] = useState(initialExpanded);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+    React.useImperativeHandle(ref, () => ({
+        toggleExpansion: () => setIsExpanded(prev => !prev),
+        setExpanded: (expanded: boolean) => setIsExpanded(expanded)
+    }));
 
     return (
         <div className="rounded-xl border border-slate-700 bg-slate-800/60 overflow-hidden shadow-lg transition-all duration-300">
@@ -81,6 +92,6 @@ const CaseDashboard: React.FC<CaseDashboardProps> = ({ userId, caseId }) => {
             </HelpModal>
         </div>
     );
-};
+});
 
 export default CaseDashboard;

@@ -9,6 +9,7 @@ import DocumentsRepositoryModal from './DocumentsRepositoryModal';
 import ConfirmationModal from './ConfirmationModal';
 import PlanSelectionModal from './PlanSelectionModal';
 import DocumentPreviewModal from './DocumentPreviewModal';
+import CaseManagementModal from './CaseManagementModal';
 
 interface AppModalsProps {
     isProfileModalOpen: boolean;
@@ -34,6 +35,7 @@ interface AppModalsProps {
     setIsWelcomeModalOpen: (open: boolean) => void;
     handleCaseAnalysis: (description: string) => void;
     isLoading: boolean;
+    welcomeModalInitialViewMode?: 'selection' | 'input';
 
     isKnowledgeModalOpen: boolean;
     setIsKnowledgeModalOpen: (open: boolean) => void;
@@ -51,17 +53,21 @@ interface AppModalsProps {
     setIsPreviewModalOpen: (open: boolean) => void;
     previewContent: string;
     previewTitle: string;
+    isCaseManagementModalOpen: boolean;
+    setIsCaseManagementModalOpen: (open: boolean) => void;
+    currentChatId: string | null;
 }
 
 const AppModals: React.FC<AppModalsProps> = ({
     isProfileModalOpen, setIsProfileModalOpen, user, userProfile, handleUpdateProfile, topics,
     isHistoryPanelOpen, setIsHistoryPanelOpen, chatHistories, handleLoadHistory, handleDeleteHistory, handleViewKnowledge, handleViewDocuments,
     isQuickActionsModalOpen, setIsQuickActionsModalOpen, handleSelectQuickAction,
-    isWelcomeModalOpen, setIsWelcomeModalOpen, handleCaseAnalysis, isLoading,
+    isWelcomeModalOpen, setIsWelcomeModalOpen, handleCaseAnalysis, isLoading, welcomeModalInitialViewMode,
     isKnowledgeModalOpen, setIsKnowledgeModalOpen, knowledgeModalChatId,
     isDocumentsModalOpen, setIsDocumentsModalOpen, documentsModalChatId,
     isDeleteModalOpen, cancelDeleteTopic, confirmDeleteTopic,
-    isPreviewModalOpen, setIsPreviewModalOpen, previewContent, previewTitle
+    isPreviewModalOpen, setIsPreviewModalOpen, previewContent, previewTitle,
+    isCaseManagementModalOpen, setIsCaseManagementModalOpen, currentChatId
 }) => {
     return (
         <>
@@ -99,6 +105,7 @@ const AppModals: React.FC<AppModalsProps> = ({
                 onClose={() => setIsWelcomeModalOpen(false)}
                 onAnalyze={handleCaseAnalysis}
                 isLoading={isLoading}
+                initialViewMode={welcomeModalInitialViewMode}
             />
 
             <LegalKnowledgeModal
@@ -128,6 +135,13 @@ const AppModals: React.FC<AppModalsProps> = ({
                 onClose={() => setIsPreviewModalOpen(false)}
                 content={previewContent}
                 title={previewTitle}
+            />
+
+            <CaseManagementModal
+                isOpen={isCaseManagementModalOpen}
+                onClose={() => setIsCaseManagementModalOpen(false)}
+                userId={user?.uid}
+                caseId={currentChatId || ''}
             />
         </>
     );

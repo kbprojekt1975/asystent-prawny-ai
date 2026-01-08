@@ -19,7 +19,8 @@ import {
   ClockIcon,
   HomeIcon,
   ProfileIcon,
-  ScaleIcon
+  ScaleIcon,
+  CaseIcon
 } from './components/Icons';
 import AppHeader from './components/AppHeader';
 import CourtRoleSelector from './components/CourtRoleSelector';
@@ -37,6 +38,7 @@ import DocumentPreviewModal from './components/DocumentPreviewModal';
 import CaseDashboard from './components/CaseDashboard';
 import LegalFAQ from './components/LegalFAQ';
 import { generateDocument } from './services/documentService';
+import { CaseDashboardRef } from './components/CaseDashboard';
 
 import { useAppNavigation } from './hooks/useAppNavigation';
 import { useChatLogic } from './hooks/useChatLogic';
@@ -73,7 +75,10 @@ const App: React.FC = () => {
   const [isAlimonyModalOpen, setIsAlimonyModalOpen] = useState(false);
 
   const handleWelcome = useCallback(() => {
-    if (!selectedLawArea) setIsWelcomeModalOpen(true);
+    if (!selectedLawArea) {
+      setWelcomeModalInitialViewMode('selection');
+      setIsWelcomeModalOpen(true);
+    }
   }, [selectedLawArea, setIsWelcomeModalOpen]);
 
   const {
@@ -113,6 +118,7 @@ const App: React.FC = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isQuickActionsModalOpen, setIsQuickActionsModalOpen] = useState(false);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
+  const [isCaseManagementModalOpen, setIsCaseManagementModalOpen] = useState(false);
   const [chatHistories, setChatHistories] = useState<{ lawArea: LawArea; topic: string; interactionMode?: InteractionMode; lastUpdated?: any }[]>([]);
 
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -123,6 +129,7 @@ const App: React.FC = () => {
   const [knowledgeModalChatId, setKnowledgeModalChatId] = useState<string | null>(null);
   const [isDocumentsModalOpen, setIsDocumentsModalOpen] = useState(false);
   const [documentsModalChatId, setDocumentsModalChatId] = useState<string | null>(null);
+  const [welcomeModalInitialViewMode, setWelcomeModalInitialViewMode] = useState<'selection' | 'input'>('selection');
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -166,6 +173,7 @@ const App: React.FC = () => {
   });
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const caseDashboardRef = useRef<CaseDashboardRef>(null);
 
   const { allEvents } = useUserCalendar(user);
   const todayStr = new Date().toISOString().split('T')[0];
@@ -550,6 +558,7 @@ const App: React.FC = () => {
         setIsWelcomeModalOpen={setIsWelcomeModalOpen}
         handleCaseAnalysis={handleCaseAnalysis}
         isLoading={isLoading}
+        welcomeModalInitialViewMode={welcomeModalInitialViewMode}
         isKnowledgeModalOpen={isKnowledgeModalOpen}
         setIsKnowledgeModalOpen={setIsKnowledgeModalOpen}
         knowledgeModalChatId={knowledgeModalChatId}
@@ -559,10 +568,11 @@ const App: React.FC = () => {
         isDeleteModalOpen={isDeleteModalOpen}
         cancelDeleteTopic={cancelDeleteTopic}
         confirmDeleteTopic={onConfirmTopicDeletion}
-        isPreviewModalOpen={isPreviewModalOpen}
-        setIsPreviewModalOpen={setIsPreviewModalOpen}
         previewContent={previewContent}
         previewTitle={previewTitle}
+        isCaseManagementModalOpen={isCaseManagementModalOpen}
+        setIsCaseManagementModalOpen={setIsCaseManagementModalOpen}
+        currentChatId={currentChatId}
       />
 
       <PlanSelectionModal
@@ -655,10 +665,20 @@ const App: React.FC = () => {
           {!selectedLawArea ? (
             <LawSelector
               onSelect={handleSelectLawArea}
-              onAnalyzeClick={() => setIsWelcomeModalOpen(true)}
+              onAnalyzeClick={() => {
+                setWelcomeModalInitialViewMode('input');
+                setIsWelcomeModalOpen(true);
+              }}
               isLocalOnly={isLocalOnly}
               setIsLocalOnly={setIsLocalOnly}
               hasConsent={userProfile.dataProcessingConsent}
+              onImport={(file) => {
+                handleImportChat(file, (data) => {
+                  setSelectedLawArea(data.lawArea);
+                  setSelectedTopic(data.topic);
+                  setInteractionMode(data.interactionMode);
+                });
+              }}
             />
           ) : !selectedTopic ? (
             <TopicSelector
@@ -696,8 +716,8 @@ const App: React.FC = () => {
                 <div className="p-6 h-full overflow-y-auto"><CourtRoleSelector onSelect={handleSelectCourtRole} /></div>
               ) : (
                 <div className="flex flex-col h-full overflow-hidden">
-                  <div className="sticky top-0 z-20 bg-slate-800/95 backdrop-blur-sm border-b border-slate-700/50 p-4">
-                    <div className="max-w-4xl mx-auto"><CaseDashboard userId={user.uid} caseId={currentChatId!} /></div>
+                  <div className="sticky top-0 z-20 bg-slate-800/95 backdrop-blur-sm border-b border-slate-700/50 p-4 hidden md:block" data-case-dashboard>
+                    <div className="max-w-4xl mx-auto"><CaseDashboard ref={caseDashboardRef} userId={user.uid} caseId={currentChatId!} /></div>
                   </div>
                   <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
                     <div className="max-w-4xl mx-auto">
@@ -730,22 +750,55 @@ const App: React.FC = () => {
             <div className="max-w-4xl mx-auto">
               {showQuickActions && !isFullScreen && <QuickActions interactionMode={interactionMode} onActionClick={handleQuickActionClick} />}
               <div className="flex flex-col gap-3 mt-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <label htmlFor="deep-thinking-toggle" className="text-sm font-medium text-slate-300 mr-3 cursor-pointer">Głębokie Myślenie</label>
-                    <button
-                      id="deep-thinking-toggle"
-                      onClick={() => setIsDeepThinkingEnabled(!isDeepThinkingEnabled)}
-                      className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${isDeepThinkingEnabled ? 'bg-cyan-600' : 'bg-slate-600'}`}
-                    >
-                      <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isDeepThinkingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
+                {!isFullScreen && (
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center">
+                      <label htmlFor="deep-thinking-toggle" className="text-sm font-medium text-slate-300 mr-2 cursor-pointer">Głębokie</label>
+                      <button
+                        id="deep-thinking-toggle"
+                        onClick={() => setIsDeepThinkingEnabled(!isDeepThinkingEnabled)}
+                        className={`relative inline-flex items-center h-5 rounded-full w-10 transition-colors ${isDeepThinkingEnabled ? 'bg-cyan-600' : 'bg-slate-600'}`}
+                      >
+                        <span className={`inline-block w-3.5 h-3.5 transform bg-white rounded-full transition-transform ${isDeepThinkingEnabled ? 'translate-x-5.5' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 md:hidden">
+                        <button
+                          onClick={() => {
+                            setIsCaseManagementModalOpen(true);
+                          }}
+                          className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors border border-slate-600 shadow-lg bg-slate-800/50"
+                          aria-label="Zarządzaj sprawą"
+                          title="Zarządzaj sprawą"
+                        >
+                          <CaseIcon className="h-5 w-5 text-cyan-400" />
+                        </button>
+                        {selectedTopic && interactionMode && (
+                          <button
+                            onClick={() => setIsFullScreen(true)}
+                            className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
+                            aria-label="Pełny ekran"
+                            title="Pełny ekran"
+                          >
+                            <ArrowsExpandIcon className="h-5 w-5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                {!isFullScreen && !([InteractionMode.SuggestRegulations, InteractionMode.FindRulings, InteractionMode.LegalTraining].includes(interactionMode)) && (
-                  <input type="text" value={legalArticles} onChange={(e) => setLegalArticles(e.target.value)} placeholder="Podaj konkretne paragrafy (opcjonalnie)..." className="w-full bg-slate-800 rounded-xl p-2.5 text-sm text-slate-200 border border-slate-700/50" disabled={isLoading} />
                 )}
                 <div className="flex items-end gap-2 bg-slate-800 rounded-xl p-2 border border-slate-700/50">
+                  {isFullScreen && (
+                    <button
+                      onClick={() => setIsFullScreen(false)}
+                      className="p-2 text-slate-400 hover:text-cyan-400 rounded-lg transition-colors border border-slate-700 mr-1"
+                      title="Wyjdź z pełnego ekranu"
+                    >
+                      <ArrowsContractIcon className="w-5 h-5" />
+                    </button>
+                  )}
                   <button onClick={() => document.getElementById('chat-file-upload')?.click()} className="p-2 text-slate-400 hover:text-cyan-400 rounded-lg"><PaperClipIcon className="w-5 h-5" /></button>
                   <input id="chat-file-upload" type="file" className="hidden" onChange={async (e) => { const file = e.target.files?.[0]; if (file) await handleFileUpload(file); e.target.value = ''; }} />
                   <textarea ref={textareaRef} value={currentMessage} onChange={(e) => setCurrentMessage(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }} placeholder="Napisz wiadomość..." className="w-full bg-transparent text-slate-200 placeholder-slate-400 focus:outline-none resize-none max-h-48" rows={1} disabled={isLoading} />

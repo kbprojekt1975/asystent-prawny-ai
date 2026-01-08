@@ -9,24 +9,25 @@ interface WelcomeAnalysisModalProps {
     onClose: () => void;
     onAnalyze: (description: string) => Promise<void>;
     isLoading: boolean;
+    initialViewMode?: ViewMode;
 }
 
 type ViewMode = 'selection' | 'input';
 
-const WelcomeAnalysisModal: React.FC<WelcomeAnalysisModalProps> = ({ isOpen, onClose, onAnalyze, isLoading }) => {
+const WelcomeAnalysisModal: React.FC<WelcomeAnalysisModalProps> = ({ isOpen, onClose, onAnalyze, isLoading, initialViewMode = 'selection' }) => {
     const [description, setDescription] = useState('');
     const [isVisible, setIsVisible] = useState(false);
-    const [viewMode, setViewMode] = useState<ViewMode>('selection');
+    const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
             setIsVisible(true);
-            setViewMode('selection'); // Reset to selection on open
+            setViewMode(initialViewMode); // Use initialViewMode on open
         } else {
             setTimeout(() => setIsVisible(false), 300);
         }
-    }, [isOpen]);
+    }, [isOpen, initialViewMode]);
 
     if (!isVisible && !isOpen) return null;
 

@@ -12,6 +12,7 @@ interface LawSelectorProps {
   isLocalOnly: boolean;
   setIsLocalOnly: (val: boolean) => void;
   hasConsent?: boolean;
+  onImport?: (file: File) => void;
 }
 
 const lawOptions = [
@@ -21,7 +22,7 @@ const lawOptions = [
   { area: LawArea.Commercial, icon: <BuildingIcon />, description: "Spółki, kontrakty, działalność gospodarcza." },
 ];
 
-const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isLocalOnly, setIsLocalOnly, hasConsent = false }) => {
+const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isLocalOnly, setIsLocalOnly, onImport, hasConsent = false }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   return (
@@ -63,6 +64,31 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isL
           </div>
         </button>
       </div>
+
+      {onImport && (
+        <div className="w-full max-w-6xl mb-8">
+          <input
+            type="file"
+            id="main-json-import"
+            className="hidden"
+            accept=".json"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                onImport(file);
+                e.target.value = '';
+              }
+            }}
+          />
+          <button
+            onClick={() => document.getElementById('main-json-import')?.click()}
+            className="w-full group bg-slate-800/40 border border-slate-700 rounded-lg p-4 flex items-center justify-center gap-3 hover:bg-slate-700/60 hover:border-cyan-500 transition-all duration-300"
+          >
+            <MagicWandIcon className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+            <span className="text-slate-200 font-medium">Importuj historię chatu (.json)</span>
+          </button>
+        </div>
+      )}
 
       <div className="w-full max-w-6xl p-6 bg-slate-800/40 rounded-xl border border-slate-700/50 backdrop-blur-sm">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
