@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SparklesIcon, DocumentTextIcon, BookOpenIcon, ChevronDownIcon } from './Icons';
+import { SparklesIcon, DocumentTextIcon, BookOpenIcon, ChevronDownIcon, BriefcaseIcon } from './Icons';
 
 interface AppGuideProps {
     onClose?: () => void;
@@ -88,6 +88,30 @@ const AppGuide: React.FC<AppGuideProps> = ({ onClose, showStartButton = true }) 
                         <div className="p-4 pt-0 border-t border-slate-700/30 mt-2">
                             <p className="text-sm text-slate-300 leading-relaxed">
                                 Wszystkie analizy są zapisywane. Możesz do nich wrócić w dowolnym momencie w sekcji "Baza Wiedzy".
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Section 4 */}
+                <div className={`group border border-slate-700/50 rounded-2xl transition-all duration-300 ${expandedSection === 'pro' ? 'bg-slate-900/40 border-cyan-500/30 ring-1 ring-cyan-500/20' : 'bg-slate-900/20 hover:bg-slate-900/40'}`}>
+                    <button
+                        onClick={() => setExpandedSection(expandedSection === 'pro' ? null : 'pro')}
+                        className="w-full flex items-center gap-4 p-4 text-left"
+                    >
+                        <div className={`p-3 rounded-xl transition-colors ${expandedSection === 'pro' ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-400 group-hover:text-amber-400'}`}>
+                            <BriefcaseIcon className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                            <h5 className="font-bold text-slate-100 italic">4. Strefa PRO <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded ml-1 not-italic">NOWOŚĆ</span></h5>
+                            <p className="text-xs text-slate-400">Strategia procesowa i zarządzanie kompletną teczką sprawy</p>
+                        </div>
+                        <ChevronDownIcon className={`w-5 h-5 text-slate-500 transition-transform duration-300 ${expandedSection === 'pro' ? 'rotate-180 text-amber-400' : ''}`} />
+                    </button>
+                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'pro' ? 'max-h-48' : 'max-h-0'}`}>
+                        <div className="p-4 pt-0 border-t border-slate-700/30 mt-2">
+                            <p className="text-sm text-slate-300 leading-relaxed">
+                                Profesjonalne narzędzie do prowadzenia skomplikowanych spraw. Twórz teczki, dodawaj dokumenty strony przeciwnej, symuluj rozprawy sądowe i buduj zwycięską strategię.
                             </p>
                         </div>
                     </div>

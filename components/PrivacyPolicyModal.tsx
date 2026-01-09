@@ -11,6 +11,12 @@ interface PrivacyPolicyModalProps {
 const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose, showAcceptance, onAccept }) => {
     const [hasRead, setHasRead] = React.useState(false);
 
+    React.useEffect(() => {
+        if (isOpen) {
+            setHasRead(false);
+        }
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     return (

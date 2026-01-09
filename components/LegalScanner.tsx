@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { SparklesIcon, FileTextIcon, ClockIcon, ArrowRightIcon, UploadIcon, XIcon, CompassIcon } from './Icons';
 import { scanLegalDocument } from '../services/geminiService';
 import LoadingSpinner from './LoadingSpinner';
+import { InfoIcon } from './InfoIcon';
+import HelpModal from './HelpModal';
 
 interface LegalScannerProps {
     onScanComplete: (chatId: string) => void;
@@ -13,6 +15,7 @@ const LegalScanner: React.FC<LegalScannerProps> = ({ onScanComplete, onBack }) =
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isHelpOpen, setIsHelpOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,6 +89,9 @@ const LegalScanner: React.FC<LegalScannerProps> = ({ onScanComplete, onBack }) =
                     </h2>
                     <p className="text-slate-400">Prześlij zdjęcie lub PDF pisma, którego nie rozumiesz.</p>
                 </div>
+                <div className="ml-auto">
+                    <InfoIcon onClick={() => setIsHelpOpen(true)} />
+                </div>
             </div>
 
             <div className="bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-2xl p-8 mb-8 text-center transition-all hover:border-cyan-500/50">
@@ -138,8 +144,8 @@ const LegalScanner: React.FC<LegalScannerProps> = ({ onScanComplete, onBack }) =
                 onClick={handleScan}
                 disabled={!file || isAnalyzing}
                 className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${!file || isAnalyzing
-                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                        : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-900/20'
+                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                    : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-900/20'
                     }`}
             >
                 {isAnalyzing ? (
@@ -178,6 +184,32 @@ const LegalScanner: React.FC<LegalScannerProps> = ({ onScanComplete, onBack }) =
                     <p className="text-[10px] text-slate-500">Trzy konkretne kroki co zrobić dalej.</p>
                 </div>
             </div>
+
+            <HelpModal
+                isOpen={isHelpOpen}
+                onClose={() => setIsHelpOpen(false)}
+                title='Skaner "Z Prawniczego na Nasze"'
+            >
+                <div className="space-y-4 text-sm">
+                    <p>
+                        Otrzymałeś pismo z sądu lub urzędu i nic z niego nie rozumiesz? To narzędzie jest dla Ciebie.
+                    </p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>
+                            <strong>Tłumaczenie:</strong> AI przeanalizuje skomplikowany prawniczy żargon i streści pismo w 3-4 prostych zdaniach.
+                        </li>
+                        <li>
+                            <strong>Terminy:</strong> System wykryje wszystkie kluczowe daty (np. "7 dni na odpowiedź") i wyróżni je.
+                        </li>
+                        <li>
+                            <strong>Plan Działania:</strong> Otrzymasz jasną instrukcję "krok po kroku", co musisz teraz zrobić.
+                        </li>
+                    </ul>
+                    <p className="italic text-slate-500 mt-2">
+                        Obsługujemy pliki PDF oraz zdjęcia (JPG, PNG). Maksymalny rozmiar pliku to 10MB.
+                    </p>
+                </div>
+            </HelpModal>
         </div>
     );
 };

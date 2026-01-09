@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { BriefcaseIcon, ArrowLeftIcon, MagicWandIcon, ClockIcon, TrashIcon } from './Icons';
 import { LawArea } from '../types';
+import { InfoIcon } from './InfoIcon';
+import HelpModal from './HelpModal';
 
 interface ProCaseInitiatorProps {
     lawArea: LawArea;
@@ -18,8 +20,10 @@ const ProCaseInitiator: React.FC<ProCaseInitiatorProps> = ({
     onAddTopic,
     onDeleteTopic,
     onBack
+
 }) => {
     const [newTopic, setNewTopic] = useState('');
+    const [isHelpOpen, setIsHelpOpen] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -52,8 +56,9 @@ const ProCaseInitiator: React.FC<ProCaseInitiatorProps> = ({
                         <div className="inline-flex items-center justify-center w-20 h-20 bg-violet-600/10 rounded-[2rem] border border-violet-500/20 mb-8 shadow-2xl shadow-violet-900/10 rotate-3">
                             <MagicWandIcon className="w-10 h-10 text-violet-400 -rotate-3" />
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-extrabold mb-4 tracking-tight">
+                        <h1 className="text-3xl md:text-4xl font-extrabold mb-4 tracking-tight flex items-center justify-center gap-3">
                             O czym jest ta sprawa?
+                            <InfoIcon onClick={() => setIsHelpOpen(true)} className="w-6 h-6" />
                         </h1>
                         <p className="text-slate-400 text-lg leading-relaxed max-w-md mx-auto">
                             Wpisz krótki tytuł sprawy. System PRO przygotuje dla Ciebie dedykowany proces analizy strategicznej.
@@ -120,6 +125,30 @@ const ProCaseInitiator: React.FC<ProCaseInitiatorProps> = ({
                     )}
                 </div>
             </div>
+
+
+            <HelpModal
+                isOpen={isHelpOpen}
+                onClose={() => setIsHelpOpen(false)}
+                title="Tworzenie nowej sprawy PRO"
+            >
+                <div className="space-y-4 text-sm">
+                    <p>
+                        Nadaj swojej sprawie krótki, ale opisowy tytuł. To pomoże Ci ją łatwo znaleźć w przyszłości, a Asystentowi nada wstępny kontekst.
+                    </p>
+                    <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+                        <strong className="text-violet-400 block mb-2">Dobre przykłady:</strong>
+                        <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                            <li>"Spadkobranie po wujku z Ameryki"</li>
+                            <li>"Rozwód z orzekaniem o winie"</li>
+                            <li>"Wypadek komunikacyjny 12.01.2024"</li>
+                        </ul>
+                    </div>
+                    <p className="italic text-slate-500 mt-2">
+                        Pamiętaj: Możesz prowadzić wiele spraw jednocześnie. Wszystkie będą zapisane w Twoim profilu.
+                    </p>
+                </div>
+            </HelpModal>
         </div>
     );
 };

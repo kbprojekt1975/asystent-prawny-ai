@@ -219,7 +219,13 @@ const Auth: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={consentChecked}
-                    onChange={(e) => setConsentChecked(e.target.checked)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setIsPrivacyPolicyOpen(true);
+                      } else {
+                        setConsentChecked(false);
+                      }
+                    }}
                     className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-slate-800"
                   />
                 </div>
@@ -328,6 +334,8 @@ const Auth: React.FC = () => {
       <PrivacyPolicyModal
         isOpen={isPrivacyPolicyOpen}
         onClose={() => setIsPrivacyPolicyOpen(false)}
+        showAcceptance={true}
+        onAccept={() => setConsentChecked(true)}
       />
     </div>
   );

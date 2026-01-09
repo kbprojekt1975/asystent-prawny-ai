@@ -20,6 +20,8 @@ import {
     ExternalLinkIcon,
     SendIcon
 } from './Icons';
+import { InfoIcon } from './InfoIcon';
+import HelpModal from './HelpModal';
 
 interface ProDashboardProps {
     userId: string;
@@ -44,6 +46,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
         [ProStep.Interview]: 'idle',
         [ProStep.Analysis]: 'idle'
     });
+    const [isHelpOpen, setIsHelpOpen] = useState(false);
 
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [currentInput, setCurrentInput] = useState('');
@@ -336,7 +339,10 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                     <span>Powrót do pulpitu sprawy</span>
                 </button>
                 <div className="max-w-4xl mx-auto w-full pb-10">
-                    <h1 className="text-3xl font-bold mb-2">Załaduj dokumenty</h1>
+                    <div className="flex items-center justify-between mb-2">
+                        <h1 className="text-3xl font-bold">Załaduj dokumenty</h1>
+                        <InfoIcon onClick={() => setIsHelpOpen(true)} />
+                    </div>
                     <p className="text-slate-400 mb-8">System przeanalizuje Twoje dokumenty, aby zrozumieć stan faktyczny.</p>
 
                     {/* Wstępny wywiad (Preliminary Context) */}
@@ -484,7 +490,32 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                         </button>
                     </div>
                 </div>
+
+
+                <HelpModal
+                    isOpen={isHelpOpen}
+                    onClose={() => setIsHelpOpen(false)}
+                    title="Etap 1: Dokumenty - Pomoc"
+                >
+                    <div className="space-y-4 text-sm">
+                        <p>
+                            <strong>Dlaczego to ważne?</strong> AI musi poznać "twarde dane" zanim zacznie doradzać.
+                        </p>
+                        <ul className="list-disc pl-5 space-y-2">
+                            <li>
+                                <strong>Moje Dokumenty:</strong> Wgraj wszystko, co przemawia na Twoją korzyść (umowy, dowody wpłat, pisma wysłane).
+                            </li>
+                            <li>
+                                <strong>Dokumenty Przeciwnika:</strong> Wgraj pisma, które otrzymałeś od drugiej strony. To pozwoli AI ocenić zagrożenia.
+                            </li>
+                        </ul>
+                        <p className="italic text-slate-500 mt-2">
+                            Obsługujemy pliki PDF, obrazy i pliki tekstowe. Jeśli nie masz dokumentów w formie cyfrowej, możesz pominąć ten krok (opcja "Nie mam dokumentów") i opowiedzieć o sprawie w kolejnym etapie.
+                        </p>
+                    </div>
+                </HelpModal>
             </div>
+
         );
     }
 
@@ -500,7 +531,10 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                         <ArrowLeftIcon className="w-5 h-5" />
                         <span>Pulpit sprawy</span>
                     </button>
-                    <h2 className="font-bold text-violet-400">Etap 2: Wywiad Strategiczny</h2>
+                    <h2 className="font-bold text-violet-400 flex items-center gap-2">
+                        Etap 2: Wywiad Strategiczny
+                        <InfoIcon onClick={() => setIsHelpOpen(true)} className="w-5 h-5" />
+                    </h2>
                     <button
                         onClick={() => {
                             setStepStatus(prev => ({ ...prev, [ProStep.Interview]: 'completed' }));
@@ -546,6 +580,30 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                         </button>
                     </div>
                 </div>
+
+
+                <HelpModal
+                    isOpen={isHelpOpen}
+                    onClose={() => setIsHelpOpen(false)}
+                    title="Etap 2: Wywiad - Pomoc"
+                >
+                    <div className="space-y-4 text-sm">
+                        <p>
+                            Dokumenty rzadko mówią wszystko. W tym kroku Asystent wciela się w rolę doświadczonego adwokata i zadaje pytania uzupełniające.
+                        </p>
+                        <ul className="list-disc pl-5 space-y-2">
+                            <li>
+                                <strong>Odpowiadaj szczerze:</strong> Asystent jest tu, aby Ci pomóc, a nie oceniać. Im więcej szczegółów podasz, tym lepsza strategia.
+                            </li>
+                            <li>
+                                <strong>Nie wiem?</strong> Jeśli nie znasz odpowiedz na pytanie, napisz wprost "nie wiem" lub "nie pamiętam".
+                            </li>
+                            <li>
+                                <strong>Zakończenie:</strong> Gdy uznasz, że powiedziałeś już wszystko, kliknij przycisk "Zakończ wywiad" w prawym górnym rogu.
+                            </li>
+                        </ul>
+                    </div>
+                </HelpModal>
             </div>
         );
     }
@@ -569,21 +627,27 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                         <ArrowLeftIcon className="w-5 h-5" />
                         <span>Pulpit sprawy</span>
                     </button>
-                    <h2 className="font-bold text-violet-400">Etap 3: Raport Strategiczny</h2>
+
+                    <h2 className="font-bold text-violet-400 flex items-center gap-2">
+                        Etap 3: Raport Strategiczny
+                        <InfoIcon onClick={() => setIsHelpOpen(true)} className="w-5 h-5" />
+                    </h2>
                     <div className="w-24"></div> {/* Spacer for balance */}
                 </div>
 
                 {/* Centered Loading Overlay */}
-                {isLoading && (
-                    <div className="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
-                        <div className="relative">
-                            <div className="w-20 h-20 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
-                            <MagicWandIcon className="w-8 h-8 text-violet-400 absolute inset-0 m-auto animate-pulse" />
+                {
+                    isLoading && (
+                        <div className="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
+                            <div className="relative">
+                                <div className="w-20 h-20 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
+                                <MagicWandIcon className="w-8 h-8 text-violet-400 absolute inset-0 m-auto animate-pulse" />
+                            </div>
+                            <h2 className="text-xl font-bold mt-6 text-white tracking-tight">Tworzenie raportu strategicznego...</h2>
+                            <p className="text-slate-400 text-sm mt-2 animate-pulse">Asystent analizuje fakty i szanse wygranej</p>
                         </div>
-                        <h2 className="text-xl font-bold mt-6 text-white tracking-tight">Tworzenie raportu strategicznego...</h2>
-                        <p className="text-slate-400 text-sm mt-2 animate-pulse">Asystent analizuje fakty i szanse wygranej</p>
-                    </div>
-                )}
+                    )
+                }
 
                 {/* Scrollable Content Area */}
                 <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 scroll-smooth">
@@ -645,27 +709,53 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                 </div>
 
                 {/* Sticky Footer for Input */}
-                {reportMessage && (
-                    <div className="p-4 bg-slate-800/80 border-t border-slate-700 backdrop-blur-md">
-                        <div className="flex gap-2 max-w-4xl mx-auto">
-                            <input
-                                type="text"
-                                className="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-violet-500 transition-all placeholder:text-slate-600"
-                                placeholder="Zadaj pytanie do raportu lub odpowiedz Asystentowi..."
-                                value={currentInput}
-                                onChange={(e) => setCurrentInput(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                            />
-                            <button
-                                onClick={handleSendMessage}
-                                disabled={isLoading || !currentInput.trim()}
-                                className="p-3 bg-violet-600 rounded-xl hover:bg-violet-500 transition-colors disabled:opacity-50 shadow-lg shadow-violet-900/20"
-                            >
-                                <SendIcon className="w-5 h-5" />
-                            </button>
+                {
+                    reportMessage && (
+                        <div className="p-4 bg-slate-800/80 border-t border-slate-700 backdrop-blur-md">
+                            <div className="flex gap-2 max-w-4xl mx-auto">
+                                <input
+                                    type="text"
+                                    className="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-violet-500 transition-all placeholder:text-slate-600"
+                                    placeholder="Zadaj pytanie do raportu lub odpowiedz Asystentowi..."
+                                    value={currentInput}
+                                    onChange={(e) => setCurrentInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                                />
+                                <button
+                                    onClick={handleSendMessage}
+                                    disabled={isLoading || !currentInput.trim()}
+                                    className="p-3 bg-violet-600 rounded-xl hover:bg-violet-500 transition-colors disabled:opacity-50 shadow-lg shadow-violet-900/20"
+                                >
+                                    <SendIcon className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
+                    )
+                }
+
+
+                <HelpModal
+                    isOpen={isHelpOpen}
+                    onClose={() => setIsHelpOpen(false)}
+                    title="Etap 3: Raport - Pomoc"
+                >
+                    <div className="space-y-4 text-sm">
+                        <p>
+                            To wynik całej naszej pracy. Raport Strategiczny zawiera kompleksową ocenę Twojej sytuacji prawnej.
+                        </p>
+                        <ul className="list-disc pl-5 space-y-2">
+                            <li>
+                                <strong>SWOT:</strong> Jasno zdefiniowane mocne i słabe strony Twojej sprawy.
+                            </li>
+                            <li>
+                                <strong>Szanse:</strong> Szacunkowa ocena prawdopodobieństwa sukcesu w procentach.
+                            </li>
+                            <li>
+                                <strong>Dyskusja:</strong> Poniżej raportu możesz kontynuować rozmowę – dopytać o niezrozumiałe kwestie lub poprosić o rozwinięcie konkretnego punktu strategii.
+                            </li>
+                        </ul>
                     </div>
-                )}
+                </HelpModal>
             </div>
         );
     }
@@ -690,6 +780,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                             </div>
                             <h1 className="text-2xl font-bold">{topic}</h1>
                         </div>
+                        <InfoIcon onClick={() => setIsHelpOpen(true)} className="ml-2" />
                     </div>
 
                     <div className="flex items-center gap-6">
@@ -802,6 +893,32 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                     </div>
                 </div>
             </div>
+
+            <HelpModal
+                isOpen={isHelpOpen}
+                onClose={() => setIsHelpOpen(false)}
+                title="Strefa PRO - Jak to działa?"
+            >
+                <div className="space-y-4 text-sm">
+                    <p>
+                        Strefa PRO to zaawansowany proces budowania Twojej strategii procesowej. Składa się z 3 kroków:
+                    </p>
+                    <ol className="list-decimal pl-5 space-y-3">
+                        <li>
+                            <strong className="text-violet-400">Załaduj Dokumenty:</strong> Wgraj wszystko co masz - pozwy, wnioski, dowody. Ważne, aby oddzielić dokumenty Twoje (Moje) od dokumentów drugiej strony (Przeciwnika). To pozwoli nam zrozumieć obie perspektywy.
+                        </li>
+                        <li>
+                            <strong className="text-violet-400">Wywiad Strategiczny:</strong> AI zada Ci serię pytań uzupełniających. Często dokumenty nie mówią wszystkiego - tutaj możesz wyjaśnić kontekst, swoje cele i obawy.
+                        </li>
+                        <li>
+                            <strong className="text-violet-400">Analiza i Raport:</strong> Finał procesu. Otrzymasz dokument z analizą SWOT (mocne/słabe strony), szacunkiem szans na wygraną i konkretnymi rekomendacjami "krok po kroku".
+                        </li>
+                    </ol>
+                    <p className="italic text-slate-500 mt-2">
+                        Pamiętaj: Możesz w każdej chwili wrócić do każdego z etapów, by dodać nowe dokumenty lub zaktualizować informacje.
+                    </p>
+                </div>
+            </HelpModal>
         </div>
     );
 };

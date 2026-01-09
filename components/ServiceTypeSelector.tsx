@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BriefcaseIcon, SparklesIcon, ChevronRightIcon } from './Icons';
 import { LawArea } from '../types';
+import { InfoIcon } from './InfoIcon';
+import HelpModal from './HelpModal';
 
 interface ServiceTypeSelectorProps {
     lawArea: LawArea;
@@ -8,10 +10,15 @@ interface ServiceTypeSelectorProps {
 }
 
 const ServiceTypeSelector: React.FC<ServiceTypeSelectorProps> = ({ lawArea, onSelect }) => {
+    const [isHelpOpen, setIsHelpOpen] = useState(false);
+
     return (
         <div className="flex flex-col items-center min-h-full p-4 w-full animate-in fade-in duration-500">
             <div className="text-center mb-10 flex flex-col items-center justify-center gap-2 mt-4 md:mt-0 pt-8 md:pt-0">
-                <h1 className="text-2xl font-bold text-white mb-2">Wybierz sposób rozwiązania sprawy</h1>
+                <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-white mb-2">Wybierz sposób rozwiązania sprawy</h1>
+                    <InfoIcon onClick={() => setIsHelpOpen(true)} className="mb-2" />
+                </div>
                 <p className="text-lg text-slate-400">
                     Dla wybranej dziedziny ({lawArea}) oferujemy dwa podejścia:
                 </p>
@@ -67,6 +74,32 @@ const ServiceTypeSelector: React.FC<ServiceTypeSelectorProps> = ({ lawArea, onSe
             <div className="mt-12 text-slate-500 text-[10px] uppercase tracking-[0.2em] font-medium text-center">
                 Asystent Prawny AI &bull; Inteligentne Wsparcie Procesowe
             </div>
+
+            <HelpModal
+                isOpen={isHelpOpen}
+                onClose={() => setIsHelpOpen(false)}
+                title="Wybór metody pracy"
+            >
+                <div className="space-y-4">
+                    <p>
+                        Masz do wyboru dwie ścieżki pracy z Asystentem, w zależności od potrzeb Twojej sprawy:
+                    </p>
+                    <div className="space-y-2">
+                        <h4 className="font-semibold text-violet-400">1. Strefa PRO (Długofalowa strategia)</h4>
+                        <p className="text-sm text-slate-400">
+                            Wybierz tę opcję, jeśli masz skomplikowaną sprawę sądową, wiele dokumentów i potrzebujesz długoterminowej analizy.
+                            Asystent pomoże Ci zarządzać "teczką sprawy", oceni szanse na wygraną i przeprowadzi symulację rozprawy.
+                        </p>
+                    </div>
+                    <div className="space-y-2">
+                        <h4 className="font-semibold text-cyan-400">2. Narzędzia AI i Porady (Szybka pomoc)</h4>
+                        <p className="text-sm text-slate-400">
+                            Idealne do szybkich działań. Jeśli potrzebujesz tylko napisać jedno pismo, sprawdzić przepis, zapytać o konkretną sytuację
+                            lub przejść szybkie szkolenie z prawa - to opcja dla Ciebie.
+                        </p>
+                    </div>
+                </div>
+            </HelpModal>
         </div>
     );
 };

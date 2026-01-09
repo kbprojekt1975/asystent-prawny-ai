@@ -555,7 +555,8 @@ const App: React.FC = () => {
     }
   };
 
-  if (authLoading) {
+  // Show loading spinner for both Auth and Profile (to prevent "flash" of unverified app state)
+  if (authLoading || profileLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-900">
         <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-cyan-500"></div>
@@ -567,6 +568,7 @@ const App: React.FC = () => {
     return <Auth />;
   }
 
+  // Pre-load logic (specific to chat history loading)
   if (isLoading && chatHistory.length === 0 && !interactionMode && !isWelcomeModalOpen) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-900">
@@ -578,7 +580,7 @@ const App: React.FC = () => {
     );
   }
 
-  // Check if account is active and paid
+  // Check if account is active and paid - NOW SAFE because profile is loaded
   const isAwaitingActivation = userProfile?.subscription && userProfile.subscription.isPaid === false;
 
   if (isAwaitingActivation) {

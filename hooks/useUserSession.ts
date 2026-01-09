@@ -13,6 +13,7 @@ const initialProfile: UserProfile = {
 export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelcome: () => void) => {
     const [user, setUser] = useState<User | null>(null);
     const [authLoading, setAuthLoading] = useState(true);
+    const [profileLoading, setProfileLoading] = useState(true); // Moved up
     const [userProfile, setUserProfile] = useState<UserProfile>(initialProfile);
     const [totalCost, setTotalCost] = useState<number>(0);
     const [isLocalOnly, setIsLocalOnly] = useState<boolean>(false);
@@ -22,9 +23,8 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            if (currentUser) {
-                setProfileLoading(true);
-            }
+            // We do NOT set profileLoading(true) here anymore to avoid race conditions/deadlocks
+            // if the user object reference doesn't change enough to trigger the effect below.
             setUser(currentUser);
             setAuthLoading(false);
             if (currentUser && welcomeTriggered.current !== currentUser.uid) {
@@ -120,8 +120,6 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
         initializeUser();
     }, [user, initialTopics]);
 
-    const [profileLoading, setProfileLoading] = useState(true);
-
     // Sync Profile and Cost
     useEffect(() => {
         if (!user) {
@@ -129,17 +127,18 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
             return;
         }
 
+        // CORRECT PLACE: Reset loading state when we actually start listening to a new user
+        setProfileLoading(true);
+
         const userDocRef = doc(db, 'users', user.uid);
         const unsubscribe = onSnapshot(userDocRef, (userDoc) => {
             try {
-                // ... existing logic ...
                 if (!userDoc.exists()) {
                     // If doc doesn't exist yet, we stick with initial. profileLoading done.
                     setProfileLoading(false);
                     return;
                 }
                 const data = userDoc.data();
-                // ... processing data ...
 
                 // Explicit fallback to 0 if totalCost is missing
                 const backendCost = data.totalCost ?? 0;

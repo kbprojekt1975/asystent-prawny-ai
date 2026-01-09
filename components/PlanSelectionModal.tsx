@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { SparklesIcon, XIcon, CreditCardIcon, TimeIcon } from './Icons';
 import { SubscriptionStatus, SubscriptionInfo } from '../types';
+import { InfoIcon } from './InfoIcon';
+import HelpModal from './HelpModal';
 
 interface PlanSelectionModalProps {
     isOpen: boolean;
@@ -12,6 +14,7 @@ interface PlanSelectionModalProps {
 
 const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelectPlan, subscription, isLoading }) => {
     const [isVisible, setIsVisible] = useState(false);
+    const [isHelpOpen, setIsHelpOpen] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -27,8 +30,11 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
         if (!subscription || subscription.status === SubscriptionStatus.None) {
             return (
                 <div className="flex flex-col items-center text-center p-6 bg-slate-700/30 border border-slate-600 rounded-2xl">
-                    <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 flex items-center justify-center mb-6 ring-1 ring-cyan-500/50">
+                    <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 flex items-center justify-center mb-6 ring-1 ring-cyan-500/50 relative">
                         <SparklesIcon className="w-8 h-8 text-cyan-400" />
+                        <div className="absolute -right-12 -top-2">
+                            <InfoIcon onClick={() => setIsHelpOpen(true)} />
+                        </div>
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-2">Pakiet Startowy AI</h3>
                     <p className="text-slate-400 mb-8 max-w-sm">
@@ -122,7 +128,29 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
             <div className="relative w-full max-w-lg transform transition-all duration-300 scale-100">
                 {getStatusDisplay()}
             </div>
-        </div>
+            <HelpModal
+                isOpen={isHelpOpen}
+                onClose={() => setIsHelpOpen(false)}
+                title="Pakiet Startowy - Szczegóły"
+            >
+                <div className="space-y-4 text-sm">
+                    <p>
+                        Korzystanie z Asystenta Prawnego AI wymaga aktywnego pakietu.
+                    </p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>
+                            <strong>Kredyt 10 PLN:</strong> Środki te są zużywane na zapytania do modelu AI (Gemini 1.5 Pro/Flash). Każde pytanie, analiza dokumentu czy generowanie pisma pobiera ułamek grosza lub kilka groszy, w zależności od długości.
+                        </li>
+                        <li>
+                            <strong>Ważność 7 Dni:</strong> Kredyt i dostęp są ważne przez tydzień od aktywacji. Niewykorzystane środki przepadają po tym czasie.
+                        </li>
+                        <li>
+                            <strong>Aktywacja:</strong> Obecnie system działa w trybie "Early Access". Po wyborze planu, skontaktuj się z administratorem, aby ręcznie aktywował Twoje konto (potwierdzenie przelewu).
+                        </li>
+                    </ul>
+                </div>
+            </HelpModal>
+        </div >
     );
 };
 
