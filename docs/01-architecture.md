@@ -18,7 +18,7 @@ Asystent Prawny AI to progresywna aplikacja webowa (PWA) zbudowana w modelu **Se
 
 ### Backend (Serverless)
 - **Cloud Functions**: Środowisko Node.js 20
-- **AI Engine**: Google Gemini API (model `gemini-1.5-pro` lub `gemini-1.5-flash`)
+- **AI Engine**: Google Gemini API (model `gemini-2.0-flash-exp`)
 - **Secret Management**: Firebase Secret Manager (dla `GEMINI_API_KEY`)
 
 ### Przechowywanie Danych

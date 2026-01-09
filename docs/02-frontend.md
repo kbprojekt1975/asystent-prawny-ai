@@ -5,9 +5,12 @@
 Projekt stosuje płaską strukturę komponentów w folderze `components/` oraz dedykowane hooki w `hooks/`.
 
 ### Główne Komponenty:
-- `App.tsx`: Centralny punkt sterujący (Orchestrator). Zarządza nawigacją między LawSelector, TopicSelector i Chatem.
+- `App.tsx`: Centralny punkt sterujący (Orchestrator). Zarządza nawigacją między LawSelector, ServiceTypeSelector, ProCaseInitiator, TopicSelector i Chatem.
+- `ServiceTypeSelector.tsx`: Wybor ścieżki (Standardowe narzędzia vs Ścieżka PRO).
+- `ProCaseInitiator.tsx`: Specjalistyczny kreator spraw dla ścieżki PRO.
+- `ProDashboard.tsx`: Kompleksowy pulpit zarządzania sprawą PRO (Dokumenty, Wywiad, Strategia).
 - `ChatBubble.tsx`: Prezentacja wiadomości (Markdown, źródła, akcje).
-- `LawSelector.tsx`: Wybór dziedziny prawa z opcją AI Case Analysis.
+- `LawSelector.tsx`: Wybór dziedziny prawa z opcją AI Case Analysis (Standard/PRO).
 - `TopicSelector.tsx`: Zarządzanie wątkami wewnątrz dziedziny (Sprawy vs Negocjacje).
 - `InteractionModeSelector.tsx`: Wybór trybu pracy asystenta (Porada, Sąd, Dokumenty).
 
@@ -29,7 +32,8 @@ Odpowiada za CRUD tematów:
 
 ### 3. `useAppNavigation.ts`
 Liniowa nawigacja stanowa:
-- Zarządzanie stosem nawigacji (Wybór Prawa -> Temat -> Tryb -> Chat).
+- Zarządzanie stosem nawigacji (Wybór Prawa -> Plan -> Serwis -> Temat -> Tryb -> Chat).
+- Obsługa ścieżki PRO (Documents -> Interview -> Analysis).
 - Persystencja wybranego ID czatu.
 
 ## Stylizacja (Theming)

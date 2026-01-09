@@ -11,14 +11,12 @@ Jest to funkcja typu `onCall`, która:
 3.  **Inicjalizuje Gemini**: Wykorzystuje `@google/generative-ai` do wygenerowania odpowiedzi.
 4.  **Zarządza Historią**: Przyjmuje pełną historię czatu, co pozwala modelowi na zachowanie ciągłości bez konieczności przechowywania stanu na serwerze (Stateless logic).
 
-## Integracja z Gemini AI
-
-System wykorzystuje zaawansowany prompt-engineering:
-- **Common Rules**: Zestaw uniwersalnych zasad (zakaz podawania dat, zakaz gwarantowania wyników, wymóg rzetelności).
+- **AI Engine**: Google Gemini API (model `gemini-2.0-flash-exp`). Backend implementuje automatyczne czyszczenie odpowiedzi AI z artefaktów formatowania (placeholder blocks).
 - **Specialized Modes**: 
     - `Advice`: Skupienie na diagnozie prawnej.
     - `Court`: Symulacja ról procesowych (Sędzia, Prokurator).
     - `Negotiation`: Styl mediatora, pomoc w redagowaniu korespondencji ugodowej.
+    - `StrategicAnalysis` (PRO): Zaawansowany tryb analityczny, budujący Akt Sprawy na podstawie dokumentów i pogłębionego wywiadu.
 
 ## Zarządzanie Sekretami
 
