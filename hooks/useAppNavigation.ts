@@ -13,6 +13,7 @@ export const useAppNavigation = () => {
     const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
     const [interactionMode, setInteractionMode] = useState<InteractionMode | null>(null);
     const [courtRole, setCourtRole] = useState<CourtRole | null>(null);
+    const [servicePath, setServicePath] = useState<'pro' | 'hub' | null>(null);
     const [topics, setTopics] = useState<Record<LawArea, string[]>>(initialTopics);
 
     const [isAnalysisMode, setIsAnalysisMode] = useState<boolean>(false);
@@ -32,6 +33,7 @@ export const useAppNavigation = () => {
         setSelectedTopic(null);
         setInteractionMode(null);
         setCourtRole(null);
+        setServicePath(null);
         setIsAnalysisMode(false);
         setIsFullScreen(false);
         setIsWelcomeModalOpen(false);
@@ -49,6 +51,7 @@ export const useAppNavigation = () => {
         setSelectedTopic(null);
         setInteractionMode(null);
         setCourtRole(null);
+        setServicePath(null);
         setIsAnalysisMode(false);
         setIsFullScreen(false);
         setIsWelcomeModalOpen(false);
@@ -59,6 +62,7 @@ export const useAppNavigation = () => {
         selectedTopic, setSelectedTopic,
         interactionMode, setInteractionMode,
         courtRole, setCourtRole,
+        servicePath, setServicePath,
         topics, setTopics,
         isAnalysisMode, setIsAnalysisMode,
         isFullScreen, setIsFullScreen,

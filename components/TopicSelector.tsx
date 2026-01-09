@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LawArea } from '../types';
-import { CaseIcon, PlusCircleIcon, TrashIcon, UserGroupIcon } from './Icons';
+import { CaseIcon, PlusCircleIcon, TrashIcon, UserGroupIcon, SparklesIcon, ChevronUpIcon } from './Icons';
 import HelpModal from './HelpModal';
 import { InfoIcon } from './InfoIcon';
 
@@ -11,9 +11,10 @@ interface TopicSelectorProps {
   onAddTopic: (topic: string) => void;
   onAddNegotiationTopic: (topic: string) => void;
   onDeleteTopic: (topic: string) => void;
+  onChangeMode?: () => void;
 }
 
-const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelectTopic, onAddTopic, onAddNegotiationTopic, onDeleteTopic }) => {
+const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelectTopic, onAddTopic, onAddNegotiationTopic, onDeleteTopic, onChangeMode }) => {
   const [newTopic, setNewTopic] = useState('');
   const [newNegotiationTopic, setNewNegotiationTopic] = useState('');
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -44,6 +45,27 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
         <InfoIcon onClick={() => setIsHelpOpen(true)} />
       </div>
       <div className="w-full max-w-2xl space-y-8 my-auto pb-8">
+        {/* AI Tools Access - RELOCATED TO TOP */}
+        {onChangeMode && (
+          <div className="pt-2">
+            <button
+              onClick={onChangeMode}
+              className="w-full flex items-center justify-between p-4 bg-slate-800/80 border border-slate-700 rounded-xl hover:bg-slate-700 hover:border-cyan-500/50 transition-all group shadow-xl backdrop-blur-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-cyan-600/20 rounded-lg text-cyan-400 group-hover:bg-cyan-600/30 transition-colors">
+                  <SparklesIcon className="h-5 w-5" />
+                </div>
+                <div className="text-left">
+                  <span className="block text-sm font-semibold text-slate-200">Zmień tryb / Narzędzia AI</span>
+                  <span className="block text-[10px] text-slate-400 uppercase tracking-wider">Tryb Analizy, Pisma, Negocjacji...</span>
+                </div>
+              </div>
+              <ChevronUpIcon className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors rotate-90" />
+            </button>
+          </div>
+        )}
+
         {/* Lista tematów */}
         <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 shadow-xl backdrop-blur-sm">
           <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
@@ -186,33 +208,34 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
             </div>
           </div>
         </div>
-        <HelpModal
-          isOpen={isHelpOpen}
-          onClose={() => setIsHelpOpen(false)}
-          title="Zarządzanie tematami"
-        >
-          <div className="space-y-4">
-            <p>
-              W ramach wybranej dziedziny prawa (np. {lawArea}) możesz tworzyć oddzielne wątki
-              dla różnych spraw.
-            </p>
-            <ul className="list-disc pl-5 space-y-2 text-sm">
-              <li>
-                <strong>Wybór tematu:</strong> Jeśli już wcześniej rozmawiałeś na dany temat,
-                znajdziesz go na liście. Kliknij go, aby kontynuować.
-              </li>
-              <li>
-                <strong>Nowy temat:</strong> Wpisz nazwę (np. "Spór z sąsiadem") i kliknij <em>Dodaj</em>,
-                aby rozpocząć zupełnie nową rozmowę.
-              </li>
-              <li>
-                <strong>Usuwanie:</strong> Możesz usunąć temat, którego już nie potrzebujesz,
-                używając ikony kosza.
-              </li>
-            </ul>
-          </div>
-        </HelpModal>
       </div>
+
+      <HelpModal
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+        title="Zarządzanie tematami"
+      >
+        <div className="space-y-4">
+          <p>
+            W ramach wybranej dziedziny prawa (np. {lawArea}) możesz tworzyć oddzielne wątki
+            dla różnych spraw.
+          </p>
+          <ul className="list-disc pl-5 space-y-2 text-sm">
+            <li>
+              <strong>Wybór tematu:</strong> Jeśli już wcześniej rozmawiałeś na dany temat,
+              znajdziesz go na liście. Kliknij go, aby kontynuować.
+            </li>
+            <li>
+              <strong>Nowy temat:</strong> Wpisz nazwę (np. "Spór z sąsiadem") i kliknij <em>Dodaj</em>,
+              aby rozpocząć zupełnie nową rozmowę.
+            </li>
+            <li>
+              <strong>Usuwanie:</strong> Możesz usunąć temat, którego już nie potrzebujesz,
+              używając ikony kosza.
+            </li>
+          </ul>
+        </div>
+      </HelpModal>
     </div>
   );
 };

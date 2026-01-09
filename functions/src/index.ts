@@ -74,7 +74,7 @@ const getAiClient = () => {
 
 // --- TYPY I ENUMY ---
 type LawAreaType = 'Prawo Karne' | 'Prawo Rodzinne' | 'Prawo Cywilne' | 'Prawo Gospodarcze';
-type InteractionModeType = 'Porada Prawna' | 'Generowanie Pisma' | 'Szkolenie Prawne' | 'Zasugeruj Przepisy' | 'Znajdź Podobne Wyroki' | 'Tryb Sądowy' | 'Konwersacja ze stroną przeciwną' | 'Analiza Sprawy';
+type InteractionModeType = 'Porada Prawna' | 'Generowanie Pisma' | 'Szkolenie Prawne' | 'Zasugeruj Przepisy' | 'Znajdź Podobne Wyroki' | 'Tryb Sądowy' | 'Konwersacja ze stroną przeciwną' | 'Analiza Sprawy' | 'Strategiczne Prowadzenie Sprawy';
 
 const LawArea = {
     Criminal: 'Prawo Karne' as LawAreaType,
@@ -91,13 +91,14 @@ const InteractionMode = {
     FindRulings: 'Znajdź Podobne Wyroki' as InteractionModeType,
     Court: 'Tryb Sądowy' as InteractionModeType,
     Negotiation: 'Konwersacja ze stroną przeciwną' as InteractionModeType,
-    Analysis: 'Analiza Sprawy' as InteractionModeType
+    Analysis: 'Analiza Sprawy' as InteractionModeType,
+    StrategicAnalysis: 'Strategiczne Prowadzenie Sprawy' as InteractionModeType
 };
 
 // --- LOGIKA CENOWA (Z marżą ok. 70%) ---
 const PRICING = {
     'gemini-2.0-flash-exp': { input: 0.25, output: 1.0 }, // USD za 1M tokenów
-    'gemini-2.0-flash-thinking-preview-1219': { input: 4.2, output: 16.7 }, // Wyższa cena dla "Thinking" (bezpieczeństwo)
+    'gemini-2.0-flash-thinking-exp': { input: 4.2, output: 16.7 }, // Wyższa cena dla "Thinking" (bezpieczeństwo)
     'gemini-1.5-flash': { input: 0.25, output: 1.0 },
     'gemini-1.5-pro': { input: 4.2, output: 16.7 },
 };
@@ -153,6 +154,7 @@ Zanim udzielisz odpowiedzi:
 - Jeśli znalazłeś NOWĄ WIEDZĘ, użyj tagu **[NOWA WIEDZA]** przy opisie tych konkretnych znalezisk.
 
 ZASADA INTERAKCJI: Zadawaj pytania POJEDYNCZO. Maksymalnie 5 pytań w toku rozmowy.
+NIE używaj pustych bloków kodu (```text ... ```) na końcu odpowiedzi jako placeholderów.
 `;
 
 const systemInstructions: Record<LawAreaType, Record<InteractionModeType, string>> = {
@@ -163,7 +165,8 @@ const systemInstructions: Record<LawAreaType, Record<InteractionModeType, string
         [InteractionMode.SuggestRegulations]: `Jesteś ekspertem prawa karnego. ${commonRules} Zapytaj o szczegóły czynu, aby precyzyjnie dobrać kwalifikację prawną.`,
         [InteractionMode.FindRulings]: `Jesteś asystentem prawnym. ${commonRules} Zapytaj o konkretne okoliczności lub zarzuty, aby znaleźć adekwatne wyroki.`,
         [InteractionMode.Court]: `Jesteś rygorystycznym asystentem przygotowującym użytkownika do rozprawy karnej. Używaj formalnego języka. Skup się na procedurze karnej, dowodach i linii obrony/oskarżenia. ${commonRules}`,
-        [InteractionMode.Negotiation]: `Jesteś mediatorem i strategiem w sprawach karnych (np. dobrowolne poddanie się karze, negocjacje z prokuratorem/pokrzywdzonym). Twoim celem jest wypracowanie najkorzystniejszego rozwiązania ugodowego. Pomagaj redagować maile, SMS-y i propozycje ugodowe. ${commonRules}`
+        [InteractionMode.Negotiation]: `Jesteś mediatorem i strategiem w sprawach karnych (np. dobrowolne poddanie się karze, negocjacje z prokuratorem/pokrzywdzonym). Twoim celem jest wypracowanie najkorzystniejszego rozwiązania ugodowego. Pomagaj redagować maile, SMS-y i propozycje ugodowe. ${commonRules}`,
+        [InteractionMode.StrategicAnalysis]: `Jesteś ekspertem-analitykiem w sprawach karnych. Twoim zadaniem jest zbudowanie zwycięskiej strategii procesowej. Oceniaj dowody, szukaj niespójności w wersji oskarżenia i buduj linię obrony opartą na faktach. ${commonRules}`
     },
     [LawArea.Family]: {
         [InteractionMode.Advice]: `Jesteś ekspertem w dziedzinie polskiego prawa rodzinnego. ${commonRules} Rozpocznij od pytania o sytuację rodzinną lub majątkową klienta. Nie podawaj źródeł, chyba że użytkownik zapyta.`,
@@ -172,7 +175,8 @@ const systemInstructions: Record<LawAreaType, Record<InteractionModeType, string
         [InteractionMode.SuggestRegulations]: `Jesteś ekspertem prawa rodzinnego. ${commonRules} Zapytaj o relacje między stronami, aby wskazać właściwe przepisy KRO.`,
         [InteractionMode.FindRulings]: `Jesteś asystentem prawnym. ${commonRules} Zapytaj o przedmiot sporu, aby znaleźć trafne orzecznictwo.`,
         [InteractionMode.Court]: `Jesteś rygorystycznym asystentem przygotowującym użytkownika do rozprawy rodzinnej. Używaj formalnego języka. Skup się na dobru dziecka, dowodach i sytuacji majątkowej. ${commonRules}`,
-        [InteractionMode.Negotiation]: `Jesteś empatycznym mediatorem w sprawach rodzinnych. Pomagaj użytkownikowi w komunikacji z drugą stroną (np. ustalanie kontaktów, alimenty) w tonie ugodowym i konstruktywnym, zawsze mając na względzie dobro dzieci. Pomagaj pisać wiadomości SMS/e-mail, które łagodzą konflikt. ${commonRules}`
+        [InteractionMode.Negotiation]: `Jesteś empatycznym mediatorem w sprawach rodzinnych. Pomagaj użytkownikowi w komunikacji z drugą stroną (np. ustalanie kontaktów, alimenty) w tonie ugodowym i konstruktywnym, zawsze mając na względzie dobro dzieci. Pomagaj pisać wiadomości SMS/e-mail, które łagodzą konflikt. ${commonRules}`,
+        [InteractionMode.StrategicAnalysis]: `Jesteś rzetelnym doradcą w sprawach rodzinnych. Twoim celem jest zabezpieczenie interesów klienta i dzieci poprzez mądrą strategię. Analizuj sytuację majątkową i opiekuńczą pod kątem przyszłych rozpraw. ${commonRules}`
     },
     [LawArea.Civil]: {
         [InteractionMode.Advice]: `Jesteś ekspertem w dziedzinie polskiego prawa cywilnego. ${commonRules} Rozpocznij od pytania o dowody, umowy lub daty zdarzeń. Nie podawaj źródeł, chyba że użytkownik zapyta.`,
@@ -181,7 +185,8 @@ const systemInstructions: Record<LawAreaType, Record<InteractionModeType, string
         [InteractionMode.SuggestRegulations]: `Jesteś ekspertem prawa cywilnego. ${commonRules} Zapytaj o rodzaj umowy lub zdarzenia, aby wskazać artykuły KC.`,
         [InteractionMode.FindRulings]: `Jesteś asystentem prawnym. ${commonRules} Zapytaj o szczegóły roszczenia, aby wyszukać wyroki.`,
         [InteractionMode.Court]: `Jesteś rygorystycznym asystentem przygotowującym użytkownika do rozprawy cywilnej. Używaj formalnego języka. Skup się na ciężarze dowodu, roszczeniach i podstawach prawnych. ${commonRules}`,
-        [InteractionMode.Negotiation]: `Jesteś profesjonalnym negocjatorem w sprawach cywilnych. Pomagaj w komunikacji z dłużnikami, wierzycielami lub kontrahentami. Skup się na argumentacji prawnej i faktach, dążąc do polubownego rozwiązania sporu. Redaguj profesjonalną korespondencję (e-maile, wezwania, propozycje ugody). ${commonRules}`
+        [InteractionMode.Negotiation]: `Jesteś profesjonalnym negocjatorem w sprawach cywilnych. Pomagaj w komunikacji z dłużnikami, wierzycielami lub kontrahentami. Skup się na argumentacji prawnej i faktach, dążąc do polubownego rozwiązania sporu. Redaguj profesjonalną korespondencję (e-maile, wezwania, propozycje ugody). ${commonRules}`,
+        [InteractionMode.StrategicAnalysis]: `Jesteś analitykiem w sprawach cywilnych. Skup się na budowaniu silnej bazy dowodowej i merytorycznej argumentacji. Szukaj ryzyk i słabych punktów w roszczeniach. ${commonRules}`
     },
     [LawArea.Commercial]: {
         [InteractionMode.Advice]: `Jesteś ekspertem w dziedzinie polskiego prawa gospodarczego. ${commonRules} Rozpocznij od pytania o formę prawną działalności lub treść kontraktu. Nie podawaj źródeł, chyba że użytkownik zapyta.`,
@@ -190,7 +195,8 @@ const systemInstructions: Record<LawAreaType, Record<InteractionModeType, string
         [InteractionMode.SuggestRegulations]: `Jesteś ekspertem prawa gospodarczego. ${commonRules} Zapytaj o formę działalności, aby wskazać przepisy KSH.`,
         [InteractionMode.FindRulings]: `Jesteś asystentem prawnym. ${commonRules} Zapytaj o branżę i przedmiot sporu.`,
         [InteractionMode.Court]: `Jesteś rygorystycznym asystentem przygotowującym użytkownika do rozprawy sądowej. Używaj bardzo formalnego, fachowego języka prawniczego. Bądź precyzyjny i wymagaj precyzji od użytkownika. Skup się na faktach i dowodach. ${commonRules}`,
-        [InteractionMode.Negotiation]: `Jesteś rzetelnym negocjatorem biznesowym. Pomagaj w rozmowach z partnerami handlowymi, kontrahentami lub organami. Skup się na interesie przedsiębiorstwa, zachowaniu relacji biznesowych i precyzyjnym formułowaniu warunków ugodowych. Redaguj wysokiej klasy korespondencję biznesową. ${commonRules}`
+        [InteractionMode.Negotiation]: `Jesteś rzetelnym negocjatorem biznesowym. Pomagaj w rozmowach z partnerami handlowymi, kontrahentami lub organami. Skup się na interesie przedsiębiorstwa, zachowaniu relacji biznesowych i precyzyjnym formułowaniu warunków ugodowych. Redaguj wysokiej klasy korespondencję biznesową. ${commonRules}`,
+        [InteractionMode.StrategicAnalysis]: `Jesteś ekspertem od strategii gospodarczej i handlowej. Analizuj ryzyka kontraktowe, szukaj luk w umowach i buduj przewagę strategiczną w sporach biznesowych. ${commonRules}`
     }
 } as Record<LawAreaType, Record<InteractionModeType, string>>;
 
@@ -217,7 +223,7 @@ export const getLegalAdvice = onCall({
     }
     logger.info("✓ User authenticated:", request.auth.uid);
 
-    const { history, lawArea, interactionMode, topic, isDeepThinkingEnabled, articles, chatId } = request.data;
+    const { history, lawArea, interactionMode, topic, articles, chatId } = request.data;
     const uid = request.auth.uid;
 
     logger.info(`Request parameters: LawArea="${lawArea}", InteractionMode="${interactionMode}", Topic="${topic}"`);
@@ -507,16 +513,13 @@ export const getLegalAdvice = onCall({
         ];
 
         // DYNAMIC MODEL SELECTION
-        let modelName = 'gemini-2.0-flash-exp';
-        if (isDeepThinkingEnabled) {
-            modelName = 'gemini-2.0-flash-thinking-preview-1219'; // or current valid thinking model
-        }
+        // Falling back to stable 2.0 Flash as Thinking experimental is 404ing in this environment
+        const modelName = 'gemini-2.0-flash-exp';
 
         const model = genAI.getGenerativeModel({
             model: modelName,
             systemInstruction: instruction,
-            tools: tools as any,
-            ...(isDeepThinkingEnabled && { thinkingConfig: { thinkingBudget: 16000 } }), // Adjusted budget
+            tools: tools as any
         }, { apiVersion: 'v1beta' });
 
         const chat = model.startChat({

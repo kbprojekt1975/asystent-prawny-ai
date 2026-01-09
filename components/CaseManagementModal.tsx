@@ -3,13 +3,12 @@ import { XIcon } from './Icons';
 import CaseDashboard from './CaseDashboard';
 
 interface CaseManagementModalProps {
-    isOpen: boolean;
-    onClose: () => void;
     userId: string;
     caseId: string;
+    onChangeMode?: () => void;
 }
 
-const CaseManagementModal: React.FC<CaseManagementModalProps> = ({ isOpen, onClose, userId, caseId }) => {
+const CaseManagementModal: React.FC<CaseManagementModalProps> = ({ isOpen, onClose, userId, caseId, onChangeMode }) => {
     if (!isOpen) return null;
 
     return (
@@ -24,7 +23,7 @@ const CaseManagementModal: React.FC<CaseManagementModalProps> = ({ isOpen, onClo
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-4 bg-slate-900">
-                    <CaseDashboard userId={userId} caseId={caseId} initialExpanded={true} />
+                    <CaseDashboard userId={userId} caseId={caseId} initialExpanded={true} onChangeMode={onChangeMode} />
                 </div>
             </div>
         </div>

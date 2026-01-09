@@ -1,6 +1,6 @@
 import React from 'react';
 import HamburgerMenu from './HamburgerMenu';
-import { SparklesIcon, ClockIcon, HomeIcon, ArrowsExpandIcon, CreditCardIcon, ProfileIcon, BookOpenIcon, DownloadIcon, UploadIcon } from './Icons';
+import { SparklesIcon, ClockIcon, HomeIcon, ArrowsExpandIcon, CreditCardIcon, ProfileIcon, BookOpenIcon, DownloadIcon, UploadIcon, ArrowLeftIcon } from './Icons';
 import CostCounter from './CostCounter';
 import { SubscriptionInfo, SubscriptionStatus } from '../types';
 import HelpModal from './HelpModal';
@@ -52,9 +52,21 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 
   return (
     <header className="bg-slate-900/70 backdrop-blur-md p-4 border-b border-slate-700 flex justify-between items-center z-40 flex-shrink-0 gap-4 w-full">
-      <h1 className="text-sm md:text-lg font-bold text-white truncate mr-auto">
-        {title}
-      </h1>
+      <div className="flex items-center gap-3 mr-auto truncate">
+        {onBackClick && (
+          <button
+            onClick={onBackClick}
+            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors flex-shrink-0"
+            aria-label={backButtonText}
+            title={backButtonText}
+          >
+            <ArrowLeftIcon className="h-6 w-6" />
+          </button>
+        )}
+        <h1 className="text-sm md:text-lg font-bold text-white truncate">
+          {title}
+        </h1>
+      </div>
       <div className="flex items-center gap-2">
         {isLocalOnly && (
           <div className="flex items-center gap-2 bg-red-500/20 border border-red-500/50 px-3 py-2 rounded-xl animate-pulse whitespace-nowrap">
@@ -90,14 +102,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           </>
         )}
 
-        {onBackClick && (
-          <button
-            onClick={onBackClick}
-            className="text-sm border border-slate-600 hover:bg-slate-700/50 text-slate-300 font-semibold py-2 px-4 rounded-lg transition-colors flex-shrink-0 hidden md:block"
-          >
-            {backButtonText}
-          </button>
-        )}
         {onChangeClick && (
           <button
             onClick={onChangeClick}

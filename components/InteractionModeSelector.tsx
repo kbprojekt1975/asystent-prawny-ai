@@ -1,6 +1,6 @@
 import React from 'react';
 import { LawArea, InteractionMode } from '../types';
-import { LightbulbIcon, DocumentTextIcon, SearchIcon, ArchiveIcon, BookOpenIcon, ScaleIcon, UserGroupIcon } from './Icons';
+import { LightbulbIcon, DocumentTextIcon, SearchIcon, ArchiveIcon, BookOpenIcon, ScaleIcon, UserGroupIcon, BriefcaseIcon } from './Icons';
 import HelpModal from './HelpModal';
 import { InfoIcon } from './InfoIcon';
 import { useState } from 'react';
@@ -24,13 +24,14 @@ const InteractionModeSelector: React.FC<InteractionModeSelectorProps> = ({
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const interactionOptions = [
-    { mode: InteractionMode.Advice, icon: <LightbulbIcon />, description: "Uzyskaj analizę i poradę w swojej sprawie." },
-    { mode: InteractionMode.Document, icon: <DocumentTextIcon />, description: "Wygeneruj pozew, wniosek lub inne pismo." },
-    { mode: InteractionMode.LegalTraining, icon: <BookOpenIcon />, description: "Przejdź interaktywne szkolenie z danego zagadnienia." },
-    { mode: InteractionMode.SuggestRegulations, icon: <SearchIcon />, description: "Opisz problem, a AI znajdzie pasujące przepisy." },
-    { mode: InteractionMode.FindRulings, icon: <ArchiveIcon />, description: "Wyszukaj przykładowe wyroki w podobnych sprawach." },
-    { mode: InteractionMode.Court, icon: <ScaleIcon />, description: "Przygotuj się do kontaktu z sądem w precyzyjnym, formalnym trybie." },
-    { mode: InteractionMode.Negotiation, icon: <UserGroupIcon />, description: "Opracuj strategię i treść komunikacji z drugą stroną sporu." },
+    { mode: InteractionMode.StrategicAnalysis, icon: <BriefcaseIcon className="h-6 w-6 text-violet-400" />, bgColor: "bg-violet-500/10", description: "Głęboka analiza teczki dokumentów, ocena szans, zagrożeń i strategii wygranej." },
+    { mode: InteractionMode.Advice, icon: <LightbulbIcon className="h-6 w-6 text-cyan-400" />, bgColor: "bg-cyan-500/10", description: "Uzyskaj analizę i poradę w swojej sprawie." },
+    { mode: InteractionMode.Document, icon: <DocumentTextIcon className="h-6 w-6 text-emerald-400" />, bgColor: "bg-emerald-500/10", description: "Wygeneruj pozew, wniosek lub inne pismo." },
+    { mode: InteractionMode.LegalTraining, icon: <BookOpenIcon className="h-6 w-6 text-blue-400" />, bgColor: "bg-blue-500/10", description: "Przejdź interaktywne szkolenie z danego zagadnienia." },
+    { mode: InteractionMode.SuggestRegulations, icon: <SearchIcon className="h-6 w-6 text-cyan-400" />, bgColor: "bg-cyan-500/10", description: "Opisz problem, a AI znajdzie pasujące przepisy." },
+    { mode: InteractionMode.FindRulings, icon: <ArchiveIcon className="h-6 w-6 text-cyan-400" />, bgColor: "bg-cyan-500/10", description: "Wyszukaj przykładowe wyroki w podobnych sprawach." },
+    { mode: InteractionMode.Court, icon: <ScaleIcon className="h-6 w-6 text-slate-200" />, bgColor: "bg-slate-700/50", description: "Przygotuj się do kontaktu z sądem w precyzyjnym, formalnym trybie." },
+    { mode: InteractionMode.Negotiation, icon: <UserGroupIcon className="h-6 w-6 text-slate-200" />, bgColor: "bg-slate-700/50", description: "Opracuj strategię i treść komunikacji z drugą stroną sporu." },
   ];
 
   return (
@@ -44,13 +45,13 @@ const InteractionModeSelector: React.FC<InteractionModeSelectorProps> = ({
           <button
             key={option.mode}
             onClick={() => onSelect(option.mode)}
-            className="group bg-slate-800/50 border border-slate-700 rounded-lg p-6 text-left hover:bg-slate-700/70 hover:border-cyan-500 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="group bg-slate-800/40 border border-slate-700/50 rounded-xl p-6 text-left hover:bg-slate-800/70 hover:border-cyan-500/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
           >
-            <div className="w-12 h-12 bg-slate-700/50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-cyan-600/30 transition-colors">
+            <div className={`w-12 h-12 ${option.bgColor} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
               {option.icon}
             </div>
-            <h2 className="text-xl font-semibold text-white mb-1">{option.mode}</h2>
-            <p className="text-slate-400">{option.description}</p>
+            <h2 className="text-xl font-bold text-white mb-2 leading-tight">{option.mode}</h2>
+            <p className="text-sm text-slate-400 leading-relaxed font-medium">{option.description}</p>
           </button>
         ))}
       </div>
@@ -110,6 +111,7 @@ const InteractionModeSelector: React.FC<InteractionModeSelectorProps> = ({
             Asystent oferuje szereg specjalistycznych narzędzi dostosowanych do Twoich potrzeb:
           </p>
           <ul className="list-disc pl-5 space-y-2 text-sm">
+            <li><strong>Strategiczne Prowadzenie Sprawy:</strong> Kompleksowa analiza dokumentacji, ocena dowodów i przewidywanie wyniku procesowego.</li>
             <li><strong>Porada Prawna:</strong> Ogólna analiza problemu i wstępne wskazówki.</li>
             <li><strong>Generowanie Pisma:</strong> Kreator dokumentów (pozwy, wnioski, wezwania).</li>
             <li><strong>Szkolenie Prawne:</strong> Moduł edukacyjny, który nauczy Cię podstaw danego zagadnienia.</li>

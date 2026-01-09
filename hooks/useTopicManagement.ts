@@ -33,8 +33,8 @@ export const useTopicManagement = (
 
 
 
-    // Updated handleAddTopic based on the instruction
-    const handleAddTopic = useCallback(async (newTopic: string, mode: InteractionMode = InteractionMode.Analysis) => {
+    // Updated handleAddTopic: allow mode to be null initially
+    const handleAddTopic = useCallback(async (newTopic: string, mode: InteractionMode | null = null) => {
         if (!user || !selectedLawArea || !newTopic.trim()) return; // Added newTopic.trim() check back
         const trimmedTopic = newTopic.trim(); // Re-introduced trimmedTopic
 

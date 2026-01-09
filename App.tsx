@@ -2,7 +2,10 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { LawArea, ChatMessage, InteractionMode, UserProfile, QuickAction, SubscriptionStatus, SubscriptionInfo, CourtRole } from './types';
 import { analyzeLegalCase } from './services/geminiService';
 import LawSelector from './components/LawSelector';
+import ServiceTypeSelector from './components/ServiceTypeSelector';
 import TopicSelector from './components/TopicSelector';
+import ProDashboard from './components/ProDashboard';
+import ProCaseInitiator from './components/ProCaseInitiator';
 import InteractionModeSelector from './components/InteractionModeSelector';
 import ChatBubble from './components/ChatBubble';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -62,6 +65,7 @@ const App: React.FC = () => {
     selectedTopic, setSelectedTopic,
     interactionMode, setInteractionMode,
     courtRole, setCourtRole,
+    servicePath, setServicePath,
     isAnalysisMode, setIsAnalysisMode,
     isFullScreen, setIsFullScreen,
     isWelcomeModalOpen, setIsWelcomeModalOpen,
@@ -225,23 +229,45 @@ const App: React.FC = () => {
   };
 
   const handleSelectInteractionMode = (mode: InteractionMode) => {
-    if (!selectedLawArea || !selectedTopic) return;
+    if (!selectedLawArea) return;
     setInteractionMode(mode);
 
-    // Jeśli historia już istnieje, dodajemy komunikat o zmianie trybu, aby AI wiedziało co robić
-    if (chatHistory.length > 0) {
+    // If a topic is selected, we might need to update the history/context
+    if (selectedTopic && chatHistory.length > 0) {
       const lastMessage = chatHistory[chatHistory.length - 1];
       if (lastMessage.role !== 'system') {
         const modeContext = `[ZMIANA TRYBU]: Użytkownik przełączył się w tryb ${mode}. Kontynuuj rozmowę w oparciu o dotychczasowe ustalenia, ale dostosuj styl pracy do nowego trybu.`;
         setChatHistory(prev => [...prev, { role: 'system', content: modeContext }]);
       }
-    } else {
-      let systemContent = `Specjalizacja: ${selectedLawArea}. Temat: ${selectedTopic}. Tryb: ${mode}`;
-      if (mode === InteractionMode.Document) {
-        systemContent += `\n\nTWOJE ZADANIE: Generowanie pism procesowych i wniosków...`;
-      }
+      const systemContent = getSystemPromptForMode(mode, selectedLawArea, selectedTopic);
       setChatHistory([{ role: 'system', content: systemContent }]);
     }
+  };
+
+  const getSystemPromptForMode = (mode: InteractionMode, lawArea: LawArea, topic: string) => {
+    let prompt = `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${mode}.\n\n`;
+
+    switch (mode) {
+      case InteractionMode.StrategicAnalysis:
+        prompt += `TWOJE ZADANIE: Jesteś Starszym Strategiem Procesowym. 
+        Analizuj całą dostępną dokumentację użytkownika (teczkę sprawy).
+        1. Zidentyfikuj MOCNE i SŁABE strony stanowiska użytkownika.
+        2. Wskaż ZAGROŻENIA i SZANSE (analiza SWOT).
+        3. Szukaj słabych punktów strony przeciwnej.
+        4. Oszacuj PROCENTOWO szanse na wygraną na podstawie dowodów.
+        5. Sugeruj konkretne przepisy i linie orzecznicze.
+        Działaj proaktywnie, wyłapuj sprzeczności w dokumentach.`;
+        break;
+      case InteractionMode.Document:
+        prompt += `TWOJE ZADANIE: Generowanie pism procesowych i wniosków...`;
+        break;
+      case InteractionMode.Court:
+        prompt += `Tryb formalny, przygotowanie do sali rozpraw...`;
+        break;
+      default:
+        prompt += `Zasugeruj analizę i pomoc w oparciu o temat.`;
+    }
+    return prompt;
   };
 
   const handleSelectQuickAction = (action: QuickAction) => {
@@ -271,7 +297,7 @@ const App: React.FC = () => {
     setIsWelcomeModalOpen(false);
     setIsLoading(true);
     setChatHistory([]);
-    setInteractionMode(null);
+    // Do NOT clear interactionMode here, as it might have been set by the Hub
     setCourtRole(null);
     setIsFullScreen(false);
 
@@ -306,15 +332,19 @@ const App: React.FC = () => {
         }
 
         setChatHistory(savedHistory);
+
+        // Use saved mode if it exists and we don't have an explicit override from Hub or topic name
         if (savedInteractionMode) {
           setInteractionMode(savedInteractionMode);
         }
 
         if (savedHistory.length === 0) {
-          const modeToUse = savedInteractionMode || InteractionMode.Analysis;
-          setInteractionMode(modeToUse);
-          const systemContent = `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${modeToUse}`;
-          setChatHistory([{ role: 'system', content: systemContent }]);
+          const modeToUse = savedInteractionMode || interactionMode;
+          if (modeToUse) {
+            setInteractionMode(modeToUse);
+            const systemContent = `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${modeToUse}`;
+            setChatHistory([{ role: 'system', content: systemContent }]);
+          }
         }
       } else {
         // Fallback for completely new topics that don't have a document yet
@@ -475,6 +505,40 @@ const App: React.FC = () => {
     setChatHistory([]);
   };
 
+  const handleBackToInteractionMode = () => {
+    setInteractionMode(null);
+    setCourtRole(null);
+  };
+
+  const handleSelectServicePath = (path: 'pro' | 'hub') => {
+    setServicePath(path);
+    if (path === 'pro') {
+      setInteractionMode(InteractionMode.StrategicAnalysis);
+    } else {
+      setInteractionMode(null);
+    }
+  };
+
+  const handleUniversalBack = () => {
+    if (selectedTopic && interactionMode) {
+      // W czacie -> powrót do wyboru tematu
+      setSelectedTopic(null);
+    } else if (!selectedTopic && interactionMode && servicePath === 'pro') {
+      // W wyborze tematów (ścieżka PRO) -> powrót do wyboru usługi (PRO/Hub)
+      setServicePath(null);
+      setInteractionMode(null);
+    } else if (!selectedTopic && interactionMode && servicePath === 'hub') {
+      // W wyborze tematów (ścieżka Hub - już wybrano narzędzie) -> powrót do Hubu
+      setInteractionMode(null);
+    } else if (!selectedTopic && !interactionMode && servicePath === 'hub') {
+      // W Hubie -> powrót do wyboru usługi (PRO/Hub)
+      setServicePath(null);
+    } else if (!selectedTopic && !interactionMode && !servicePath && selectedLawArea) {
+      // W wyborze usługi -> powrót do wyboru dziedziny
+      setSelectedLawArea(null);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-900">
@@ -573,6 +637,10 @@ const App: React.FC = () => {
         isCaseManagementModalOpen={isCaseManagementModalOpen}
         setIsCaseManagementModalOpen={setIsCaseManagementModalOpen}
         currentChatId={currentChatId}
+        onChangeMode={() => {
+          setInteractionMode(null);
+          setIsCaseManagementModalOpen(false);
+        }}
       />
 
       <PlanSelectionModal
@@ -640,7 +708,11 @@ const App: React.FC = () => {
             onProfileClick={() => setIsProfileModalOpen(true)}
             onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}
             onHistoryClick={() => setIsHistoryPanelOpen(true)}
-            onBackClick={selectedTopic ? handleBackToTopic : (selectedLawArea ? handleBackToLawArea : undefined)}
+            onBackClick={
+              (selectedTopic && interactionMode) || (selectedTopic && !interactionMode) || (selectedLawArea && !selectedTopic)
+                ? handleUniversalBack
+                : undefined
+            }
             onHomeClick={handleGoHome}
             onFullScreenClick={selectedTopic && interactionMode ? () => setIsFullScreen(true) : undefined}
             totalCost={totalCost}
@@ -680,22 +752,10 @@ const App: React.FC = () => {
                 });
               }}
             />
-          ) : !selectedTopic ? (
-            <TopicSelector
+          ) : !servicePath ? (
+            <ServiceTypeSelector
               lawArea={selectedLawArea}
-              topics={topics[selectedLawArea] || []}
-              onSelectTopic={handleSelectTopic}
-              onAddTopic={async (topic) => {
-                await handleAddTopic(topic);
-                const h = await loadChatHistories();
-                if (h) setChatHistories(h);
-              }}
-              onAddNegotiationTopic={async (topic) => {
-                await handleAddTopic(topic, InteractionMode.Negotiation);
-                const h = await loadChatHistories();
-                if (h) setChatHistories(h);
-              }}
-              onDeleteTopic={(topic) => requestDeleteTopic(selectedLawArea, topic)}
+              onSelect={handleSelectServicePath}
             />
           ) : !interactionMode ? (
             <div className="flex flex-col flex-1">
@@ -710,6 +770,45 @@ const App: React.FC = () => {
                 <LegalFAQ lawArea={selectedLawArea} onSelectQuestion={handleSendMessage} />
               </div>
             </div>
+          ) : servicePath === 'pro' && !selectedTopic ? (
+            <ProCaseInitiator
+              lawArea={selectedLawArea}
+              existingTopics={topics[selectedLawArea] || []}
+              onSelectTopic={handleSelectTopic}
+              onAddTopic={async (topic) => {
+                await handleAddTopic(topic, InteractionMode.StrategicAnalysis);
+                const h = await loadChatHistories();
+                if (h) setChatHistories(h);
+              }}
+              onDeleteTopic={(topic) => requestDeleteTopic(selectedLawArea, topic)}
+              onBack={() => setServicePath(null)}
+            />
+          ) : !selectedTopic ? (
+            <TopicSelector
+              lawArea={selectedLawArea}
+              topics={topics[selectedLawArea] || []}
+              onSelectTopic={handleSelectTopic}
+              onAddTopic={async (topic) => {
+                await handleAddTopic(topic, interactionMode); // Use current mode
+                const h = await loadChatHistories();
+                if (h) setChatHistories(h);
+              }}
+              onAddNegotiationTopic={async (topic) => {
+                await handleAddTopic(topic, InteractionMode.Negotiation);
+                const h = await loadChatHistories();
+                if (h) setChatHistories(h);
+              }}
+              onDeleteTopic={(topic) => requestDeleteTopic(selectedLawArea, topic)}
+              onChangeMode={() => setInteractionMode(null)}
+            />
+          ) : servicePath === 'pro' ? (
+            <ProDashboard
+              userId={user.uid}
+              chatId={currentChatId}
+              lawArea={selectedLawArea}
+              topic={selectedTopic}
+              onBack={() => setSelectedTopic(null)}
+            />
           ) : (
             <div className="flex flex-col h-full bg-slate-900">
               {interactionMode === InteractionMode.Court && !courtRole ? (
@@ -717,7 +816,14 @@ const App: React.FC = () => {
               ) : (
                 <div className="flex flex-col h-full overflow-hidden">
                   <div className="sticky top-0 z-20 bg-slate-800/95 backdrop-blur-sm border-b border-slate-700/50 p-4 hidden md:block" data-case-dashboard>
-                    <div className="max-w-4xl mx-auto"><CaseDashboard ref={caseDashboardRef} userId={user.uid} caseId={currentChatId!} /></div>
+                    <div className="max-w-4xl mx-auto">
+                      <CaseDashboard
+                        ref={caseDashboardRef}
+                        userId={user.uid}
+                        caseId={currentChatId!}
+                        onChangeMode={() => setInteractionMode(null)}
+                      />
+                    </div>
                   </div>
                   <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
                     <div className="max-w-4xl mx-auto">
@@ -745,7 +851,7 @@ const App: React.FC = () => {
         <RemindersWidget user={user} />
         <CookieConsent />
 
-        {selectedTopic && interactionMode && (
+        {selectedTopic && interactionMode && servicePath !== 'pro' && (
           <footer className="bg-slate-900 p-4 border-t border-slate-700/50">
             <div className="max-w-4xl mx-auto">
               {showQuickActions && !isFullScreen && <QuickActions interactionMode={interactionMode} onActionClick={handleQuickActionClick} />}

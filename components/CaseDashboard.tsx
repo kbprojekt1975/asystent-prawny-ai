@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDownIcon, ChevronUpIcon, BriefcaseIcon } from './Icons';
+import { ChevronDownIcon, ChevronUpIcon, BriefcaseIcon, SparklesIcon } from './Icons';
 import Timeline from './Timeline';
 import DocumentManager from './DocumentManager';
 import ChecklistManager from './ChecklistManager';
@@ -10,6 +10,7 @@ interface CaseDashboardProps {
     userId: string;
     caseId: string;
     initialExpanded?: boolean;
+    onChangeMode?: () => void;
 }
 
 export interface CaseDashboardRef {
@@ -17,7 +18,7 @@ export interface CaseDashboardRef {
     setExpanded: (expanded: boolean) => void;
 }
 
-const CaseDashboard = React.forwardRef<CaseDashboardRef, CaseDashboardProps>(({ userId, caseId, initialExpanded = false }, ref) => {
+const CaseDashboard = React.forwardRef<CaseDashboardRef, CaseDashboardProps>(({ userId, caseId, initialExpanded = false, onChangeMode }, ref) => {
     const [isExpanded, setIsExpanded] = useState(initialExpanded);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
 
@@ -60,7 +61,26 @@ const CaseDashboard = React.forwardRef<CaseDashboardRef, CaseDashboardProps>(({ 
                     <Timeline userId={userId} caseId={caseId} />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <DocumentManager userId={userId} caseId={caseId} />
-                        <ChecklistManager userId={userId} caseId={caseId} />
+                        <div className="space-y-4">
+                            <ChecklistManager userId={userId} caseId={caseId} />
+                            {onChangeMode && (
+                                <button
+                                    onClick={onChangeMode}
+                                    className="w-full flex items-center justify-between p-4 bg-slate-800/80 border border-slate-700 rounded-xl hover:bg-slate-700 hover:border-cyan-500/50 transition-all group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-cyan-600/20 rounded-lg text-cyan-400 group-hover:bg-cyan-600/30 transition-colors">
+                                            <SparklesIcon className="h-5 w-5" />
+                                        </div>
+                                        <div className="text-left">
+                                            <span className="block text-sm font-semibold text-slate-200">Zmień tryb / Narzędzia AI</span>
+                                            <span className="block text-[10px] text-slate-400 uppercase tracking-wider">Tryb Analizy, Pisma, Negocjacji...</span>
+                                        </div>
+                                    </div>
+                                    <ChevronUpIcon className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors rotate-90" />
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

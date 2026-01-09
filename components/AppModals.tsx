@@ -56,6 +56,7 @@ interface AppModalsProps {
     isCaseManagementModalOpen: boolean;
     setIsCaseManagementModalOpen: (open: boolean) => void;
     currentChatId: string | null;
+    onChangeMode?: () => void;
 }
 
 const AppModals: React.FC<AppModalsProps> = ({
@@ -67,7 +68,7 @@ const AppModals: React.FC<AppModalsProps> = ({
     isDocumentsModalOpen, setIsDocumentsModalOpen, documentsModalChatId,
     isDeleteModalOpen, cancelDeleteTopic, confirmDeleteTopic,
     isPreviewModalOpen, setIsPreviewModalOpen, previewContent, previewTitle,
-    isCaseManagementModalOpen, setIsCaseManagementModalOpen, currentChatId
+    isCaseManagementModalOpen, setIsCaseManagementModalOpen, currentChatId, onChangeMode
 }) => {
     return (
         <>
@@ -140,8 +141,9 @@ const AppModals: React.FC<AppModalsProps> = ({
             <CaseManagementModal
                 isOpen={isCaseManagementModalOpen}
                 onClose={() => setIsCaseManagementModalOpen(false)}
-                userId={user?.uid}
+                userId={user?.uid || ''}
                 caseId={currentChatId || ''}
+                onChangeMode={onChangeMode}
             />
         </>
     );

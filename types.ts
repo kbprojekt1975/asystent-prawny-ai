@@ -13,7 +13,8 @@ export enum InteractionMode {
   SuggestRegulations = 'Zasugeruj Przepisy',
   FindRulings = 'Znajdź Podobne Wyroki',
   Court = 'Tryb Sądowy',
-  Negotiation = 'Konwersacja ze stroną przeciwną'
+  Negotiation = 'Konwersacja ze stroną przeciwną',
+  StrategicAnalysis = 'Strategiczne Prowadzenie Sprawy'
 }
 
 export enum CourtRole {
