@@ -34,7 +34,7 @@ export const useTopicManagement = (
 
 
     // Updated handleAddTopic: allow mode to be null initially
-    const handleAddTopic = useCallback(async (newTopic: string, mode: InteractionMode | null = null) => {
+    const handleAddTopic = useCallback(async (newTopic: string, mode: InteractionMode | null = null, servicePath: 'pro' | 'standard' = 'standard') => {
         if (!user || !selectedLawArea || !newTopic.trim()) return; // Added newTopic.trim() check back
         const trimmedTopic = newTopic.trim(); // Re-introduced trimmedTopic
 
@@ -65,7 +65,8 @@ export const useTopicManagement = (
                 lastUpdated: serverTimestamp(),
                 lawArea: selectedLawArea,
                 topic: trimmedTopic,
-                interactionMode: mode
+                interactionMode: mode,
+                servicePath: servicePath
             }, { merge: true });
 
         } catch (e) {

@@ -15,12 +15,14 @@ Dokumenty reprezentujące poszczególne wątki rozmów.
 - `lawArea`: Dziedzina (np. Prawo Cywilne).
 - `topic`: Nazwa tematu (np. Rozwód).
 - `interactionMode`: Ostatnio używany tryb.
+- `servicePath`: Ścieżka usługi (`pro` | `standard`). Służy do izolacji spraw strategicznych.
 - `messages`: Tablica obiektów `ChatMessage` (role, content).
 
 #### Podkolekcje czatu:
 - `/timeline`: Zdarzenia, fakty i terminy (deadlines) powiązane ze sprawą.
 - `/checklist`: Lista zadań do wykonania w danej sprawie.
-- `/documents`: Metadane przesłanych dokumentów.
+- `/documents`: Metadane przesłanych dokumentów (id, name, type, url, uploadedAt, path, party).
+    - `party`: Kategoria strony (`mine` | `opposing`).
 
 ### Kolekcja globalna: `/knowledge`
 Repozytorium wiedzy prawnej (pliki PDF/TXT przetworzone przez system), do których asystent ma dostęp w celu podawania precyzyjnych źródeł.

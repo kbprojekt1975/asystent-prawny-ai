@@ -3,9 +3,12 @@ import { collection, query, orderBy, onSnapshot, doc, setDoc, serverTimestamp } 
 import { db } from '../services/firebase';
 import { LawArea, InteractionMode, CaseDocument, ChatMessage } from '../types';
 import { getLegalAdvice } from '../services/geminiService';
+import { uploadCaseDocument, deleteCaseDocument } from '../services/storageService';
 import {
     DocumentTextIcon,
     UserGroupIcon,
+    UserIcon,
+    TrashIcon,
     ScaleIcon,
     CheckIcon,
     ChevronRightIcon,
@@ -45,6 +48,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [currentInput, setCurrentInput] = useState('');
     const scrollRef = useRef<HTMLDivElement>(null);
+    const mineInputRef = useRef<HTMLInputElement>(null);
+    const opposingInputRef = useRef<HTMLInputElement>(null);
 
     // Scroll chat to bottom when messages change
     useEffect(() => {
@@ -91,6 +96,33 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
         return text.replace(/```[a-z]*\s*(\.\.\.|\s*)*```\s*$/gi, '').trim();
     };
 
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, party: 'mine' | 'opposing') => {
+        const file = event.target.files?.[0];
+        if (!file || !userId || !chatId) return;
+
+        setIsLoading(true);
+        try {
+            await uploadCaseDocument(userId, chatId, file, party);
+        } catch (err) {
+            console.error('Error uploading document:', err);
+        } finally {
+            setIsLoading(false);
+            if (event.target) event.target.value = ''; // Reset input
+        }
+    };
+
+    const handleDeleteDoc = async (docObj: CaseDocument) => {
+        if (!userId || !chatId) return;
+        setIsLoading(true);
+        try {
+            await deleteCaseDocument(userId, chatId, docObj.id, docObj.path);
+        } catch (err) {
+            console.error('Error deleting document:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleNoDocs = async () => {
         if (!chatId) return;
 
@@ -127,7 +159,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                 await setDoc(doc(db, 'users', userId, 'chats', chatId), {
                     messages: newMessages,
                     proStatus: { ...stepStatus, [ProStep.Documents]: 'completed' },
-                    lastUpdated: serverTimestamp()
+                    lastUpdated: serverTimestamp(),
+                    servicePath: 'pro'
                 }, { merge: true });
 
                 setMessages(newMessages);
@@ -145,7 +178,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
             await setDoc(doc(db, 'users', userId, 'chats', chatId), {
                 messages: initialHistory,
                 proStatus: { ...stepStatus, [ProStep.Documents]: 'completed' },
-                lastUpdated: serverTimestamp()
+                lastUpdated: serverTimestamp(),
+                servicePath: 'pro'
             }, { merge: true });
 
             setMessages(initialHistory);
@@ -162,12 +196,19 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
         if (!chatId || documents.length === 0) return;
         setIsLoading(true);
         try {
+            const myDocs = documents.filter(d => d.party === 'mine' || !d.party).map(d => d.name).join(', ');
+            const opposingDocs = documents.filter(d => d.party === 'opposing').map(d => d.name).join(', ');
+
             const prompt = `[SYSTEM PRO: ANALIZA DOKUMENTÓW]
-            W tej sprawie załadowano dokumenty: ${documents.map(d => d.name).join(', ')}.
+            Temat sprawy: ${topic}.
+            
+            W tej sprawie załadowano następujące dokumenty:
+            - MOJE DOKUMENTY: ${myDocs || 'brak'}
+            - DOKUMENTY STRONY PRZECIWNEJ: ${opposingDocs || 'brak'}
             
             TWOJE ZADANIE:
-            1. Przeanalizuj treść tych plików w kontekście sprawy: ${topic}.
-            2. Przedstaw konkretne podsumowanie tego, co już udało się ustalić na podstawie dokumentów (fakty, chronologia, kluczowe dowody).
+            1. Przeanalizuj treść tych plików (dostępną w Twojej bazie wiedzy dla tego czatu).
+            2. Przedstaw konkretne podsumowanie tego, co już udało się ustalić, z wyraźnym rozróżnieniem na to, co wiemy od nas, a co od przeciwnika.
             3. Na tej podstawie zadaj 2-3 najważniejsze pytania uzupełniające, które pomogą Ci przygotować strategię.
             
             Twoja odpowiedź otwiera Etap 2: Wywiad Strategiczny. Bądź profesjonalny i konkretny.`;
@@ -193,7 +234,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
             await setDoc(doc(db, 'users', userId, 'chats', chatId), {
                 messages: newMessages,
                 proStatus: { ...stepStatus, [ProStep.Documents]: 'completed' },
-                lastUpdated: serverTimestamp()
+                lastUpdated: serverTimestamp(),
+                servicePath: 'pro'
             }, { merge: true });
 
             setStepStatus(prev => ({ ...prev, [ProStep.Documents]: 'completed' }));
@@ -232,7 +274,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
 
             await setDoc(doc(db, 'users', userId, 'chats', chatId), {
                 messages: finalHistory,
-                lastUpdated: serverTimestamp()
+                lastUpdated: serverTimestamp(),
+                servicePath: 'pro'
             }, { merge: true });
 
         } catch (err) {
@@ -323,47 +366,105 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                         </div>
                     )}
 
-                    <div className="bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-3xl p-12 text-center mb-8">
-                        <DocumentTextIcon className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                        <h2 className="text-xl font-semibold mb-2">Przeciągnij pliki tutaj</h2>
-                        <p className="text-slate-500 text-sm mb-6">PDF, JPG, PNG (pozwy, pisma, dowody)</p>
-                        <button className="bg-violet-600 hover:bg-violet-500 px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-violet-900/20">
-                            Wybierz pliki
-                        </button>
-                        <div className="mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        {/* Moje Dokumenty */}
+                        <div
+                            className="bg-slate-800/40 border-2 border-dashed border-violet-500/30 rounded-3xl p-8 text-center hover:border-violet-500/60 transition-all group"
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                const file = e.dataTransfer.files[0];
+                                if (file) handleFileUpload({ target: { files: [file] } } as any, 'mine');
+                            }}
+                        >
+                            <UserIcon className="w-12 h-12 text-violet-400/50 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                            <h3 className="font-bold mb-1">Moje Dokumenty</h3>
+                            <p className="text-slate-500 text-xs mb-4">Pozwy, Twoje pisma, dowody własne</p>
+                            <input
+                                type="file"
+                                ref={mineInputRef}
+                                className="hidden"
+                                onChange={(e) => handleFileUpload(e, 'mine')}
+                            />
                             <button
-                                onClick={handleNoDocs}
-                                className="text-slate-500 text-sm hover:text-white hover:underline transition-colors"
+                                onClick={() => mineInputRef.current?.click()}
+                                className="bg-violet-600/20 text-violet-400 border border-violet-500/30 px-4 py-2 rounded-xl text-xs font-bold hover:bg-violet-600/30 transition-all"
                             >
-                                {isLoading ? 'Inicjowanie wywiadu...' : 'Nie mam dokumentów - chcę opowiedzieć o sprawie'}
+                                WYBIERZ PLIKI
+                            </button>
+                        </div>
+
+                        {/* Dokumenty Przeciwnika */}
+                        <div
+                            className="bg-slate-800/40 border-2 border-dashed border-slate-700 rounded-3xl p-8 text-center hover:border-slate-500/60 transition-all group"
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                const file = e.dataTransfer.files[0];
+                                if (file) handleFileUpload({ target: { files: [file] } } as any, 'opposing');
+                            }}
+                        >
+                            <UserGroupIcon className="w-12 h-12 text-slate-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                            <h3 className="font-bold mb-1">Dokumenty Przeciwnika</h3>
+                            <p className="text-slate-500 text-xs mb-4">Pisma od drugiej strony, ich dowody</p>
+                            <input
+                                type="file"
+                                ref={opposingInputRef}
+                                className="hidden"
+                                onChange={(e) => handleFileUpload(e, 'opposing')}
+                            />
+                            <button
+                                onClick={() => opposingInputRef.current?.click()}
+                                className="bg-slate-700/50 text-slate-400 border border-slate-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-300 hover:text-slate-900 transition-all"
+                            >
+                                WYBIERZ PLIKI
                             </button>
                         </div>
                     </div>
 
-                    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+                    <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-bold text-slate-300">Twoja lista dokumentów ({documents.length})</h3>
+                            <h3 className="font-bold text-slate-300">Lista załadowanych plików ({documents.length})</h3>
                         </div>
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-2">
                             {documents.length > 0 ? (
                                 documents.map(doc => (
-                                    <div key={doc.id} className="flex items-center justify-between p-3 bg-slate-900/50 border border-slate-700/50 rounded-xl group hover:border-violet-500/50 transition-all">
-                                        <div className="flex items-center gap-3">
-                                            <DocumentTextIcon className="w-5 h-5 text-violet-400" />
-                                            <span className="text-sm">{doc.name}</span>
+                                    <div key={doc.id} className="flex items-center justify-between p-3 bg-slate-900/50 border border-slate-700/30 rounded-xl group hover:border-violet-500/30 transition-all">
+                                        <div className="flex items-center gap-3 overflow-hidden">
+                                            <div className={`p-1.5 rounded-lg ${doc.party === 'opposing' ? 'bg-slate-700 text-slate-400' : 'bg-violet-600/20 text-violet-400'}`}>
+                                                {doc.party === 'opposing' ? <UserGroupIcon className="w-4 h-4" /> : <UserIcon className="w-4 h-4" />}
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-sm font-medium truncate">{doc.name}</span>
+                                                <span className={`text-[10px] font-bold uppercase ${doc.party === 'opposing' ? 'text-slate-500' : 'text-violet-400'}`}>
+                                                    {doc.party === 'opposing' ? 'Strona Przeciwna' : 'Moje'}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <a href={doc.url} target="_blank" className="p-2 bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors">
-                                            <ExternalLinkIcon className="w-4 h-4" />
-                                        </a>
+                                        <div className="flex items-center gap-1">
+                                            <a href={doc.url} target="_blank" className="p-2 text-slate-500 hover:text-white transition-colors" title="Podejrzyj">
+                                                <ExternalLinkIcon className="w-4 h-4" />
+                                            </a>
+                                            <button
+                                                onClick={() => handleDeleteDoc(doc)}
+                                                className="p-2 text-slate-500 hover:text-red-400 transition-colors"
+                                                title="Usuń"
+                                            >
+                                                <TrashIcon className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-slate-500 text-sm italic">Brak załadowanych dokumentów.</p>
+                                <div className="text-center py-8">
+                                    <DocumentTextIcon className="w-12 h-12 text-slate-700 mx-auto mb-2" />
+                                    <p className="text-slate-500 text-sm italic">Brak dokumentów. Wrzuć pliki powyżej.</p>
+                                </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="mt-12 flex justify-center">
+                    <div className="mt-12 flex flex-col items-center gap-4">
                         <button
                             disabled={documents.length === 0 || isLoading}
                             className={`flex items-center gap-3 bg-gradient-to-r from-violet-600 to-indigo-600 px-10 py-5 rounded-2xl font-bold shadow-lg transition-all ${(documents.length === 0 || isLoading) ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:scale-105 hover:shadow-violet-900/40'
@@ -372,6 +473,14 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                         >
                             {isLoading ? <div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin"></div> : <MagicWandIcon className="w-6 h-6" />}
                             <span>ANALIZUJ DOKUMENTY (AI)</span>
+                        </button>
+
+                        <button
+                            onClick={handleNoDocs}
+                            disabled={isLoading}
+                            className="text-slate-500 text-sm hover:text-white hover:underline transition-colors mt-2"
+                        >
+                            {isLoading ? 'Inicjowanie...' : 'Nie mam dokumentów - chcę opowiedzieć o sprawie'}
                         </button>
                     </div>
                 </div>

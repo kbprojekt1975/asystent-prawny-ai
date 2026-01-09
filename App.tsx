@@ -173,6 +173,7 @@ const App: React.FC = () => {
       if (h) setChatHistories(h);
     },
     setCourtRole,
+    chatHistories,
     isLocalOnly
   });
 
@@ -202,6 +203,21 @@ const App: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [chatHistory, isLoading, currentMessage]);
+
+  const filteredTopics = useMemo(() => {
+    if (!selectedLawArea) return { standard: [], pro: [] };
+    const allTopics = topics[selectedLawArea] || [];
+
+    // Find topics that have a pro servicePath in chatHistories
+    const proTopicNames = chatHistories
+      .filter(h => h.lawArea === selectedLawArea && h.servicePath === 'pro')
+      .map(h => h.topic);
+
+    return {
+      standard: allTopics.filter(t => !proTopicNames.includes(t)),
+      pro: allTopics.filter(t => proTopicNames.includes(t))
+    };
+  }, [topics, selectedLawArea, chatHistories]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -773,10 +789,10 @@ const App: React.FC = () => {
           ) : servicePath === 'pro' && !selectedTopic ? (
             <ProCaseInitiator
               lawArea={selectedLawArea}
-              existingTopics={topics[selectedLawArea] || []}
+              existingTopics={filteredTopics.pro}
               onSelectTopic={handleSelectTopic}
               onAddTopic={async (topic) => {
-                await handleAddTopic(topic, InteractionMode.StrategicAnalysis);
+                await handleAddTopic(topic, InteractionMode.StrategicAnalysis, 'pro');
                 const h = await loadChatHistories();
                 if (h) setChatHistories(h);
               }}
@@ -786,15 +802,15 @@ const App: React.FC = () => {
           ) : !selectedTopic ? (
             <TopicSelector
               lawArea={selectedLawArea}
-              topics={topics[selectedLawArea] || []}
+              topics={filteredTopics.standard}
               onSelectTopic={handleSelectTopic}
               onAddTopic={async (topic) => {
-                await handleAddTopic(topic, interactionMode); // Use current mode
+                await handleAddTopic(topic, interactionMode, 'standard'); // Use current mode
                 const h = await loadChatHistories();
                 if (h) setChatHistories(h);
               }}
               onAddNegotiationTopic={async (topic) => {
-                await handleAddTopic(topic, InteractionMode.Negotiation);
+                await handleAddTopic(topic, InteractionMode.Negotiation, 'standard');
                 const h = await loadChatHistories();
                 if (h) setChatHistories(h);
               }}

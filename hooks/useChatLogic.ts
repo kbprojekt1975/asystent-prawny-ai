@@ -15,6 +15,7 @@ interface UseChatLogicProps {
     onAddCost: (cost: number) => void;
     onRefreshHistories: () => void;
     setCourtRole: (role: CourtRole | null) => void;
+    chatHistories?: { lawArea: LawArea; topic: string; servicePath?: 'pro' | 'standard' }[];
     isLocalOnly?: boolean;
 }
 
@@ -28,6 +29,7 @@ export const useChatLogic = ({
     onAddCost,
     onRefreshHistories,
     setCourtRole,
+    chatHistories = [],
     isLocalOnly = false
 }: UseChatLogicProps) => {
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
@@ -91,7 +93,7 @@ export const useChatLogic = ({
     const handleSendMessage = useCallback(async (
         messageOverride?: string,
         historyOverride?: ChatMessage[],
-        metadataOverride?: { lawArea: LawArea, topic: string, interactionMode: InteractionMode }
+        metadataOverride?: { lawArea: LawArea, topic: string, interactionMode: InteractionMode, servicePath?: 'pro' | 'standard' }
     ) => {
         // Determine effective values (use overrides or current state)
         const effectiveLawArea = metadataOverride?.lawArea || selectedLawArea;
@@ -147,7 +149,11 @@ export const useChatLogic = ({
                     lastUpdated: serverTimestamp(),
                     lawArea: effectiveLawArea,
                     topic: effectiveTopic,
-                    interactionMode: effectiveInteractionMode
+                    interactionMode: effectiveInteractionMode,
+                    servicePath: metadataOverride?.servicePath || (chatHistories.find(h => {
+                        const sanTopic = h.topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                        return h.lawArea === effectiveLawArea && sanTopic === effectiveTopic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                    })?.servicePath) || 'standard'
                 }, { merge: true });
             }
 
@@ -188,7 +194,11 @@ export const useChatLogic = ({
                     lastUpdated: serverTimestamp(),
                     lawArea: effectiveLawArea,
                     topic: effectiveTopic,
-                    interactionMode: effectiveInteractionMode
+                    interactionMode: effectiveInteractionMode,
+                    servicePath: metadataOverride?.servicePath || (chatHistories.find(h => {
+                        const sanTopic = h.topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                        return h.lawArea === effectiveLawArea && sanTopic === effectiveTopic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                    })?.servicePath) || 'standard'
                 }, { merge: true });
 
                 // Reload histories only if syncing with server
@@ -259,7 +269,7 @@ export const useChatLogic = ({
         try {
             const chatsColRef = collection(db, 'users', user.uid, 'chats');
             const querySnapshot = await getDocs(chatsColRef);
-            const histories: { lawArea: LawArea; topic: string; interactionMode?: InteractionMode; lastUpdated?: any }[] = [];
+            const histories: { lawArea: LawArea; topic: string; interactionMode?: InteractionMode; servicePath?: 'pro' | 'standard'; lastUpdated?: any }[] = [];
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 const parts = doc.id.split('_');
@@ -279,7 +289,7 @@ export const useChatLogic = ({
                             }
                         }
                     }
-                    histories.push({ lawArea, topic, interactionMode, lastUpdated: data.lastUpdated });
+                    histories.push({ lawArea, topic, interactionMode, servicePath: data.servicePath || 'standard', lastUpdated: data.lastUpdated });
                 }
             });
             histories.sort((a, b) => {

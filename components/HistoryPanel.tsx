@@ -9,7 +9,7 @@ import { useState } from 'react';
 interface HistoryPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  histories: { lawArea: LawArea, topic: string, interactionMode?: InteractionMode, lastUpdated?: any }[];
+  histories: { lawArea: LawArea, topic: string, interactionMode?: InteractionMode, servicePath?: 'pro' | 'standard', lastUpdated?: any }[];
   onLoadHistory: (lawArea: LawArea, topic: string) => void;
   onDeleteHistory: (lawArea: LawArea, topic: string) => void;
   onViewKnowledge?: (lawArea: LawArea, topic: string) => void;
@@ -59,17 +59,22 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
           <div>
             <p className="text-sm text-slate-400 mb-4">Wybierz sprawę, aby do niej wrócić.</p>
             <div className="space-y-2">
-              {histories.length > 0 ? histories.map(({ lawArea, topic, interactionMode }, index) => (
+              {histories.length > 0 ? histories.map(({ lawArea, topic, interactionMode, servicePath }, index) => (
                 <div key={`${lawArea}-${topic}-${index}`} className="flex items-center justify-between bg-slate-700/50 rounded-lg group hover:bg-slate-700 transition-colors px-3">
                   <button onClick={() => { onLoadHistory(lawArea, topic); onClose(); }} className="flex-grow flex items-center gap-3 py-3 text-left min-w-0">
-                    <div className="w-10 h-10 bg-slate-600 rounded-lg flex items-center justify-center flex-shrink-0 text-cyan-400">
+                    <div className={`w-10 h-10 ${servicePath === 'pro' ? 'bg-violet-600/20 text-violet-400' : 'bg-slate-600 text-cyan-400'} rounded-lg flex items-center justify-center flex-shrink-0`}>
                       <CaseIcon />
                     </div>
                     <div className="overflow-hidden min-w-0">
-                      <p className="text-sm text-white font-medium truncate">{topic}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-white font-medium truncate">{topic}</p>
+                        {servicePath === 'pro' && (
+                          <span className="text-[9px] bg-violet-600 text-white px-1.5 py-0.5 rounded font-black tracking-tighter shrink-0">PRO</span>
+                        )}
+                      </div>
                       <p className="text-xs text-slate-400 truncate">
                         {lawArea}
-                        {interactionMode && <span className="text-cyan-500/80"> • {interactionMode}</span>}
+                        {interactionMode && <span className={`${servicePath === 'pro' ? 'text-violet-400/80' : 'text-cyan-500/80'}`}> • {interactionMode}</span>}
                       </p>
                     </div>
                   </button>

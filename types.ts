@@ -56,6 +56,7 @@ export interface CaseDocument {
   url: string;
   uploadedAt: any;
   path: string;
+  party?: 'mine' | 'opposing';
   userId?: string; // Added for Global Collection Group queries
 }
 

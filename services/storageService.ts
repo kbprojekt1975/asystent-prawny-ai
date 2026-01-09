@@ -6,7 +6,8 @@ import { CaseDocument } from "../types";
 export const uploadCaseDocument = async (
     userId: string,
     caseId: string,
-    file: File
+    file: File,
+    party?: 'mine' | 'opposing'
 ): Promise<CaseDocument> => {
     const filePath = `users/${userId}/cases/${caseId}/documents/${Date.now()}_${file.name}`;
     const storageRef = ref(storage, filePath);
@@ -29,7 +30,8 @@ export const uploadCaseDocument = async (
         url: url,
         uploadedAt: serverTimestamp(),
         path: filePath,
-        userId: userId // Essential for global collection group queries
+        userId: userId, // Essential for global collection group queries
+        party: party
     };
 
     await setDoc(docRef, caseDoc);
