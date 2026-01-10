@@ -10,7 +10,7 @@ const initialProfile: UserProfile = {
     isActive: false
 };
 
-export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelcome: () => void) => {
+export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
     const [user, setUser] = useState<User | null>(null);
     const [authLoading, setAuthLoading] = useState(true);
     const [profileLoading, setProfileLoading] = useState(true); // Moved up
@@ -23,20 +23,17 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            // We do NOT set profileLoading(true) here anymore to avoid race conditions/deadlocks
-            // if the user object reference doesn't change enough to trigger the effect below.
+            if (currentUser) {
+                setProfileLoading(true);
+            }
             setUser(currentUser);
             setAuthLoading(false);
             if (currentUser && welcomeTriggered.current !== currentUser.uid) {
                 welcomeTriggered.current = currentUser.uid;
-                // Delay welcome modal to ensure UI is ready
-                setTimeout(() => {
-                    onWelcome();
-                }, 800);
             }
         });
         return () => unsubscribe();
-    }, [onWelcome]);
+    }, []);
 
     // Initialize User in Firestore
     useEffect(() => {
@@ -98,12 +95,17 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>, onWelco
                     }
 
                     if (now - lastUpdate > 3600000 || needsUpdate) {
+                        const previousConsent = data.profile?.dataProcessingConsent ?? false;
+                        const newConsent = pendingConsentValue !== null ? isConsentFromAuth : previousConsent;
+                        // Prevent downgrade: if it was true, keep it true unless we want an explicit way to withdraw (not implemented here)
+                        const finalConsent = previousConsent || newConsent;
+
                         await updateDoc(userDocRef, {
                             email: user.email,
                             displayName: finalDisplayName || user.displayName,
                             "profile.displayName": finalDisplayName || user.displayName,
-                            "profile.dataProcessingConsent": pendingConsentValue !== null ? isConsentFromAuth : (data.profile?.dataProcessingConsent ?? false),
-                            "profile.consentDate": (pendingConsentValue !== null && isConsentFromAuth) ? serverTimestamp() : (data.profile?.consentDate ?? null),
+                            "profile.dataProcessingConsent": finalConsent,
+                            "profile.consentDate": (finalConsent && !previousConsent) ? serverTimestamp() : (data.profile?.consentDate ?? null),
                             lastLogin: serverTimestamp()
                         });
                     }

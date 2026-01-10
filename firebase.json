@@ -42,24 +42,35 @@
         "source": "**",
         "destination": "/index.html"
       }
+    ],
+    "headers": [
+      {
+        "source": "/**",
+        "headers": [
+          {
+            "key": "Cross-Origin-Opener-Policy",
+            "value": "same-origin-allow-popups"
+          }
+        ]
+      }
     ]
   },
   "emulators": {
     "auth": {
       "port": 9099,
-      "host": "127.0.0.1"
+      "host": "0.0.0.0"
     },
     "functions": {
       "port": 5001,
-      "host": "127.0.0.1"
+      "host": "0.0.0.0"
     },
     "firestore": {
       "port": 8080,
-      "host": "127.0.0.1"
+      "host": "0.0.0.0"
     },
     "storage": {
       "port": 9199,
-      "host": "127.0.0.1"
+      "host": "0.0.0.0"
     },
     "ui": {
       "enabled": true

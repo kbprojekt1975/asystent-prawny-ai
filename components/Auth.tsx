@@ -105,7 +105,6 @@ const Auth: React.FC = () => {
   return (
     <div
       className="flex flex-col items-center justify-center min-h-[100dvh] bg-slate-900 p-4"
-      onKeyDown={(e) => e.stopPropagation()}
     >
       <div className="bg-slate-800 border border-slate-700 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center relative">
         <div className="absolute top-4 right-4">
@@ -186,9 +185,25 @@ const Auth: React.FC = () => {
                 placeholder="Twój Nick"
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 required
-                pattern="^[a-zA-Z0-9_-]+$"
+                pattern="^[a-zA-Z0-9_\-]+$"
                 title="Nick może zawierać tylko litery, cyfry, podkreślniki i myślniki."
               />
+            )}
+
+            {authMethod === 'nickname' && (
+              <div className="bg-amber-900/30 border border-amber-500/50 p-3 rounded-xl text-left animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex gap-2">
+                  <div className="p-1 h-fit bg-amber-500/20 rounded-lg text-amber-500">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <p className="text-[10px] leading-relaxed text-amber-200/90">
+                    <strong className="text-amber-400 block mb-0.5 uppercase tracking-wide">Bezpieczeństwo konta</strong>
+                    Konto oparte na samym nicku uniemożliwia tradycyjne odzyskanie hasła. Pamiętaj o zachowaniu hasła w bezpiecznym miejscu, ponieważ w przypadku jego utraty nie będziemy mogli zresetować go przez e-mail.
+                  </p>
+                </div>
+              </div>
             )}
             <div className="flex flex-col items-end gap-1">
               <input
@@ -199,7 +214,7 @@ const Auth: React.FC = () => {
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 required
               />
-              {isLogin && (
+              {isLogin && authMethod === 'email' && (
                 <button
                   type="button"
                   onClick={() => {

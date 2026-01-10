@@ -389,6 +389,35 @@ export const useChatLogic = ({
         }
     }, [handleSendMessage]);
 
+    const handleInitialGreeting = useCallback(async (lawArea: LawArea, topic: string, mode: InteractionMode) => {
+        if (!user) return;
+        setIsLoading(true);
+
+        const specializedPrompt = `
+            SYSTEM: To jest początek NOWEJ ROZMOWY. 
+            TWOJE ZADANIE: 
+            1. Przywitaj się uprzejmie jako Asystent Prawny AI.
+            2. Poinformuj użytkownika, że znajdujemy się w dziale: "${lawArea}" i zajmujemy się tematem: "${topic}".
+            3. Wyjaśnij krótko, jak możesz pomóc w tym konkretnym trybie ("${mode}").
+            4. Poinstruuj użytkownika, co powinien zrobić teraz (np. opisać swoją sytuację, zadać pytanie lub przesłać dokumenty do analizy).
+            
+            Twoja odpowiedź powinna być profesjonalna, empatyczna i zachęcająca do interakcji.
+        `;
+
+        const initialHistory: ChatMessage[] = [
+            { role: 'system', content: `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${mode}\n\n${specializedPrompt}` },
+            { role: 'user', content: "[SYSTEM: Przywitaj się i wprowadź mnie w sprawę]" }
+        ];
+
+        setChatHistory(initialHistory);
+
+        await handleSendMessage(undefined, initialHistory, {
+            lawArea,
+            topic,
+            interactionMode: mode
+        });
+    }, [user, handleSendMessage]);
+
     return {
         chatHistory, setChatHistory,
         currentMessage, setCurrentMessage,
@@ -402,6 +431,7 @@ export const useChatLogic = ({
         loadChatHistories,
         handleAddCost,
         handleExportChat,
-        handleImportChat
+        handleImportChat,
+        handleInitialGreeting
     };
 };

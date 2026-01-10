@@ -43,14 +43,18 @@ export async function searchLegalActs(params: ActSearchParams): Promise<ActMetad
 
     try {
         const response = await fetch(url.toString(), {
-            headers: { 'Accept': 'application/json' }
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
         });
 
         if (!response.ok) {
-            throw new Error(`ISAP API Error: ${response.statusText}`);
+            throw new Error(`ISAP API Error: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json() as any;
+        // ... rest stays same
 
         // The API returns an object with 'items' array. Increase limit to 30 to find consolidated texts.
         const items = (data.items || []) as any[];
@@ -116,9 +120,15 @@ export async function getActContent(publisher: string, year: number, pos: number
     const url = `https://api.sejm.gov.pl/eli/acts/${publisher}/${year}/${pos}/text.html`;
 
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Referer': 'https://isap.sejm.gov.pl/'
+            }
+        });
         if (!response.ok) {
-            throw new Error(`ISAP Text API Error: ${response.statusText}`);
+            throw new Error(`ISAP Text API Error: ${response.status} ${response.statusText}`);
         }
 
         const html = await response.text();
@@ -132,11 +142,14 @@ export async function getActContent(publisher: string, year: number, pos: number
             .replace(/\s+/g, ' ')
             .trim();
 
-        // Limit content length for the prototype (e.g., first 10k characters)
+        if (text.length < 200) {
+            throw new Error("Pobrana treść aktu jest zbyt krótka lub pusta (prawdopodobna blokada API).");
+        }
+
         return text.substring(0, 15000);
-    } catch (error) {
+    } catch (error: any) {
         logger.error(`Error fetching act content: ${publisher}/${year}/${pos}`, error);
-        return "Błąd podczas pobierania treści aktu prawnego.";
+        return `Błąd: ${error.message}`;
     }
 }
 
@@ -148,9 +161,15 @@ export async function getFullActContent(publisher: string, year: number, pos: nu
     const url = `https://api.sejm.gov.pl/eli/acts/${publisher}/${year}/${pos}/text.html`;
 
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Referer': 'https://isap.sejm.gov.pl/'
+            }
+        });
         if (!response.ok) {
-            throw new Error(`ISAP Text API Error: ${response.statusText}`);
+            throw new Error(`ISAP Text API Error: ${response.status} ${response.statusText}`);
         }
 
         const html = await response.text();
@@ -163,9 +182,13 @@ export async function getFullActContent(publisher: string, year: number, pos: nu
             .replace(/\s+/g, ' ')
             .trim();
 
+        if (text.length < 200) {
+            throw new Error("Pobrana treść aktu jest zbyt krótka (prawdopodobna blokada API).");
+        }
+
         return text; // NO LIMIT
-    } catch (error) {
+    } catch (error: any) {
         logger.error(`Error fetching full act content: ${publisher}/${year}/${pos}`, error);
-        return "Błąd podczas pobierania treści aktu prawnego.";
+        throw error; // Throw so index.ts catches it as 500
     }
 }

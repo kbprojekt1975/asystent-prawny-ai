@@ -1,0 +1,23 @@
+# ngrok configuration for Asystent Prawny AI
+# Usage: ngrok start --all --config ./ngrok.yml
+
+version: "2"
+# authtoken: YOUR_AUTHTOKEN_HERE # Uncomment and add your token if not configured globally
+
+tunnels:
+  frontend:
+    proto: http
+    addr: 5173
+    # hostname: optional-custom-domain.ngrok.io # Requires paid plan
+  auth:
+    proto: http
+    addr: 9099
+  firestore:
+    proto: http
+    addr: 8080
+  functions:
+    proto: http
+    addr: 5001
+  storage:
+    proto: http
+    addr: 9199

@@ -562,22 +562,32 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                 </div>
 
                 <div className="p-4 bg-slate-800/80 border-t border-slate-700">
-                    <div className="flex gap-2 max-w-4xl mx-auto">
-                        <input
-                            type="text"
-                            className="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-violet-500 transition-all"
-                            placeholder="Wpisz odpowiedź na pytania AI..."
-                            value={currentInput}
-                            onChange={(e) => setCurrentInput(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                        />
-                        <button
-                            onClick={handleSendMessage}
-                            disabled={isLoading || !currentInput.trim()}
-                            className="p-3 bg-violet-600 rounded-xl hover:bg-violet-500 transition-colors disabled:opacity-50"
-                        >
-                            <SendIcon className="w-5 h-5" />
-                        </button>
+                    <div className="flex flex-col gap-3 max-w-4xl mx-auto">
+                        {/* Context Badge */}
+                        <div className="flex items-center gap-2 px-1 py-1 text-[10px] opacity-70">
+                            <ScaleIcon className="w-3 h-3 text-cyan-400 flex-shrink-0" />
+                            <span className="text-slate-400 font-semibold uppercase tracking-wider">Tryb: Strategia PRO</span>
+                            <span className="text-slate-600">|</span>
+                            <BriefcaseIcon className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                            <span className="text-amber-400 font-semibold truncate uppercase tracking-wider">{topic}</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                className="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-violet-500 transition-all"
+                                placeholder="Wpisz odpowiedź na pytania AI..."
+                                value={currentInput}
+                                onChange={(e) => setCurrentInput(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                            />
+                            <button
+                                onClick={handleSendMessage}
+                                disabled={isLoading || !currentInput.trim()}
+                                className="p-3 bg-violet-600 rounded-xl hover:bg-violet-500 transition-colors disabled:opacity-50"
+                            >
+                                <SendIcon className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -712,22 +722,32 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                 {
                     reportMessage && (
                         <div className="p-4 bg-slate-800/80 border-t border-slate-700 backdrop-blur-md">
-                            <div className="flex gap-2 max-w-4xl mx-auto">
-                                <input
-                                    type="text"
-                                    className="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-violet-500 transition-all placeholder:text-slate-600"
-                                    placeholder="Zadaj pytanie do raportu lub odpowiedz Asystentowi..."
-                                    value={currentInput}
-                                    onChange={(e) => setCurrentInput(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                                />
-                                <button
-                                    onClick={handleSendMessage}
-                                    disabled={isLoading || !currentInput.trim()}
-                                    className="p-3 bg-violet-600 rounded-xl hover:bg-violet-500 transition-colors disabled:opacity-50 shadow-lg shadow-violet-900/20"
-                                >
-                                    <SendIcon className="w-5 h-5" />
-                                </button>
+                            <div className="flex flex-col gap-3 max-w-4xl mx-auto">
+                                {/* Context Badge */}
+                                <div className="flex items-center gap-2 px-1 py-1 text-[10px] opacity-70">
+                                    <ScaleIcon className="w-3 h-3 text-cyan-400 flex-shrink-0" />
+                                    <span className="text-slate-400 font-semibold uppercase tracking-wider">Tryb: Analiza Strategiczna</span>
+                                    <span className="text-slate-600">|</span>
+                                    <BriefcaseIcon className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                                    <span className="text-amber-400 font-semibold truncate uppercase tracking-wider">{topic}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        className="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-violet-500 transition-all placeholder:text-slate-600"
+                                        placeholder="Zadaj pytanie do raportu lub odpowiedz Asystentowi..."
+                                        value={currentInput}
+                                        onChange={(e) => setCurrentInput(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                                    />
+                                    <button
+                                        onClick={handleSendMessage}
+                                        disabled={isLoading || !currentInput.trim()}
+                                        className="p-3 bg-violet-600 rounded-xl hover:bg-violet-500 transition-colors disabled:opacity-50 shadow-lg shadow-violet-900/20"
+                                    >
+                                        <SendIcon className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )

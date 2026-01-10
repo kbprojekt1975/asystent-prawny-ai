@@ -23,7 +23,8 @@ import {
   HomeIcon,
   ProfileIcon,
   ScaleIcon,
-  CaseIcon
+  CaseIcon,
+  ChevronRightIcon
 } from './components/Icons';
 import AppHeader from './components/AppHeader';
 import CourtRoleSelector from './components/CourtRoleSelector';
@@ -78,13 +79,6 @@ const App: React.FC = () => {
 
   const [isAlimonyModalOpen, setIsAlimonyModalOpen] = useState(false);
 
-  const handleWelcome = useCallback(() => {
-    if (!selectedLawArea) {
-      setWelcomeModalInitialViewMode('selection');
-      setIsWelcomeModalOpen(true);
-    }
-  }, [selectedLawArea, setIsWelcomeModalOpen]);
-
   const {
     user,
     authLoading,
@@ -95,7 +89,7 @@ const App: React.FC = () => {
     handleUpdateProfile,
     isLocalOnly,
     setIsLocalOnly
-  } = useUserSession(initialTopics, handleWelcome);
+  } = useUserSession(initialTopics);
 
   const {
     topics,
@@ -159,7 +153,8 @@ const App: React.FC = () => {
     loadChatHistories,
     handleAddCost,
     handleExportChat,
-    handleImportChat
+    handleImportChat,
+    handleInitialGreeting
   } = useChatLogic({
     user,
     userProfile,
@@ -349,26 +344,23 @@ const App: React.FC = () => {
 
         setChatHistory(savedHistory);
 
-        // Use saved mode if it exists and we don't have an explicit override from Hub or topic name
-        if (savedInteractionMode) {
-          setInteractionMode(savedInteractionMode);
+        // PRIORITY: If user already selected a mode (e.g., from Hub), keep it
+        // Otherwise, use saved mode from database
+        const modeToUse = interactionMode || savedInteractionMode;
+        if (modeToUse) {
+          setInteractionMode(modeToUse);
         }
 
-        if (savedHistory.length === 0) {
-          const modeToUse = savedInteractionMode || interactionMode;
-          if (modeToUse) {
-            setInteractionMode(modeToUse);
-            const systemContent = `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${modeToUse}`;
-            setChatHistory([{ role: 'system', content: systemContent }]);
-          }
+        if (savedHistory.length === 0 && modeToUse) {
+          handleInitialGreeting(lawArea, topic, modeToUse);
         }
       } else {
         // Fallback for completely new topics that don't have a document yet
         setChatHistory([]);
-        if (autoInteractionMode) {
-          setInteractionMode(autoInteractionMode);
-          const systemContent = `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${autoInteractionMode}`;
-          setChatHistory([{ role: 'system', content: systemContent }]);
+        const modeToUse = interactionMode || autoInteractionMode;
+        if (modeToUse) {
+          setInteractionMode(modeToUse);
+          handleInitialGreeting(lawArea, topic, modeToUse);
         }
       }
     } catch (e) {
@@ -455,12 +447,10 @@ const App: React.FC = () => {
       setIsWelcomeModalOpen(false);
       setIsLoading(false);
 
-      const initialHistory: ChatMessage[] = [
+      handleSendMessage(description, [
         { role: 'system', content: `Specjalizacja: ${result.lawArea}. Temat: ${result.topic}. Tryb: ${result.interactionMode}` },
         { role: 'user', content: description }
-      ];
-
-      handleSendMessage(description, initialHistory, {
+      ], {
         lawArea: result.lawArea,
         topic: result.topic,
         interactionMode: result.interactionMode
@@ -555,11 +545,19 @@ const App: React.FC = () => {
     }
   };
 
-  // Show loading spinner for both Auth and Profile (to prevent "flash" of unverified app state)
-  if (authLoading || profileLoading) {
+  // Consolidated loading spinner for a clean initialization experience
+  if (authLoading || profileLoading || (isLoading && chatHistory.length === 0 && !interactionMode && !isWelcomeModalOpen && selectedTopic)) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-900">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-cyan-500"></div>
+      <div className="flex h-screen items-center justify-center bg-slate-800">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-24 w-24 border-t-2 border-b-2 border-cyan-500"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <SparklesIcon className="w-8 h-8 text-cyan-400/50 animate-pulse" />
+            </div>
+          </div>
+          <p className="text-slate-400 font-medium tracking-wide animate-pulse">Inicjalizacja bezpiecznego połączenia...</p>
+        </div>
       </div>
     );
   }
@@ -568,24 +566,12 @@ const App: React.FC = () => {
     return <Auth />;
   }
 
-  // Pre-load logic (specific to chat history loading)
-  if (isLoading && chatHistory.length === 0 && !interactionMode && !isWelcomeModalOpen) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-900">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-500"></div>
-          <p className="text-slate-400">Ładowanie sprawy...</p>
-        </div>
-      </div>
-    );
-  }
-
   // Check if account is active and paid - NOW SAFE because profile is loaded
   const isAwaitingActivation = userProfile?.subscription && userProfile.subscription.isPaid === false;
 
   if (isAwaitingActivation) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-900 px-4">
+      <div className="flex h-screen items-center justify-center bg-slate-800 px-4">
         <div className="max-w-md w-full bg-slate-800 border border-slate-700/50 p-8 rounded-2xl text-center shadow-2xl backdrop-blur-sm">
           <div className="w-16 h-16 bg-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <ClockIcon className="w-8 h-8" />
@@ -671,7 +657,7 @@ const App: React.FC = () => {
       {isFullScreen && (
         <button
           onClick={() => setIsFullScreen(false)}
-          className="fixed top-4 right-4 z-[100] bg-slate-800/90 hover:bg-slate-700 text-slate-200 p-3 rounded-full shadow-2xl border border-slate-600 transition-all group active:scale-95"
+          className="fixed top-4 right-4 z-[100] bg-slate-800/90 hover:bg-slate-700 text-slate-200 p-3 rounded-full shadow-2xl border border-slate-600 transition-all group active:scale-95 hidden md:block"
           title="Wyjdź z pełnego ekranu"
         >
           <ArrowsContractIcon className="h-6 w-6 group-hover:text-cyan-400 transition-colors" />
@@ -709,19 +695,62 @@ const App: React.FC = () => {
         {!isFullScreen && (
           <AppHeader
             title={
-              !selectedLawArea ? "Asystent Prawny AI" : (
-                !selectedTopic ? (
-                  <>
-                    <span className="text-slate-400 hidden sm:inline">Asystent:</span>
-                    <span className="text-cyan-400"> {selectedLawArea}</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-slate-400 hidden sm:inline">Asystent:</span>
-                    <span className="text-cyan-400"> {selectedLawArea} / {selectedTopic}</span>
-                  </>
-                )
-              )
+              (() => {
+                const breadcrumbParts = [];
+
+                // Level 1: Service Path
+                if (servicePath) {
+                  breadcrumbParts.push({
+                    label: 'Narzędzia AI',
+                    color: 'text-slate-200'
+                  });
+                }
+
+                // Level 2: Law Area
+                if (selectedLawArea) {
+                  breadcrumbParts.push({
+                    label: selectedLawArea,
+                    color: 'text-slate-200'
+                  });
+                }
+
+                // Level 3: Interaction Mode (Tool)
+                if (interactionMode) {
+                  breadcrumbParts.push({
+                    label: interactionMode,
+                    color: 'text-slate-200',
+                    icon: ScaleIcon
+                  });
+                }
+
+                // Level 4: Topic/Case
+                if (selectedTopic) {
+                  breadcrumbParts.push({
+                    label: selectedTopic,
+                    color: 'text-cyan-400',
+                    isCurrent: true
+                  });
+                }
+
+                // Fallback if no breadcrumb
+                if (breadcrumbParts.length === 0) {
+                  return "Asystent Prawny AI";
+                }
+
+                return (
+                  <div className="flex items-center gap-1.5 overflow-x-auto max-w-full text-xs">
+                    {breadcrumbParts.map((part, idx) => (
+                      <React.Fragment key={idx}>
+                        {idx > 0 && <ChevronRightIcon className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />}
+                        <div className={`flex items-center gap-1 ${part.isCurrent ? 'font-semibold' : 'font-medium'} whitespace-nowrap`}>
+                          {part.icon && <part.icon className="w-3.5 h-3.5 flex-shrink-0" />}
+                          <span className={part.color}>{part.label}</span>
+                        </div>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                );
+              })()
             }
             onProfileClick={() => setIsProfileModalOpen(true)}
             onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}
@@ -797,6 +826,7 @@ const App: React.FC = () => {
                 await handleAddTopic(topic, InteractionMode.StrategicAnalysis, 'pro');
                 const h = await loadChatHistories();
                 if (h) setChatHistories(h);
+                handleLoadHistory(selectedLawArea!, topic);
               }}
               onDeleteTopic={(topic) => requestDeleteTopic(selectedLawArea, topic)}
               onBack={() => setServicePath(null)}
@@ -810,11 +840,13 @@ const App: React.FC = () => {
                 await handleAddTopic(topic, interactionMode, 'standard'); // Use current mode
                 const h = await loadChatHistories();
                 if (h) setChatHistories(h);
+                handleLoadHistory(selectedLawArea!, topic);
               }}
               onAddNegotiationTopic={async (topic) => {
                 await handleAddTopic(topic, InteractionMode.Negotiation, 'standard');
                 const h = await loadChatHistories();
                 if (h) setChatHistories(h);
+                handleLoadHistory(selectedLawArea!, topic);
               }}
               onDeleteTopic={(topic) => requestDeleteTopic(selectedLawArea, topic)}
               onChangeMode={() => setInteractionMode(null)}
@@ -853,7 +885,7 @@ const App: React.FC = () => {
                           </div>
                         </div>
                       )}
-                      {chatHistory.filter(msg => msg.role !== 'system').map((msg, index) => (
+                      {chatHistory.filter(msg => msg.role !== 'system' && !msg.content.includes('[SYSTEM:')).map((msg, index) => (
                         <ChatBubble key={index} message={msg} onPreviewDocument={handlePreviewDocument} onAddDeadline={handleAddDeadline} onAddTask={handleAddTask} />
                       ))}
                       {isLoading && <LoadingSpinner />}
@@ -913,6 +945,29 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 )}
+                {/* Context Badge */}
+                {(interactionMode || selectedTopic) && (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/50 border-t border-slate-700/30 text-xs">
+                    {interactionMode && (
+                      <>
+                        <ScaleIcon className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                        <span className="text-slate-400">Tryb:</span>
+                        <span className="text-cyan-400 font-semibold">{interactionMode}</span>
+                      </>
+                    )}
+                    {interactionMode && selectedTopic && (
+                      <span className="text-slate-600">|</span>
+                    )}
+                    {selectedTopic && (
+                      <>
+                        <CaseIcon className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                        <span className="text-slate-400">Sprawa:</span>
+                        <span className="text-amber-400 font-semibold truncate">{selectedTopic}</span>
+                      </>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex items-end gap-2 bg-slate-800 rounded-xl p-2 border border-slate-700/50">
                   {isFullScreen && (
                     <button

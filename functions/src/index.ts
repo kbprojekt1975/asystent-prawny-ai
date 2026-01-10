@@ -154,7 +154,7 @@ Zanim udzielisz odpowiedzi:
 - Jeśli znalazłeś NOWĄ WIEDZĘ, użyj tagu **[NOWA WIEDZA]** przy opisie tych konkretnych znalezisk.
 
 ZASADA INTERAKCJI: Zadawaj pytania POJEDYNCZO. Maksymalnie 5 pytań w toku rozmowy.
-NIE używaj pustych bloków kodu (```text ... ```) na końcu odpowiedzi jako placeholderów.
+NIE używaj pustych bloków kodu (\`\`\`text ... \`\`\`) na końcu odpowiedzi jako placeholderów.
 `;
 
 const systemInstructions: Record<LawAreaType, Record<InteractionModeType, string>> = {
@@ -1204,7 +1204,6 @@ export const ingestLegalAct = onRequest({
             res.status(500).send("AI Client not initialized");
             return;
         }
-        const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
 
         // 0. Resolve Title
         let title = manualTitle;
@@ -1221,6 +1220,11 @@ export const ingestLegalAct = onRequest({
 
         // 1. Fetch FULL content (no character limit)
         const fullContent = await getFullActContent(publisher, year, pos);
+        if (!fullContent || fullContent.length < 50) {
+            throw new Error(`Pobrana treść aktu jest zbyt krótka (${fullContent?.length || 0} znaków).`);
+        }
+
+        const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" }, { apiVersion: 'v1beta' });
 
         // 2. Decode HTML entities
         let decoded = fullContent
@@ -1258,6 +1262,11 @@ export const ingestLegalAct = onRequest({
             chunks = decoded.match(/.{1,2000}/gs) || [decoded];
         }
 
+        if (!chunks || chunks.length === 0) {
+            res.status(200).send(`Success (Warning). Ingested 0 chunks, but text length was ${decoded.length}. Sample: ${decoded.substring(0, 100)}`);
+            return;
+        }
+
         logger.info(`Chunking complete: ${chunks.length} chunks found`);
 
         const actDocumentId = `${publisher}_${year}_${pos}`;
@@ -1276,6 +1285,7 @@ export const ingestLegalAct = onRequest({
         // 4. Generate Embeddings & Save
         let savedCount = 0;
         const batchSize = 10;
+        let lastError = "";
 
         for (let i = 0; i < chunks.length; i += batchSize) {
             const batch = chunks.slice(i, i + batchSize);
@@ -1301,11 +1311,17 @@ export const ingestLegalAct = onRequest({
                         }
                     });
                     savedCount++;
-                } catch (e) {
+                } catch (e: any) {
                     logger.error("Embedding error", e);
+                    lastError = e.message;
                 }
             }));
             logger.info(`Batch ${Math.floor(i / batchSize) + 1} complete. Saved ${savedCount} chunks so far.`);
+        }
+
+        if (savedCount === 0 && chunks.length > 0) {
+            res.status(200).send(`Error. Ingested 0/ ${chunks.length} chunks. Last error: ${lastError}. Sample text: ${decoded.substring(0, 100)}`);
+            return;
         }
 
         res.status(200).send(`Success. Ingested ${savedCount} chunks for ${publisher} ${year}/${pos}.`);
