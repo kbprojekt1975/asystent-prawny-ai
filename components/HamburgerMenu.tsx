@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MenuIcon, ProfileIcon, BookOpenIcon, HomeIcon, ClockIcon, SparklesIcon, ArrowsExpandIcon } from './Icons';
+import { MenuIcon, ProfileIcon, BookOpenIcon, HomeIcon, ClockIcon, SparklesIcon, ArrowsExpandIcon, DownloadIcon, UploadIcon } from './Icons';
 import { SubscriptionInfo } from '../types';
 
 interface HamburgerMenuProps {
@@ -9,6 +9,9 @@ interface HamburgerMenuProps {
     onHistoryClick?: () => void;
     onQuickActionsClick?: () => void;
     onFullScreenClick?: () => void;
+    onExportChat?: () => void;
+    onImportChat?: (file: File) => void;
+    onInstallApp?: () => void;
     subscription?: SubscriptionInfo;
     totalCost?: number;
 }
@@ -20,6 +23,9 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     onHistoryClick,
     onQuickActionsClick,
     onFullScreenClick,
+    onExportChat,
+    onImportChat,
+    onInstallApp,
     subscription,
     totalCost
 }) => {
@@ -129,6 +135,53 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                             >
                                 <ArrowsExpandIcon className="h-5 w-5 text-slate-400" />
                                 <span>Pełny Ekran</span>
+                            </button>
+                        )}
+
+                        <div className="border-t border-slate-700 my-1 sm:hidden"></div>
+
+                        {onExportChat && (
+                            <button
+                                onClick={() => { onExportChat(); setIsOpen(false); }}
+                                className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors sm:hidden"
+                                role="menuitem"
+                            >
+                                <DownloadIcon className="h-5 w-5 text-blue-400" />
+                                <span>Eksportuj Rozmowę</span>
+                            </button>
+                        )}
+
+                        {onImportChat && (
+                            <label
+                                className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors cursor-pointer sm:hidden"
+                                role="menuitem"
+                            >
+                                <input
+                                    type="file"
+                                    accept=".json"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            onImportChat(file);
+                                            setIsOpen(false);
+                                            e.target.value = '';
+                                        }
+                                    }}
+                                />
+                                <UploadIcon className="h-5 w-5 text-purple-400" />
+                                <span>Importuj Rozmowę</span>
+                            </label>
+                        )}
+
+                        {onInstallApp && (
+                            <button
+                                onClick={() => { onInstallApp(); setIsOpen(false); }}
+                                className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-white bg-cyan-600/20 hover:bg-cyan-600/30 transition-colors border-t border-slate-700"
+                                role="menuitem"
+                            >
+                                <SparklesIcon className="h-5 w-5 text-cyan-400" />
+                                <span className="font-bold">Zainstaluj Aplikację</span>
                             </button>
                         )}
                     </div>

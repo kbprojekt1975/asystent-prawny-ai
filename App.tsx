@@ -24,7 +24,9 @@ import {
   ProfileIcon,
   ScaleIcon,
   CaseIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  DownloadIcon,
+  UploadIcon
 } from './components/Icons';
 import AppHeader from './components/AppHeader';
 import CourtRoleSelector from './components/CourtRoleSelector';
@@ -48,6 +50,7 @@ import { useAppNavigation } from './hooks/useAppNavigation';
 import { useChatLogic } from './hooks/useChatLogic';
 
 import AppModals from './components/AppModals';
+import SplashScreen from './components/SplashScreen';
 import { useUserSession } from './hooks/useUserSession';
 import { useTopicManagement } from './hooks/useTopicManagement';
 import RemindersWidget from './components/RemindersWidget';
@@ -56,6 +59,7 @@ import { useUserCalendar } from './hooks/useUserCalendar';
 import AlimonyCalculator from './components/AlimonyCalculator';
 import GlobalAnnouncement from './components/GlobalAnnouncement';
 import AdminBroadcastInput from './components/AdminBroadcastInput';
+import PWAUpdateNotification from './components/PWAUpdateNotification';
 
 const initialProfile: UserProfile = {
   quickActions: [],
@@ -106,6 +110,31 @@ const App: React.FC = () => {
 
 
 
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      console.log('User accepted the install prompt');
+    }
+    setDeferredPrompt(null);
+  };
+
+  const toggleFullScreen = () => setIsFullScreen(!isFullScreen);
+
   const onConfirmTopicDeletion = async () => {
     if (topicToDelete) {
       const { lawArea, topic } = topicToDelete;
@@ -128,6 +157,8 @@ const App: React.FC = () => {
   const [isKnowledgeModalOpen, setIsKnowledgeModalOpen] = useState(false);
   const [knowledgeModalChatId, setKnowledgeModalChatId] = useState<string | null>(null);
   const [isDocumentsModalOpen, setIsDocumentsModalOpen] = useState(false);
+  const [isSplashDismissed, setIsSplashDismissed] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [documentsModalChatId, setDocumentsModalChatId] = useState<string | null>(null);
   const [welcomeModalInitialViewMode, setWelcomeModalInitialViewMode] = useState<'selection' | 'input'>('selection');
 
@@ -563,17 +594,19 @@ const App: React.FC = () => {
   };
 
   const handleUniversalBack = () => {
-    if (selectedTopic && interactionMode) {
+    if (selectedTopic) {
       // W czacie -> powrót do wyboru tematu
       setSelectedTopic(null);
-    } else if (!selectedTopic && interactionMode && servicePath === 'pro') {
+    } else if (!selectedTopic && interactionMode && (servicePath === 'pro')) {
       // W wyborze tematów (ścieżka PRO) -> powrót do wyboru usługi (PRO/Hub)
       setServicePath(null);
       setInteractionMode(null);
-    } else if (!selectedTopic && interactionMode && servicePath === 'hub') {
-      // W wyborze tematów (ścieżka Hub - już wybrano narzędzie) -> powrót do Hubu
+      setCourtRole(null);
+    } else if (!selectedTopic && interactionMode && (servicePath === 'hub' || servicePath === 'standard' || !servicePath)) {
+      // W wyborze tematów (ścieżka Hub/Standard) -> powrót do wyboru narzędzia (Hub)
       setInteractionMode(null);
-    } else if (!selectedTopic && !interactionMode && servicePath === 'hub') {
+      setCourtRole(null);
+    } else if (!selectedTopic && !interactionMode && (servicePath === 'hub' || servicePath === 'standard')) {
       // W Hubie -> powrót do wyboru usługi (PRO/Hub)
       setServicePath(null);
     } else if (!selectedTopic && !interactionMode && !servicePath && selectedLawArea) {
@@ -582,20 +615,15 @@ const App: React.FC = () => {
     }
   };
 
-  // Consolidated loading spinner for a clean initialization experience
-  if (authLoading || profileLoading || (isLoading && chatHistory.length === 0 && !interactionMode && !isWelcomeModalOpen && selectedTopic)) {
+  const isAppDataLoading = authLoading || profileLoading || (isLoading && chatHistory.length === 0 && !interactionMode && !isWelcomeModalOpen && selectedTopic);
+
+  // Consolidated loading experience with marketing messages
+  if (!isSplashDismissed) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-800">
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-24 w-24 border-t-2 border-b-2 border-cyan-500"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <SparklesIcon className="w-8 h-8 text-cyan-400/50 animate-pulse" />
-            </div>
-          </div>
-          <p className="text-slate-400 font-medium tracking-wide animate-pulse">Inicjalizacja bezpiecznego połączenia...</p>
-        </div>
-      </div>
+      <SplashScreen
+        isReady={!isAppDataLoading}
+        onStart={() => setIsSplashDismissed(true)}
+      />
     );
   }
 
@@ -642,6 +670,7 @@ const App: React.FC = () => {
 
   return (
     <>
+      <PWAUpdateNotification />
       <AppModals
         isProfileModalOpen={isProfileModalOpen}
         setIsProfileModalOpen={setIsProfileModalOpen}
@@ -741,7 +770,7 @@ const App: React.FC = () => {
                 // Level 1: Service Path (Home/Base)
                 if (servicePath) {
                   breadcrumbParts.push({
-                    label: 'Narzędzia AI',
+                    label: servicePath === 'pro' ? 'Strefa PRO' : 'Narzędzia AI',
                     color: 'text-slate-400 hover:text-white',
                     onClick: handleGoHome
                   });
@@ -755,6 +784,7 @@ const App: React.FC = () => {
                     onClick: () => {
                       setSelectedTopic(null);
                       setInteractionMode(null);
+                      setCourtRole(null);
                       setServicePath(null);
                     }
                   });
@@ -821,12 +851,12 @@ const App: React.FC = () => {
                 : undefined
             }
             onHomeClick={handleGoHome}
-            onFullScreenClick={selectedTopic && interactionMode ? () => setIsFullScreen(true) : undefined}
+            onFullScreenClick={toggleFullScreen}
             totalCost={totalCost}
             subscription={userProfile?.subscription}
-            onKnowledgeClick={() => handleViewKnowledge()}
-
+            onKnowledgeClick={interactionMode ? () => setIsKnowledgeModalOpen(true) : undefined}
             onGenerateKnowledgeClick={selectedTopic ? handleGenerateKnowledge : undefined}
+            onInstallApp={deferredPrompt ? handleInstallApp : undefined}
             remindersCount={activeRemindersCount}
             isLocalOnly={isLocalOnly}
             hasConsent={userProfile?.dataProcessingConsent}
@@ -919,7 +949,10 @@ const App: React.FC = () => {
                 handleLoadHistory(selectedLawArea!, topic);
               }}
               onDeleteTopic={(topic) => requestDeleteTopic(selectedLawArea, topic)}
-              onChangeMode={() => setInteractionMode(null)}
+              onChangeMode={() => {
+                setInteractionMode(null);
+                setCourtRole(null);
+              }}
             />
           ) : servicePath === 'pro' ? (
             <ProDashboard
@@ -938,7 +971,10 @@ const App: React.FC = () => {
                       ref={caseDashboardRef}
                       userId={user.uid}
                       caseId={currentChatId!}
-                      onChangeMode={() => setInteractionMode(null)}
+                      onChangeMode={() => {
+                        setInteractionMode(null);
+                        setCourtRole(null);
+                      }}
                     />
                   </div>
                 </div>
@@ -975,7 +1011,10 @@ const App: React.FC = () => {
                 {!isFullScreen && (
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center">
-                      <label htmlFor="deep-thinking-toggle" className="text-sm font-medium text-slate-300 mr-2 cursor-pointer">Głębokie</label>
+                      <label htmlFor="deep-thinking-toggle" className="text-[10px] sm:text-xs leading-tight font-medium text-slate-400 mr-2 cursor-pointer flex flex-col items-center">
+                        <span>Głębokie</span>
+                        <span>Myślenie</span>
+                      </label>
                       <button
                         id="deep-thinking-toggle"
                         onClick={() => setIsDeepThinkingEnabled(!isDeepThinkingEnabled)}
@@ -983,6 +1022,41 @@ const App: React.FC = () => {
                       >
                         <span className={`inline-block w-3.5 h-3.5 transform bg-white rounded-full transition-transform ${isDeepThinkingEnabled ? 'translate-x-5.5' : 'translate-x-1'}`} />
                       </button>
+
+                      {/* Eksport/Import mobilny obok przełącznika */}
+                      <div className="flex items-center gap-1.5 ml-3 md:hidden border-l border-slate-700 pl-3">
+                        <button
+                          onClick={handleExportChat}
+                          className="p-1.5 text-slate-300 hover:text-cyan-400 rounded-lg transition-colors bg-slate-800/50 border border-slate-700"
+                          title="Eksportuj czat"
+                        >
+                          <DownloadIcon className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => document.getElementById('mobile-chat-import')?.click()}
+                          className="p-1.5 text-slate-300 hover:text-purple-400 rounded-lg transition-colors bg-slate-800/50 border border-slate-700"
+                          title="Importuj czat"
+                        >
+                          <UploadIcon className="w-4 h-4" />
+                        </button>
+                        <input
+                          id="mobile-chat-import"
+                          type="file"
+                          accept=".json"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handleImportChat(file, (data) => {
+                                setSelectedLawArea(data.lawArea);
+                                setSelectedTopic(data.topic);
+                                setInteractionMode(data.interactionMode);
+                              });
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-2">

@@ -426,7 +426,7 @@ export const getLegalAdvice = onCall({
             }
         }
 
-        const contents = history
+        let contents = history
             .filter((msg: any) => msg.role !== 'system')
             .map((msg: any, index: number, arr: any[]) => {
                 let text = msg.content;
@@ -447,6 +447,28 @@ export const getLegalAdvice = onCall({
                     parts
                 };
             });
+
+        // --- ENFORCE GEMINI ROLE CONSTRAINTS ---
+        // 1. Must start with 'user'
+        if (contents.length > 0 && contents[0].role === 'model') {
+            logger.info("First message is 'model', adding placeholder 'user' message to satisfy Gemini SDK.");
+            contents.unshift({
+                role: 'user',
+                parts: [{ text: "Dzień dobry." }]
+            });
+        }
+
+        // 2. Roles must alternate
+        const alternatingContents: any[] = [];
+        contents.forEach((msg, idx) => {
+            if (idx > 0 && msg.role === alternatingContents[alternatingContents.length - 1].role) {
+                logger.warn(`Consecutive roles detected (${msg.role}). Merging content.`);
+                alternatingContents[alternatingContents.length - 1].parts.push(...msg.parts);
+            } else {
+                alternatingContents.push(msg);
+            }
+        });
+        contents = alternatingContents;
 
         // --- DEFINE TOOLS ---
         const tools = [
