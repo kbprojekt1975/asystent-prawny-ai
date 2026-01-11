@@ -1,6 +1,6 @@
 import React from 'react';
 import HamburgerMenu from './HamburgerMenu';
-import { SparklesIcon, ClockIcon, HomeIcon, ArrowsExpandIcon, CreditCardIcon, ProfileIcon, BookOpenIcon, DownloadIcon, UploadIcon, ArrowLeftIcon } from './Icons';
+import { SparklesIcon, ClockIcon, HomeIcon, ArrowsExpandIcon, CreditCardIcon, ProfileIcon, BookOpenIcon, DownloadIcon, UploadIcon, ArrowLeftIcon, BrainIcon } from './Icons';
 import CostCounter from './CostCounter';
 import { SubscriptionInfo, SubscriptionStatus } from '../types';
 import HelpModal from './HelpModal';
@@ -24,6 +24,7 @@ interface AppHeaderProps {
   onGenerateKnowledgeClick?: () => void;
   remindersCount?: number;
   isLocalOnly?: boolean;
+  hasConsent?: boolean;
   onExportChat?: () => void;
   onImportChat?: (file: File) => void;
 }
@@ -45,6 +46,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   onGenerateKnowledgeClick,
   remindersCount = 0,
   isLocalOnly = false,
+  hasConsent = true,
   onExportChat,
   onImportChat
 }) => {
@@ -69,10 +71,10 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       </div>
       <div className="flex items-center gap-2">
         {isLocalOnly && (
-          <div className="flex items-center gap-2 bg-red-500/20 border border-red-500/50 px-3 py-2 rounded-xl animate-pulse whitespace-nowrap">
-            <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
-            <span className="text-[10px] font-bold text-red-500 uppercase tracking-tight">
-              BRAK ZGODY RODO
+          <div className={`flex items-center gap-2 ${hasConsent ? 'bg-amber-500/20 border-amber-500/50' : 'bg-red-500/20 border-red-500/50'} px-3 py-2 rounded-xl animate-pulse whitespace-nowrap`}>
+            <div className={`w-2 h-2 rounded-full ${hasConsent ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`}></div>
+            <span className={`text-[10px] font-bold ${hasConsent ? 'text-amber-500' : 'text-red-500'} uppercase tracking-tight`}>
+              {hasConsent ? 'TRYB LOKALNY' : 'BRAK ZGODY RODO'}
             </span>
           </div>
         )}
@@ -127,7 +129,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             aria-label="Generuj Bazę Wiedzy"
             title="Generuj Bazę Wiedzy (Pobierz Akty i Wyroki)"
           >
-            <DownloadIcon className="h-6 w-6 text-green-400" />
+            <BrainIcon className="h-6 w-6 text-green-400" />
           </button>
         )}
         {onKnowledgeClick && (

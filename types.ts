@@ -132,3 +132,9 @@ export interface ExportedChat {
   messages: ChatMessage[];
   exportedAt: string;
 }
+
+export interface EvidenceSuggestion {
+  label: string;
+  description: string;
+  status: 'missing' | 'collected';
+}

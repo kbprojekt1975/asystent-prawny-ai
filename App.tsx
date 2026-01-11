@@ -54,6 +54,8 @@ import RemindersWidget from './components/RemindersWidget';
 import CookieConsent from './components/CookieConsent';
 import { useUserCalendar } from './hooks/useUserCalendar';
 import AlimonyCalculator from './components/AlimonyCalculator';
+import GlobalAnnouncement from './components/GlobalAnnouncement';
+import AdminBroadcastInput from './components/AdminBroadcastInput';
 
 const initialProfile: UserProfile = {
   quickActions: [],
@@ -140,6 +142,16 @@ const App: React.FC = () => {
     setTotalCost(prev => prev + cost);
   }, [setTotalCost]);
 
+  const handleToggleLocalMode = (val: boolean) => {
+    setIsLocalOnly(val);
+    if (userProfile?.dataProcessingConsent) {
+      handleUpdateProfile({
+        ...userProfile,
+        manualLocalMode: val
+      }, false);
+    }
+  };
+
   const {
     chatHistory, setChatHistory,
     currentMessage, setCurrentMessage,
@@ -199,6 +211,17 @@ const App: React.FC = () => {
     scrollToBottom();
   }, [chatHistory, isLoading, currentMessage]);
 
+  // Initial Load of Chat Histories
+  useEffect(() => {
+    if (user && !isLocalOnly) {
+      loadChatHistories().then(h => {
+        if (h) setChatHistories(h);
+      });
+    } else if (!user || isLocalOnly) {
+      setChatHistories([]);
+    }
+  }, [user, isLocalOnly, loadChatHistories]);
+
   const filteredTopics = useMemo(() => {
     if (!selectedLawArea) return { standard: [], pro: [] };
     const allTopics = topics[selectedLawArea] || [];
@@ -243,15 +266,11 @@ const App: React.FC = () => {
     if (!selectedLawArea) return;
     setInteractionMode(mode);
 
-    // If a topic is selected, we might need to update the history/context
     if (selectedTopic && chatHistory.length > 0) {
-      const lastMessage = chatHistory[chatHistory.length - 1];
-      if (lastMessage.role !== 'system') {
-        const modeContext = `[ZMIANA TRYBU]: Użytkownik przełączył się w tryb ${mode}. Kontynuuj rozmowę w oparciu o dotychczasowe ustalenia, ale dostosuj styl pracy do nowego trybu.`;
-        setChatHistory(prev => [...prev, { role: 'system', content: modeContext }]);
+      if (mode !== InteractionMode.Court) {
+        const systemContent = getSystemPromptForMode(mode, selectedLawArea, selectedTopic);
+        setChatHistory([{ role: 'system', content: systemContent }]);
       }
-      const systemContent = getSystemPromptForMode(mode, selectedLawArea, selectedTopic);
-      setChatHistory([{ role: 'system', content: systemContent }]);
     }
   };
 
@@ -303,13 +322,21 @@ const App: React.FC = () => {
     handleSendMessage(prompt);
   };
 
-  const handleLoadHistory = async (lawArea: LawArea, topic: string) => {
+  const handleLoadHistory = async (lawArea: LawArea, topic: string, mode?: InteractionMode, path?: 'pro' | 'standard') => {
     if (!user) return;
     setIsWelcomeModalOpen(false);
     setIsLoading(true);
     setChatHistory([]);
-    // Do NOT clear interactionMode here, as it might have been set by the Hub
-    setCourtRole(null);
+
+    // Priority: use the mode and path passed from history
+    if (mode) setInteractionMode(mode);
+    if (path) setServicePath(path);
+    // Else if no mode/path provided, we can auto-clear if it's a "clean" load from elsewhere
+    // but usually this comes from History which now has them.
+
+    if (mode !== InteractionMode.Court && interactionMode !== InteractionMode.Court) {
+      setCourtRole(null);
+    }
     setIsFullScreen(false);
 
     setSelectedLawArea(lawArea);
@@ -330,37 +357,47 @@ const App: React.FC = () => {
       if (chatDoc.exists()) {
         const data = chatDoc.data();
         const savedHistory = data.messages || [];
-        let savedInteractionMode = (data.interactionMode as InteractionMode) || autoInteractionMode;
+        const savedInteractionMode = (data.interactionMode as InteractionMode) || autoInteractionMode;
+        const savedServicePath = data.servicePath as 'pro' | 'standard' | undefined;
 
-        // Jeśli nie ma zapisanego trybu, spróbuj wyciągnąć go z wiadomości systemowej
-        if (!savedInteractionMode && savedHistory.length > 0 && savedHistory[0].role === 'system') {
+        // Restore service path if not provided but saved
+        if (!path && savedServicePath) setServicePath(savedServicePath);
+
+        // Jeśli nie została przekazana z zewnątrz (np. z kliknięcia w historię), spróbuj wyciągnąć go z dokumentu
+        let finalMode = mode || interactionMode || savedInteractionMode;
+
+        if (!finalMode && savedHistory.length > 0 && savedHistory[0].role === 'system') {
           const systemMessage = savedHistory[0].content;
           const modeMatch = systemMessage.match(/Tryb: (.*)/);
           if (modeMatch && modeMatch[1]) {
             const parsed = modeMatch[1].trim() as InteractionMode;
-            if (Object.values(InteractionMode).includes(parsed)) savedInteractionMode = parsed;
+            if (Object.values(InteractionMode).includes(parsed)) finalMode = parsed;
           }
         }
 
         setChatHistory(savedHistory);
 
-        // PRIORITY: If user already selected a mode (e.g., from Hub), keep it
-        // Otherwise, use saved mode from database
-        const modeToUse = interactionMode || savedInteractionMode;
-        if (modeToUse) {
-          setInteractionMode(modeToUse);
+        if (finalMode) {
+          setInteractionMode(finalMode);
         }
 
-        if (savedHistory.length === 0 && modeToUse) {
-          handleInitialGreeting(lawArea, topic, modeToUse);
+        // Auto-trigger court simulation if a role was pre-selected
+        if (finalMode === InteractionMode.Court && courtRole) {
+          handleSelectCourtRole(courtRole);
+        } else if (savedHistory.length === 0 && finalMode) {
+          handleInitialGreeting(lawArea, topic, finalMode);
         }
       } else {
         // Fallback for completely new topics that don't have a document yet
         setChatHistory([]);
-        const modeToUse = interactionMode || autoInteractionMode;
+        const modeToUse = mode || interactionMode || autoInteractionMode;
         if (modeToUse) {
           setInteractionMode(modeToUse);
-          handleInitialGreeting(lawArea, topic, modeToUse);
+          if (modeToUse === InteractionMode.Court && courtRole) {
+            handleSelectCourtRole(courtRole);
+          } else {
+            handleInitialGreeting(lawArea, topic, modeToUse);
+          }
         }
       }
     } catch (e) {
@@ -645,6 +682,7 @@ const App: React.FC = () => {
           setInteractionMode(null);
           setIsCaseManagementModalOpen(false);
         }}
+        isLocalOnly={isLocalOnly}
       />
 
       <PlanSelectionModal
@@ -691,6 +729,8 @@ const App: React.FC = () => {
         </>
       )}
 
+      <GlobalAnnouncement />
+
       <div className="flex flex-col h-[100dvh] bg-slate-800">
         {!isFullScreen && (
           <AppHeader
@@ -698,11 +738,12 @@ const App: React.FC = () => {
               (() => {
                 const breadcrumbParts = [];
 
-                // Level 1: Service Path
+                // Level 1: Service Path (Home/Base)
                 if (servicePath) {
                   breadcrumbParts.push({
                     label: 'Narzędzia AI',
-                    color: 'text-slate-200'
+                    color: 'text-slate-400 hover:text-white',
+                    onClick: handleGoHome
                   });
                 }
 
@@ -710,7 +751,12 @@ const App: React.FC = () => {
                 if (selectedLawArea) {
                   breadcrumbParts.push({
                     label: selectedLawArea,
-                    color: 'text-slate-200'
+                    color: 'text-slate-400 hover:text-white',
+                    onClick: () => {
+                      setSelectedTopic(null);
+                      setInteractionMode(null);
+                      setServicePath(null);
+                    }
                   });
                 }
 
@@ -718,8 +764,12 @@ const App: React.FC = () => {
                 if (interactionMode) {
                   breadcrumbParts.push({
                     label: interactionMode,
-                    color: 'text-slate-200',
-                    icon: ScaleIcon
+                    color: 'text-slate-400 hover:text-white',
+                    icon: ScaleIcon,
+                    onClick: () => {
+                      setSelectedTopic(null);
+                      setCourtRole(null);
+                    }
                   });
                 }
 
@@ -742,10 +792,20 @@ const App: React.FC = () => {
                     {breadcrumbParts.map((part, idx) => (
                       <React.Fragment key={idx}>
                         {idx > 0 && <ChevronRightIcon className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />}
-                        <div className={`flex items-center gap-1 ${part.isCurrent ? 'font-semibold' : 'font-medium'} whitespace-nowrap`}>
-                          {part.icon && <part.icon className="w-3.5 h-3.5 flex-shrink-0" />}
-                          <span className={part.color}>{part.label}</span>
-                        </div>
+                        {part.onClick ? (
+                          <button
+                            onClick={part.onClick}
+                            className={`flex items-center gap-1 ${part.isCurrent ? 'font-semibold' : 'font-medium'} whitespace-nowrap transition-colors ${part.color}`}
+                          >
+                            {part.icon && <part.icon className="w-3.5 h-3.5 flex-shrink-0" />}
+                            <span>{part.label}</span>
+                          </button>
+                        ) : (
+                          <div className={`flex items-center gap-1 ${part.isCurrent ? 'font-semibold' : 'font-medium'} whitespace-nowrap ${part.color}`}>
+                            {part.icon && <part.icon className="w-3.5 h-3.5 flex-shrink-0" />}
+                            <span>{part.label}</span>
+                          </div>
+                        )}
                       </React.Fragment>
                     ))}
                   </div>
@@ -769,6 +829,7 @@ const App: React.FC = () => {
             onGenerateKnowledgeClick={selectedTopic ? handleGenerateKnowledge : undefined}
             remindersCount={activeRemindersCount}
             isLocalOnly={isLocalOnly}
+            hasConsent={userProfile?.dataProcessingConsent}
             onExportChat={selectedTopic && interactionMode ? handleExportChat : undefined}
             onImportChat={selectedTopic && interactionMode ? (file) => {
               handleImportChat(file, (data) => {
@@ -781,6 +842,11 @@ const App: React.FC = () => {
         )}
 
         <main ref={chatContainerRef} className="flex-1 overflow-y-auto">
+          {!selectedLawArea && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+              <AdminBroadcastInput user={user} />
+            </div>
+          )}
           {!selectedLawArea ? (
             <LawSelector
               onSelect={handleSelectLawArea}
@@ -789,7 +855,7 @@ const App: React.FC = () => {
                 setIsWelcomeModalOpen(true);
               }}
               isLocalOnly={isLocalOnly}
-              setIsLocalOnly={setIsLocalOnly}
+              setIsLocalOnly={handleToggleLocalMode}
               hasConsent={userProfile.dataProcessingConsent}
               onImport={(file) => {
                 handleImportChat(file, (data) => {
@@ -831,6 +897,10 @@ const App: React.FC = () => {
               onDeleteTopic={(topic) => requestDeleteTopic(selectedLawArea, topic)}
               onBack={() => setServicePath(null)}
             />
+          ) : (interactionMode === InteractionMode.Court && !courtRole) ? (
+            <div className="p-6 h-full overflow-y-auto">
+              <CourtRoleSelector onSelect={handleSelectCourtRole} />
+            </div>
           ) : !selectedTopic ? (
             <TopicSelector
               lawArea={selectedLawArea}
@@ -861,39 +931,35 @@ const App: React.FC = () => {
             />
           ) : (
             <div className="flex flex-col h-full bg-slate-900">
-              {interactionMode === InteractionMode.Court && !courtRole ? (
-                <div className="p-6 h-full overflow-y-auto"><CourtRoleSelector onSelect={handleSelectCourtRole} /></div>
-              ) : (
-                <div className="flex flex-col h-full overflow-hidden">
-                  <div className="sticky top-0 z-20 bg-slate-800/95 backdrop-blur-sm border-b border-slate-700/50 p-4 hidden md:block" data-case-dashboard>
-                    <div className="max-w-4xl mx-auto">
-                      <CaseDashboard
-                        ref={caseDashboardRef}
-                        userId={user.uid}
-                        caseId={currentChatId!}
-                        onChangeMode={() => setInteractionMode(null)}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
-                    <div className="max-w-4xl mx-auto">
-                      {interactionMode === InteractionMode.Analysis && (
-                        <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700/50 mb-4 flex items-center justify-between backdrop-blur-sm">
-                          <div className="flex-1">
-                            <h3 className="text-sm font-semibold text-white mb-1">Faza: Analiza i Gromadzenie Wiedzy</h3>
-                            <p className="text-xs text-slate-400">Dostarcz niezbędne informacje i dokumenty przed uzyskaniem porady.</p>
-                          </div>
-                        </div>
-                      )}
-                      {chatHistory.filter(msg => msg.role !== 'system' && !msg.content.includes('[SYSTEM:')).map((msg, index) => (
-                        <ChatBubble key={index} message={msg} onPreviewDocument={handlePreviewDocument} onAddDeadline={handleAddDeadline} onAddTask={handleAddTask} />
-                      ))}
-                      {isLoading && <LoadingSpinner />}
-                      <div ref={messagesEndRef} />
-                    </div>
+              <div className="flex flex-col h-full overflow-hidden">
+                <div className="sticky top-0 z-20 bg-slate-800/95 backdrop-blur-sm border-b border-slate-700/50 p-4 hidden md:block" data-case-dashboard>
+                  <div className="max-w-4xl mx-auto">
+                    <CaseDashboard
+                      ref={caseDashboardRef}
+                      userId={user.uid}
+                      caseId={currentChatId!}
+                      onChangeMode={() => setInteractionMode(null)}
+                    />
                   </div>
                 </div>
-              )}
+                <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+                  <div className="max-w-4xl mx-auto">
+                    {interactionMode === InteractionMode.Analysis && (
+                      <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700/50 mb-4 flex items-center justify-between backdrop-blur-sm">
+                        <div className="flex-1">
+                          <h3 className="text-sm font-semibold text-white mb-1">Faza: Analiza i Gromadzenie Wiedzy</h3>
+                          <p className="text-xs text-slate-400">Dostarcz niezbędne informacje i dokumenty przed uzyskaniem porady.</p>
+                        </div>
+                      </div>
+                    )}
+                    {chatHistory.filter(msg => msg.role !== 'system' && !msg.content.includes('[SYSTEM:')).map((msg, index) => (
+                      <ChatBubble key={index} message={msg} onPreviewDocument={handlePreviewDocument} onAddDeadline={handleAddDeadline} onAddTask={handleAddTask} />
+                    ))}
+                    {isLoading && <LoadingSpinner />}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </main>

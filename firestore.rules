@@ -47,7 +47,15 @@ service cloud.firestore {
     // 6. Collection Group Rules
     match /{path=**}/timeline/{eventId} {
       // Allow user to read timeline events from their own account via collection group queries
-      // We check if the parent path contains the user's ID
+      allow read: if request.auth != null && (
+        path[1] == request.auth.uid || 
+        resource.data.userId == request.auth.uid ||
+        isMasterAdmin()
+      );
+    }
+
+    match /{path=**}/documents/{docId} {
+      // Allow user to read documents across all their chats
       allow read: if request.auth != null && (
         path[1] == request.auth.uid || 
         resource.data.userId == request.auth.uid ||

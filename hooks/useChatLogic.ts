@@ -38,8 +38,14 @@ export const useChatLogic = ({
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isDeepThinkingEnabled, setIsDeepThinkingEnabled] = useState<boolean>(false);
 
-    const handleSelectCourtRole = (role: CourtRole) => {
+    const handleSelectCourtRole = useCallback((role: CourtRole) => {
         setCourtRole(role);
+
+        if (!selectedTopic || !selectedLawArea) {
+            // If no topic selected yet, just set the role and return.
+            // The simulation will be triggered once the topic is loaded.
+            return;
+        }
 
         let roleInstructions = "";
         switch (role) {
@@ -88,7 +94,7 @@ export const useChatLogic = ({
         }
 
         setChatHistory(newMessages);
-    };
+    }, [selectedLawArea, selectedTopic, chatHistory, setCourtRole, setChatHistory]);
 
     const handleSendMessage = useCallback(async (
         messageOverride?: string,
@@ -269,13 +275,26 @@ export const useChatLogic = ({
         try {
             const chatsColRef = collection(db, 'users', user.uid, 'chats');
             const querySnapshot = await getDocs(chatsColRef);
-            const histories: { lawArea: LawArea; topic: string; interactionMode?: InteractionMode; servicePath?: 'pro' | 'standard'; lastUpdated?: any }[] = [];
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                const parts = doc.id.split('_');
+            const histories: { lawArea: LawArea; topic: string; interactionMode?: InteractionMode; servicePath?: 'pro' | 'standard'; lastUpdated?: any; docCount?: number }[] = [];
+
+            // Collect all promises to fetch metadata for each chat concurrently
+            const historyPromises = querySnapshot.docs.map(async (chatDoc) => {
+                const data = chatDoc.data();
+                const parts = chatDoc.id.split('_');
                 if (parts.length >= 2) {
                     const lawArea = parts[0] as LawArea;
                     const topic = parts.slice(1).join('_');
+
+                    // Fetch document count
+                    let docCount = 0;
+                    try {
+                        const docsRef = collection(db, 'users', user.uid, 'chats', chatDoc.id, 'documents');
+                        const docsSnap = await getDocs(docsRef);
+                        docCount = docsSnap.size;
+                    } catch (err) {
+                        console.warn(`Could not fetch doc count for ${chatDoc.id}`, err);
+                    }
+
                     let interactionMode: InteractionMode | undefined = undefined;
                     if (data.interactionMode && Object.values(InteractionMode).includes(data.interactionMode)) {
                         interactionMode = data.interactionMode as InteractionMode;
@@ -289,8 +308,14 @@ export const useChatLogic = ({
                             }
                         }
                     }
-                    histories.push({ lawArea, topic, interactionMode, servicePath: data.servicePath || 'standard', lastUpdated: data.lastUpdated });
+                    return { lawArea, topic, interactionMode, servicePath: data.servicePath || 'standard', lastUpdated: data.lastUpdated, docCount };
                 }
+                return null;
+            });
+
+            const results = await Promise.all(historyPromises);
+            results.forEach(res => {
+                if (res) histories.push(res);
             });
             histories.sort((a, b) => {
                 if (a.lastUpdated && b.lastUpdated) return b.lastUpdated.seconds - a.lastUpdated.seconds;
@@ -393,30 +418,40 @@ export const useChatLogic = ({
         if (!user) return;
         setIsLoading(true);
 
-        const specializedPrompt = `
-            SYSTEM: To jest początek NOWEJ ROZMOWY. 
-            TWOJE ZADANIE: 
-            1. Przywitaj się uprzejmie jako Asystent Prawny AI.
-            2. Poinformuj użytkownika, że znajdujemy się w dziale: "${lawArea}" i zajmujemy się tematem: "${topic}".
-            3. Wyjaśnij krótko, jak możesz pomóc w tym konkretnym trybie ("${mode}").
-            4. Poinstruuj użytkownika, co powinien zrobić teraz (np. opisać swoją sytuację, zadać pytanie lub przesłać dokumenty do analizy).
-            
-            Twoja odpowiedź powinna być profesjonalna, empatyczna i zachęcająca do interakcji.
-        `;
+        const welcomeMessage = `Dzień dobry! Rozpoczynamy nową sprawę w dziale: **${lawArea}**. Temat: **${topic}**.
+
+Abyśmy mogli skutecznie zacząć, proszę o wykonanie jednego z poniższych kroków:
+1. **Opisz krótko swoją sytuację** – napisz, co się wydarzyło i w czym potrzebujesz pomocy.
+2. **Prześlij dokumenty** – jeśli masz pisma, umowy lub wnioski związane ze sprawą, użyj ikony spinacza, aby dodać je do analizy.
+3. **Zadaj pytanie** – jeśli masz konkretne wątpliwości prawne, po prostu je napisz.
+
+Jestem gotowy do pomocy!`;
 
         const initialHistory: ChatMessage[] = [
-            { role: 'system', content: `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${mode}\n\n${specializedPrompt}` },
-            { role: 'user', content: "[SYSTEM: Przywitaj się i wprowadź mnie w sprawę]" }
+            { role: 'system', content: `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${mode}` },
+            { role: 'model', content: welcomeMessage }
         ];
 
         setChatHistory(initialHistory);
 
-        await handleSendMessage(undefined, initialHistory, {
-            lawArea,
-            topic,
-            interactionMode: mode
-        });
-    }, [user, handleSendMessage]);
+        if (!isLocalOnly) {
+            const chatId = `${lawArea}_${topic.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
+            try {
+                await setDoc(doc(db, 'users', user.uid, 'chats', chatId), {
+                    messages: initialHistory,
+                    lastUpdated: serverTimestamp(),
+                    lawArea,
+                    topic,
+                    interactionMode: mode,
+                    servicePath: 'standard' // Default for new topics from this path
+                }, { merge: true });
+                onRefreshHistories();
+            } catch (e) {
+                console.error("Error saving initial greeting:", e);
+            }
+        }
+        setIsLoading(false);
+    }, [user, isLocalOnly, onRefreshHistories]);
 
     return {
         chatHistory, setChatHistory,

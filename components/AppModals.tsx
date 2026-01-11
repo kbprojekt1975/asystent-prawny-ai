@@ -22,7 +22,7 @@ interface AppModalsProps {
     isHistoryPanelOpen: boolean;
     setIsHistoryPanelOpen: (open: boolean) => void;
     chatHistories: any[];
-    handleLoadHistory: (lawArea: LawArea, topic: string) => void;
+    handleLoadHistory: (lawArea: LawArea, topic: string, mode?: InteractionMode, servicePath?: 'pro' | 'standard') => void;
     handleDeleteHistory: (lawArea: LawArea, topic: string) => void;
     handleViewKnowledge: (lawArea?: LawArea | null, topic?: string | null) => void;
     handleViewDocuments: (chatId?: string | null) => void;
@@ -57,6 +57,7 @@ interface AppModalsProps {
     setIsCaseManagementModalOpen: (open: boolean) => void;
     currentChatId: string | null;
     onChangeMode?: () => void;
+    isLocalOnly: boolean;
 }
 
 const AppModals: React.FC<AppModalsProps> = ({
@@ -68,7 +69,8 @@ const AppModals: React.FC<AppModalsProps> = ({
     isDocumentsModalOpen, setIsDocumentsModalOpen, documentsModalChatId,
     isDeleteModalOpen, cancelDeleteTopic, confirmDeleteTopic,
     isPreviewModalOpen, setIsPreviewModalOpen, previewContent, previewTitle,
-    isCaseManagementModalOpen, setIsCaseManagementModalOpen, currentChatId, onChangeMode
+    isCaseManagementModalOpen, setIsCaseManagementModalOpen, currentChatId, onChangeMode,
+    isLocalOnly
 }) => {
     return (
         <>
@@ -92,6 +94,8 @@ const AppModals: React.FC<AppModalsProps> = ({
                     const chatId = `${lawArea}_${topic}`;
                     handleViewDocuments(chatId);
                 }}
+                isLocalOnly={isLocalOnly}
+                userProfile={userProfile}
             />
 
             <QuickActionsModal
