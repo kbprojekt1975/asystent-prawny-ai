@@ -20,10 +20,12 @@ import {
     ExternalLinkIcon,
     SendIcon,
     ArrowsExpandIcon,
-    ArrowsContractIcon
+    ArrowsContractIcon,
+    DocumentDuplicateIcon
 } from './Icons';
 import { InfoIcon } from './InfoIcon';
 import HelpModal from './HelpModal';
+import NotesWidget from './NotesWidget';
 
 interface ProDashboardProps {
     userId: string;
@@ -40,7 +42,8 @@ interface ProDashboardProps {
 enum ProStep {
     Documents = 'docs',
     Interview = 'interview',
-    Analysis = 'analysis'
+    Analysis = 'analysis',
+    Notes = 'notes'
 }
 
 const ProDashboard: React.FC<ProDashboardProps> = ({
@@ -57,6 +60,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
     const [activeStep, setActiveStep] = useState<ProStep | null>(null);
     const [documents, setDocuments] = useState<CaseDocument[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isAddingNoteId, setIsAddingNoteId] = useState<number | null>(null);
+    const [noteContent, setNoteContent] = useState('');
     const [stepStatus, setStepStatus] = useState({
         [ProStep.Documents]: 'idle',
         [ProStep.Interview]: 'idle',
@@ -343,6 +348,21 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
         }
     };
 
+    const handleAddNote = async (content: string) => {
+        if (!userId || !chatId) return;
+        try {
+            const notesRef = collection(db, 'users', userId, 'chats', chatId, 'notes');
+            const noteId = `note_${Date.now()}`;
+            await setDoc(doc(notesRef, noteId), {
+                content: `Z analizy PRO: ${content}`,
+                createdAt: serverTimestamp()
+            });
+            alert("Dodano notatkę z analizy.");
+        } catch (e) {
+            console.error("Error adding note:", e);
+        }
+    };
+
     // Sub-view: Step 1 - Documents
     if (activeStep === ProStep.Documents) {
         return (
@@ -569,11 +589,64 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                     className="flex-1 overflow-y-auto p-4 space-y-4"
                 >
                     {messages.map((m, i) => (
-                        <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] p-4 rounded-2xl ${m.role === 'user' ? 'bg-violet-600 text-white rounded-tr-none shadow-lg' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'
+                        <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} gap-2`}>
+                            <div className={`group relative max-w-[85%] p-4 rounded-2xl ${m.role === 'user' ? 'bg-violet-600 text-white rounded-tr-none shadow-lg' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'
                                 }`}>
                                 <p className="text-sm whitespace-pre-wrap">{m.content}</p>
+                                {isAddingNoteId !== (i + 1000) && (
+                                    <button
+                                        onClick={() => {
+                                            setIsAddingNoteId(i + 1000); // Offset to avoid conflict with followUpMessages
+                                            let contextPrefix = '';
+                                            if (lawArea && topic) {
+                                                contextPrefix = `[${lawArea} > ${topic}] `;
+                                            } else if (lawArea) {
+                                                contextPrefix = `[${lawArea}] `;
+                                            }
+                                            setNoteContent(`${contextPrefix}Z wywiadu: ${m.content.substring(0, 50)}... `);
+                                        }}
+                                        className={`absolute -bottom-2 ${m.role === 'user' ? 'left-0' : 'right-0'} p-1 bg-slate-700 border border-slate-600 rounded-lg opacity-0 group-hover:opacity-100 transition-all text-slate-400 hover:text-white flex items-center gap-1 text-[9px] font-bold uppercase z-10`}
+                                        title="Dodaj do notatek"
+                                    >
+                                        <DocumentDuplicateIcon className="w-2.5 h-2.5" />
+                                        <span>Zanotuj</span>
+                                    </button>
+                                )}
                             </div>
+                            {isAddingNoteId === (i + 1000) && (
+                                <div className="w-full max-w-[85%] bg-slate-800/95 border border-violet-500/40 rounded-xl p-3 animate-in zoom-in-95 duration-200 shadow-xl backdrop-blur-md">
+                                    <textarea
+                                        className="w-full bg-transparent text-slate-200 text-xs focus:outline-none min-h-[60px] resize-none"
+                                        placeholder="Twoja prywatna notatka (niewidoczna dla AI)..."
+                                        value={noteContent}
+                                        onChange={(e) => setNoteContent(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <div className="flex justify-end gap-2 mt-2">
+                                        <button
+                                            onClick={() => {
+                                                setIsAddingNoteId(null);
+                                                setNoteContent('');
+                                            }}
+                                            className="px-3 py-1 text-[9px] font-bold text-slate-500 hover:text-white transition-colors uppercase"
+                                        >
+                                            Anuluj
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                handleAddNote(noteContent);
+                                                setIsAddingNoteId(null);
+                                                setNoteContent('');
+                                            }}
+                                            disabled={!noteContent.trim()}
+                                            className="px-3 py-1 bg-violet-600 text-white text-[9px] font-bold rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-all flex items-center gap-1 uppercase"
+                                        >
+                                            <CheckIcon className="w-2.5 h-2.5" />
+                                            Zapisz
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ))}
                     {isLoading && <div className="text-slate-500 text-sm animate-pulse italic">Asystent analizuje fakty...</div>}
@@ -751,11 +824,64 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                     <div className="h-px flex-1 bg-slate-800"></div>
                                 </div>
                                 {followUpMessages.map((m, i) => (
-                                    <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[85%] p-4 rounded-2xl ${m.role === 'user' ? 'bg-violet-600 text-white rounded-tr-none shadow-lg' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'
+                                    <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} gap-2`}>
+                                        <div className={`group relative max-w-[85%] p-4 rounded-2xl ${m.role === 'user' ? 'bg-violet-600 text-white rounded-tr-none shadow-lg' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'
                                             }`}>
                                             <p className="text-sm whitespace-pre-wrap">{m.content}</p>
+                                            {isAddingNoteId !== i && (
+                                                <button
+                                                    onClick={() => {
+                                                        setIsAddingNoteId(i);
+                                                        let contextPrefix = '';
+                                                        if (lawArea && topic) {
+                                                            contextPrefix = `[${lawArea} > ${topic}] `;
+                                                        } else if (lawArea) {
+                                                            contextPrefix = `[${lawArea}] `;
+                                                        }
+                                                        setNoteContent(`${contextPrefix}W odniesieniu do analizy: ${m.content.substring(0, 50)}... `);
+                                                    }}
+                                                    className={`absolute -bottom-2 ${m.role === 'user' ? 'left-0' : 'right-0'} p-1 bg-slate-700 border border-slate-600 rounded-lg opacity-0 group-hover:opacity-100 transition-all text-slate-400 hover:text-white flex items-center gap-1 text-[9px] font-bold uppercase z-10`}
+                                                    title="Dodaj do notatek"
+                                                >
+                                                    <DocumentDuplicateIcon className="w-2.5 h-2.5" />
+                                                    <span>Zanotuj</span>
+                                                </button>
+                                            )}
                                         </div>
+                                        {isAddingNoteId === i && (
+                                            <div className="w-full max-w-[85%] bg-slate-800/95 border border-violet-500/40 rounded-xl p-3 animate-in zoom-in-95 duration-200 shadow-xl backdrop-blur-md">
+                                                <textarea
+                                                    className="w-full bg-transparent text-slate-200 text-xs focus:outline-none min-h-[60px] resize-none"
+                                                    placeholder="Twoja prywatna notatka (niewidoczna dla AI)..."
+                                                    value={noteContent}
+                                                    onChange={(e) => setNoteContent(e.target.value)}
+                                                    autoFocus
+                                                />
+                                                <div className="flex justify-end gap-2 mt-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setIsAddingNoteId(null);
+                                                            setNoteContent('');
+                                                        }}
+                                                        className="px-3 py-1 text-[9px] font-bold text-slate-500 hover:text-white transition-colors uppercase"
+                                                    >
+                                                        Anuluj
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            handleAddNote(noteContent);
+                                                            setIsAddingNoteId(null);
+                                                            setNoteContent('');
+                                                        }}
+                                                        disabled={!noteContent.trim()}
+                                                        className="px-3 py-1 bg-violet-600 text-white text-[9px] font-bold rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-all flex items-center gap-1 uppercase"
+                                                    >
+                                                        <CheckIcon className="w-2.5 h-2.5" />
+                                                        Zapisz
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                                 {isLoading && <div className="text-slate-500 text-sm animate-pulse italic">Asystent analizuje raport...</div>}
@@ -878,6 +1004,24 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
         );
     }
 
+    // Sub-view: Step 4 - Notes
+    if (activeStep === ProStep.Notes) {
+        return (
+            <div className="flex flex-col h-full bg-slate-900 text-white p-6 overflow-y-auto">
+                <button
+                    onClick={() => setActiveStep(null)}
+                    className="flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors self-start"
+                >
+                    <ArrowLeftIcon className="w-5 h-5" />
+                    <span>Powrót do pulpitu sprawy</span>
+                </button>
+                <div className="max-w-4xl mx-auto w-full pb-10 h-[calc(100vh-200px)] min-h-[500px]">
+                    <NotesWidget userId={userId} chatId={chatId!} />
+                </div>
+            </div>
+        );
+    }
+
     // Main Dashboard View
     return (
         <div className="flex flex-col h-full bg-slate-900 text-white overflow-hidden">
@@ -993,6 +1137,26 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
 
                             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-violet-400">
                                 <span>GENERUJ RAPORT</span>
+                                <ChevronRightIcon className="w-4 h-4" />
+                            </div>
+                        </div>
+
+                        {/* Kafel 4: Notatki */}
+                        <div
+                            onClick={() => chatId && setActiveStep(ProStep.Notes)}
+                            className="group relative bg-slate-800/40 border-2 border-slate-700/50 rounded-[2.5rem] p-8 cursor-pointer transition-all duration-300 overflow-hidden hover:border-violet-500 hover:bg-slate-800/60"
+                        >
+                            <div className="w-16 h-16 bg-violet-600/20 text-violet-400 rounded-2xl flex items-center justify-center mb-8 transition-transform group-hover:scale-110">
+                                <DocumentTextIcon className="w-8 h-8" />
+                            </div>
+
+                            <h3 className="text-2xl font-bold mb-4">4. Moje Notatki</h3>
+                            <p className="text-slate-400 text-sm leading-relaxed mb-8">
+                                Zapisuj własne przemyślenia, pytania do adwokata lub ważne fakty. Notatki są bezpieczne i widoczne tylko dla Ciebie.
+                            </p>
+
+                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-violet-400">
+                                <span>OTWÓRZ NOTATNIK</span>
                                 <ChevronRightIcon className="w-4 h-4" />
                             </div>
                         </div>

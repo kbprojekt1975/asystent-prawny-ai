@@ -75,6 +75,15 @@ export interface ChecklistItem {
   createdAt: any;
 }
 
+export interface CaseNote {
+  id: string;
+  content: string;
+  createdAt: any;
+  linkedMessage?: string; // Content snippet or ID to link note to a specific  linkedMessage?: string;
+  linkedRole?: 'user' | 'model' | 'system';
+  position?: { x: number; y: number };
+}
+
 export interface QuickAction {
   lawArea: LawArea;
   topic?: string;

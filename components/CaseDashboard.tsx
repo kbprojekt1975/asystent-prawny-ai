@@ -3,6 +3,7 @@ import { ChevronDownIcon, ChevronUpIcon, BriefcaseIcon, SparklesIcon } from './I
 import Timeline from './Timeline';
 import DocumentManager from './DocumentManager';
 import ChecklistManager from './ChecklistManager';
+import NotesWidget from './NotesWidget';
 import HelpModal from './HelpModal';
 import { InfoIcon } from './InfoIcon';
 
@@ -63,6 +64,9 @@ const CaseDashboard = React.forwardRef<CaseDashboardRef, CaseDashboardProps>(({ 
                         <DocumentManager userId={userId} caseId={caseId} />
                         <div className="space-y-4">
                             <ChecklistManager userId={userId} caseId={caseId} />
+                            <div className="h-80">
+                                <NotesWidget userId={userId} chatId={caseId} />
+                            </div>
                             {onChangeMode && (
                                 <button
                                     onClick={onChangeMode}
@@ -106,6 +110,10 @@ const CaseDashboard = React.forwardRef<CaseDashboardRef, CaseDashboardProps>(({ 
                         <li>
                             <strong>Lista zadań (Checklist):</strong> Prosta lista "to-do", która pomoże Ci
                             zapanować nad kolejnymi krokami (np. "Wysłać pismo", "Opłacić wniosek").
+                        </li>
+                        <li>
+                            <strong>Notatki:</strong> Twoje osobiste miejsce na własne przemyślenia,
+                            pytania do adwokata lub ważne fakty, które chcesz mieć zawsze pod ręką.
                         </li>
                     </ul>
                 </div>
