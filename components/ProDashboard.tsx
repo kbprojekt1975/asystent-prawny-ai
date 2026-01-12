@@ -25,6 +25,7 @@ import {
 } from './Icons';
 import { InfoIcon } from './InfoIcon';
 import HelpModal from './HelpModal';
+import ChatBubble from './ChatBubble';
 import NotesWidget from './NotesWidget';
 
 interface ProDashboardProps {
@@ -37,6 +38,10 @@ interface ProDashboardProps {
     setIsFullScreen?: (val: boolean) => void;
     isDeepThinkingEnabled?: boolean;
     setIsDeepThinkingEnabled?: (val: boolean) => void;
+    onAddNote?: (content: string, linkedMsg?: string, noteId?: string, linkedRole?: 'user' | 'model' | 'system') => void;
+    onDeleteNote?: (noteId: string) => void;
+    onUpdateNotePosition?: (noteId: string, position: { x: number, y: number } | null) => void;
+    existingNotes?: any[];
 }
 
 enum ProStep {
@@ -55,7 +60,11 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
     isFullScreen = false,
     setIsFullScreen,
     isDeepThinkingEnabled = false,
-    setIsDeepThinkingEnabled
+    setIsDeepThinkingEnabled,
+    onAddNote,
+    onDeleteNote,
+    onUpdateNotePosition,
+    existingNotes
 }) => {
     const [activeStep, setActiveStep] = useState<ProStep | null>(null);
     const [documents, setDocuments] = useState<CaseDocument[]>([]);
@@ -586,70 +595,26 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
 
                 <div
                     ref={scrollRef}
-                    className="flex-1 overflow-y-auto p-4 space-y-4"
+                    className="flex-1 overflow-y-auto p-4 custom-scrollbar"
                 >
-                    {messages.map((m, i) => (
-                        <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} gap-2`}>
-                            <div className={`group relative max-w-[85%] p-4 rounded-2xl ${m.role === 'user' ? 'bg-violet-600 text-white rounded-tr-none shadow-lg' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'
-                                }`}>
-                                <p className="text-sm whitespace-pre-wrap">{m.content}</p>
-                                {isAddingNoteId !== (i + 1000) && (
-                                    <button
-                                        onClick={() => {
-                                            setIsAddingNoteId(i + 1000); // Offset to avoid conflict with followUpMessages
-                                            let contextPrefix = '';
-                                            if (lawArea && topic) {
-                                                contextPrefix = `[${lawArea} > ${topic}] `;
-                                            } else if (lawArea) {
-                                                contextPrefix = `[${lawArea}] `;
-                                            }
-                                            setNoteContent(`${contextPrefix}Z wywiadu: ${m.content.substring(0, 50)}... `);
-                                        }}
-                                        className={`absolute -bottom-2 ${m.role === 'user' ? 'left-0' : 'right-0'} p-1 bg-slate-700 border border-slate-600 rounded-lg opacity-0 group-hover:opacity-100 transition-all text-slate-400 hover:text-white flex items-center gap-1 text-[9px] font-bold uppercase z-10`}
-                                        title="Dodaj do notatek"
-                                    >
-                                        <DocumentDuplicateIcon className="w-2.5 h-2.5" />
-                                        <span>Zanotuj</span>
-                                    </button>
+                    <div className="max-w-4xl mx-auto space-y-4">
+                        {messages.map((m, i) => (
+                            <ChatBubble
+                                key={i}
+                                message={m}
+                                onAddNote={onAddNote ? (content, linkedMsg, noteId) => onAddNote(content, linkedMsg, noteId, m.role === 'model' ? 'model' : 'user') : undefined}
+                                existingNotes={existingNotes?.filter(n =>
+                                    n.linkedMessage === m.content.substring(0, 50) &&
+                                    (!n.linkedRole || n.linkedRole === (m.role === 'model' ? 'model' : 'user'))
                                 )}
-                            </div>
-                            {isAddingNoteId === (i + 1000) && (
-                                <div className="w-full max-w-[85%] bg-slate-800/95 border border-violet-500/40 rounded-xl p-3 animate-in zoom-in-95 duration-200 shadow-xl backdrop-blur-md">
-                                    <textarea
-                                        className="w-full bg-transparent text-slate-200 text-xs focus:outline-none min-h-[60px] resize-none"
-                                        placeholder="Twoja prywatna notatka (niewidoczna dla AI)..."
-                                        value={noteContent}
-                                        onChange={(e) => setNoteContent(e.target.value)}
-                                        autoFocus
-                                    />
-                                    <div className="flex justify-end gap-2 mt-2">
-                                        <button
-                                            onClick={() => {
-                                                setIsAddingNoteId(null);
-                                                setNoteContent('');
-                                            }}
-                                            className="px-3 py-1 text-[9px] font-bold text-slate-500 hover:text-white transition-colors uppercase"
-                                        >
-                                            Anuluj
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                handleAddNote(noteContent);
-                                                setIsAddingNoteId(null);
-                                                setNoteContent('');
-                                            }}
-                                            disabled={!noteContent.trim()}
-                                            className="px-3 py-1 bg-violet-600 text-white text-[9px] font-bold rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-all flex items-center gap-1 uppercase"
-                                        >
-                                            <CheckIcon className="w-2.5 h-2.5" />
-                                            Zapisz
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                    {isLoading && <div className="text-slate-500 text-sm animate-pulse italic">Asystent analizuje fakty...</div>}
+                                onDeleteNote={onDeleteNote}
+                                onUpdateNotePosition={onUpdateNotePosition}
+                                lawArea={lawArea}
+                                topic={topic}
+                            />
+                        ))}
+                        {isLoading && <div className="text-slate-500 text-sm animate-pulse italic">Asystent analizuje fakty...</div>}
+                    </div>
                 </div>
 
                 <div className="p-4 bg-slate-800/80 border-t border-slate-700">
@@ -808,10 +773,19 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
 
                         {/* The Strategic Report */}
                         {reportMessage && (
-                            <div className="bg-slate-800/50 border border-slate-700 rounded-3xl p-8 shadow-2xl mb-12">
-                                <div className="prose prose-invert max-w-none text-slate-100 text-sm leading-relaxed whitespace-pre-wrap">
-                                    {reportMessage.content}
-                                </div>
+                            <div className="mb-12">
+                                <ChatBubble
+                                    message={reportMessage}
+                                    onAddNote={onAddNote ? (content, linkedMsg, noteId) => onAddNote(content, linkedMsg, noteId, 'model') : undefined}
+                                    existingNotes={existingNotes?.filter(n =>
+                                        n.linkedMessage === reportMessage.content.substring(0, 50) &&
+                                        (!n.linkedRole || n.linkedRole === 'model')
+                                    )}
+                                    onDeleteNote={onDeleteNote}
+                                    onUpdateNotePosition={onUpdateNotePosition}
+                                    lawArea={lawArea}
+                                    topic={topic}
+                                />
                             </div>
                         )}
 
@@ -824,65 +798,19 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                     <div className="h-px flex-1 bg-slate-800"></div>
                                 </div>
                                 {followUpMessages.map((m, i) => (
-                                    <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} gap-2`}>
-                                        <div className={`group relative max-w-[85%] p-4 rounded-2xl ${m.role === 'user' ? 'bg-violet-600 text-white rounded-tr-none shadow-lg' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'
-                                            }`}>
-                                            <p className="text-sm whitespace-pre-wrap">{m.content}</p>
-                                            {isAddingNoteId !== i && (
-                                                <button
-                                                    onClick={() => {
-                                                        setIsAddingNoteId(i);
-                                                        let contextPrefix = '';
-                                                        if (lawArea && topic) {
-                                                            contextPrefix = `[${lawArea} > ${topic}] `;
-                                                        } else if (lawArea) {
-                                                            contextPrefix = `[${lawArea}] `;
-                                                        }
-                                                        setNoteContent(`${contextPrefix}W odniesieniu do analizy: ${m.content.substring(0, 50)}... `);
-                                                    }}
-                                                    className={`absolute -bottom-2 ${m.role === 'user' ? 'left-0' : 'right-0'} p-1 bg-slate-700 border border-slate-600 rounded-lg opacity-0 group-hover:opacity-100 transition-all text-slate-400 hover:text-white flex items-center gap-1 text-[9px] font-bold uppercase z-10`}
-                                                    title="Dodaj do notatek"
-                                                >
-                                                    <DocumentDuplicateIcon className="w-2.5 h-2.5" />
-                                                    <span>Zanotuj</span>
-                                                </button>
-                                            )}
-                                        </div>
-                                        {isAddingNoteId === i && (
-                                            <div className="w-full max-w-[85%] bg-slate-800/95 border border-violet-500/40 rounded-xl p-3 animate-in zoom-in-95 duration-200 shadow-xl backdrop-blur-md">
-                                                <textarea
-                                                    className="w-full bg-transparent text-slate-200 text-xs focus:outline-none min-h-[60px] resize-none"
-                                                    placeholder="Twoja prywatna notatka (niewidoczna dla AI)..."
-                                                    value={noteContent}
-                                                    onChange={(e) => setNoteContent(e.target.value)}
-                                                    autoFocus
-                                                />
-                                                <div className="flex justify-end gap-2 mt-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setIsAddingNoteId(null);
-                                                            setNoteContent('');
-                                                        }}
-                                                        className="px-3 py-1 text-[9px] font-bold text-slate-500 hover:text-white transition-colors uppercase"
-                                                    >
-                                                        Anuluj
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            handleAddNote(noteContent);
-                                                            setIsAddingNoteId(null);
-                                                            setNoteContent('');
-                                                        }}
-                                                        disabled={!noteContent.trim()}
-                                                        className="px-3 py-1 bg-violet-600 text-white text-[9px] font-bold rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-all flex items-center gap-1 uppercase"
-                                                    >
-                                                        <CheckIcon className="w-2.5 h-2.5" />
-                                                        Zapisz
-                                                    </button>
-                                                </div>
-                                            </div>
+                                    <ChatBubble
+                                        key={i}
+                                        message={m}
+                                        onAddNote={onAddNote ? (content, linkedMsg, noteId) => onAddNote(content, linkedMsg, noteId, m.role === 'model' ? 'model' : 'user') : undefined}
+                                        existingNotes={existingNotes?.filter(n =>
+                                            n.linkedMessage === m.content.substring(0, 50) &&
+                                            (!n.linkedRole || n.linkedRole === (m.role === 'model' ? 'model' : 'user'))
                                         )}
-                                    </div>
+                                        onDeleteNote={onDeleteNote}
+                                        onUpdateNotePosition={onUpdateNotePosition}
+                                        lawArea={lawArea}
+                                        topic={topic}
+                                    />
                                 ))}
                                 {isLoading && <div className="text-slate-500 text-sm animate-pulse italic">Asystent analizuje raport...</div>}
                             </div>

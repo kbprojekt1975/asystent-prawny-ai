@@ -134,6 +134,28 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, [user, currentChatId]);
 
+  const handleUpdateNotePosition = async (noteId: string, position: { x: number, y: number } | null) => {
+    if (!user || !currentChatId) return;
+    try {
+      const noteRef = doc(db, 'users', user.uid, 'chats', currentChatId, 'notes', noteId);
+      await updateDoc(noteRef, {
+        position: position,
+        updatedAt: serverTimestamp()
+      });
+    } catch (e) {
+      console.error("Error updating note position:", e);
+    }
+  };
+
+  const deleteNote = async (noteId: string) => {
+    if (!user || !currentChatId) return;
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'chats', currentChatId, 'notes', noteId));
+    } catch (e) {
+      console.error("Error deleting note:", e);
+    }
+  };
+
 
 
   useEffect(() => {
@@ -515,36 +537,29 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAddNote = async (content: string, linkedMessage?: string, noteId?: string) => {
+  const handleAddNote = async (content: string, linkedMessage?: string, noteId?: string, linkedRole?: 'user' | 'model' | 'system') => {
     if (!user || !currentChatId) return;
     try {
       const notesRef = collection(db, 'users', user.uid, 'chats', currentChatId, 'notes');
       const finalNoteId = noteId || `note_${Date.now()}`;
-
-      await setDoc(doc(notesRef, finalNoteId), {
-        content: content,
-        linkedMessage: linkedMessage || null,
-        createdAt: noteId ? undefined : serverTimestamp(), // Don't overwrite createdAt on update
-        updatedAt: serverTimestamp() // Add updatedAt
-      }, { merge: true }); // Merge to preserve createdAt if updating
-
-      // If creating new, we might need to manually set createdAt if merge=true prevents it? 
-      // check firestore behavior. setDoc with merge updates fields. 
-      // If doc doesn't exist, it creates.
-      // Ideally explicitly set createdAt only if !noteId.
 
       const payload: any = {
         content,
         linkedMessage: linkedMessage || null,
         updatedAt: serverTimestamp()
       };
+
+      if (linkedRole) {
+        payload.linkedRole = linkedRole;
+      }
+
       if (!noteId) {
         payload.createdAt = serverTimestamp();
       }
 
       await setDoc(doc(notesRef, finalNoteId), payload, { merge: true });
 
-      alert(noteId ? "Zaktualizowano notatkę." : "Dodano notatkę do wiadomości.");
+      // alert(noteId ? "Zaktualizowano notatkę." : "Dodano notatkę do wiadomości."); // Removed excessive alerts
     } catch (e) {
       console.error("Error adding/updating note:", e);
     }
@@ -1029,6 +1044,18 @@ const App: React.FC = () => {
               setIsFullScreen={setIsFullScreen}
               isDeepThinkingEnabled={isDeepThinkingEnabled}
               setIsDeepThinkingEnabled={setIsDeepThinkingEnabled}
+              onAddNote={(content, linkedMsg, noteId, linkedRole) => handleAddNote(content, linkedMsg, noteId, linkedRole)}
+              onDeleteNote={deleteNote}
+              onUpdateNotePosition={handleUpdateNotePosition}
+              existingNotes={
+                chatNotes.map(n => ({
+                  id: n.id,
+                  content: n.content,
+                  linkedMessage: n.linkedMessage,
+                  linkedRole: n.linkedRole,
+                  position: n.position
+                }))
+              }
             />
           ) : (
             <div className="flex flex-col h-full bg-slate-900">
@@ -1058,58 +1085,6 @@ const App: React.FC = () => {
                     )}
                     {chatHistory.filter(msg => msg.role !== 'system' && !msg.content.includes('[SYSTEM:')).map((msg, index) => {
                       // Find notes linked to this message (by content snippet match)
-                      const snippet = msg.content.substring(0, 50);
-
-                      const handleAddNote = async (content: string, linkedMsg?: string, noteId?: string, linkedRole?: 'user' | 'model' | 'system') => {
-                        if (!user || !currentChatId) return;
-                        try {
-                          const notesRef = collection(db, 'users', user.uid, 'chats', currentChatId, 'notes');
-
-                          const noteData: any = {
-                            content,
-                            updatedAt: new Date().toISOString()
-                          };
-
-                          if (linkedMsg) {
-                            noteData.linkedMessage = linkedMsg;
-                          }
-
-                          if (linkedRole) {
-                            noteData.linkedRole = linkedRole;
-                          }
-
-                          if (noteId) {
-                            await setDoc(doc(notesRef, noteId), noteData, { merge: true });
-                          } else {
-                            noteData.createdAt = new Date().toISOString();
-                            await addDoc(notesRef, noteData);
-                          }
-                        } catch (e) {
-                          console.error("Error adding/updating note:", e);
-                        }
-                      };
-
-                      const deleteNote = async (noteId: string) => {
-                        if (!user || !currentChatId) return;
-                        try {
-                          await deleteDoc(doc(db, 'users', user.uid, 'chats', currentChatId, 'notes', noteId));
-                        } catch (e) {
-                          console.error("Error deleting note:", e);
-                        }
-                      };
-
-                      const handleUpdateNotePosition = async (noteId: string, position: { x: number; y: number } | null) => {
-                        if (!user || !currentChatId) return;
-                        try {
-                          const notesRef = collection(db, 'users', user.uid, 'chats', currentChatId, 'notes');
-                          await setDoc(doc(notesRef, noteId), {
-                            position: position
-                          }, { merge: true });
-                        } catch (e) {
-                          console.error("Error updating note position:", e);
-                        }
-                      };
-
                       return (
                         <ChatBubble
                           key={index}
@@ -1117,9 +1092,9 @@ const App: React.FC = () => {
                           onPreviewDocument={handlePreviewDocument}
                           onAddDeadline={handleAddDeadline}
                           onAddTask={handleAddTask}
-                          onAddNote={(content, linkedMsg, noteId) => handleAddNote(content, linkedMsg, noteId, msg.role)}
-                          onUpdateNotePosition={handleUpdateNotePosition}
+                          onAddNote={(content, linkedMsg, noteId) => handleAddNote(content, linkedMsg, noteId, msg.role as 'user' | 'model' | 'system')}
                           onDeleteNote={deleteNote}
+                          onUpdateNotePosition={handleUpdateNotePosition}
                           existingNotes={chatNotes.filter(n =>
                             n.linkedMessage === msg.content.substring(0, 50) &&
                             (!n.linkedRole || n.linkedRole === msg.role)

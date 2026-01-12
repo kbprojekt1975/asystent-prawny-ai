@@ -8,6 +8,8 @@ interface ChatBubbleProps {
   onAddDeadline?: (date: string, title: string, description: string) => void;
   onAddTask?: (text: string) => void;
   onAddNote?: (content: string, linkedMsg?: string, noteId?: string) => void;
+  onUpdateNotePosition?: (noteId: string, position: { x: number, y: number } | null) => void;
+  onDeleteNote?: (noteId: string) => void;
   lawArea?: string;
   topic?: string;
   existingNotes?: any[];
