@@ -57,6 +57,7 @@ import RemindersWidget from './components/RemindersWidget';
 import CookieConsent from './components/CookieConsent';
 import { useUserCalendar } from './hooks/useUserCalendar';
 import AlimonyCalculator from './components/AlimonyCalculator';
+import DraggableButton from './components/DraggableButton';
 import GlobalAnnouncement from './components/GlobalAnnouncement';
 import AdminBroadcastInput from './components/AdminBroadcastInput';
 import PWAUpdateNotification from './components/PWAUpdateNotification';
@@ -733,34 +734,37 @@ const App: React.FC = () => {
 
 
 
-      {/* MODULAR FEATURE: Alimony Calculator (Only for Family Law) */}
-      {selectedLawArea === LawArea.Family && !isLoading && !isWelcomeModalOpen && (
-        <>
-          <button
-            onClick={() => setIsAlimonyModalOpen(true)}
-            className="fixed bottom-24 right-4 z-40 bg-pink-600 hover:bg-pink-500 text-white p-4 rounded-full shadow-2xl border border-pink-400/50 transition-all group hover:scale-105 active:scale-95 animate-bounce-in"
-            title="Kalkulator Alimentów"
-          >
-            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-900">
-              NEW
-            </div>
-            {/* Simple Calculator Icon SVG inline if not imported */}
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-          </button>
 
-          <AlimonyCalculator
-            isOpen={isAlimonyModalOpen}
-            onClose={() => setIsAlimonyModalOpen(false)}
-            lawArea={selectedLawArea}
-          />
-        </>
-      )}
 
       <GlobalAnnouncement />
 
-      <div className="flex flex-col h-[100dvh] bg-slate-800">
+      <div className="flex flex-col h-[100dvh] bg-slate-800 relative">
+        {/* MODULAR FEATURE: Alimony Calculator (Only for Family Law) */}
+        {selectedLawArea === LawArea.Family && !isLoading && !isWelcomeModalOpen && (
+          <>
+            <DraggableButton
+              id="alimony-calculator-v6"
+              initialBottom={250}
+              initialRight={20}
+              onClick={() => setIsAlimonyModalOpen(true)}
+              className="bg-pink-600 hover:bg-pink-500 text-white p-4 rounded-full shadow-2xl border border-pink-400/50 transition-all group hover:scale-105 active:scale-95"
+              title="Kalkulator Alimentów"
+            >
+              <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-900 shadow-sm">
+                NEW
+              </div>
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </DraggableButton>
+
+            <AlimonyCalculator
+              isOpen={isAlimonyModalOpen}
+              onClose={() => setIsAlimonyModalOpen(false)}
+              lawArea={selectedLawArea}
+            />
+          </>
+        )}
         {!isFullScreen && (
           <AppHeader
             title={
@@ -961,6 +965,10 @@ const App: React.FC = () => {
               lawArea={selectedLawArea}
               topic={selectedTopic}
               onBack={() => setSelectedTopic(null)}
+              isFullScreen={isFullScreen}
+              setIsFullScreen={setIsFullScreen}
+              isDeepThinkingEnabled={isDeepThinkingEnabled}
+              setIsDeepThinkingEnabled={setIsDeepThinkingEnabled}
             />
           ) : (
             <div className="flex flex-col h-full bg-slate-900">

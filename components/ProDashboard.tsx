@@ -18,7 +18,9 @@ import {
     MagicWandIcon,
     ClockIcon,
     ExternalLinkIcon,
-    SendIcon
+    SendIcon,
+    ArrowsExpandIcon,
+    ArrowsContractIcon
 } from './Icons';
 import { InfoIcon } from './InfoIcon';
 import HelpModal from './HelpModal';
@@ -29,6 +31,10 @@ interface ProDashboardProps {
     lawArea: LawArea;
     topic: string;
     onBack: () => void;
+    isFullScreen?: boolean;
+    setIsFullScreen?: (val: boolean) => void;
+    isDeepThinkingEnabled?: boolean;
+    setIsDeepThinkingEnabled?: (val: boolean) => void;
 }
 
 enum ProStep {
@@ -37,7 +43,17 @@ enum ProStep {
     Analysis = 'analysis'
 }
 
-const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, topic, onBack }) => {
+const ProDashboard: React.FC<ProDashboardProps> = ({
+    userId,
+    chatId,
+    lawArea,
+    topic,
+    onBack,
+    isFullScreen = false,
+    setIsFullScreen,
+    isDeepThinkingEnabled = false,
+    setIsDeepThinkingEnabled
+}) => {
     const [activeStep, setActiveStep] = useState<ProStep | null>(null);
     const [documents, setDocuments] = useState<CaseDocument[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -523,28 +539,30 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
     if (activeStep === ProStep.Interview) {
         return (
             <div className="flex flex-col h-full bg-slate-900 text-white overflow-hidden">
-                <div className="p-4 border-b border-slate-700 flex items-center justify-between bg-slate-800/50 backdrop-blur-md">
-                    <button
-                        onClick={() => setActiveStep(null)}
-                        className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
-                    >
-                        <ArrowLeftIcon className="w-5 h-5" />
-                        <span>Pulpit sprawy</span>
-                    </button>
-                    <h2 className="font-bold text-violet-400 flex items-center gap-2">
-                        Etap 2: Wywiad Strategiczny
-                        <InfoIcon onClick={() => setIsHelpOpen(true)} className="w-5 h-5" />
-                    </h2>
-                    <button
-                        onClick={() => {
-                            setStepStatus(prev => ({ ...prev, [ProStep.Interview]: 'completed' }));
-                            setActiveStep(null);
-                        }}
-                        className="text-xs bg-green-600/20 text-green-400 border border-green-500/30 px-3 py-1 rounded-full font-bold hover:bg-green-600/30 transition-all"
-                    >
-                        Zakończ wywiad
-                    </button>
-                </div>
+                {!isFullScreen && (
+                    <div className="p-4 border-b border-slate-700 flex items-center justify-between bg-slate-800/50 backdrop-blur-md gap-2">
+                        <button
+                            onClick={() => setActiveStep(null)}
+                            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors flex-shrink-0"
+                        >
+                            <ArrowLeftIcon className="w-5 h-5" />
+                            <span className="hidden md:inline">Pulpit sprawy</span>
+                        </button>
+                        <h2 className="font-bold text-violet-400 flex items-center gap-1.5 text-xs md:text-base truncate">
+                            Etap 2: Wywiad Strategiczny
+                            <InfoIcon onClick={() => setIsHelpOpen(true)} className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+                        </h2>
+                        <button
+                            onClick={() => {
+                                setStepStatus(prev => ({ ...prev, [ProStep.Interview]: 'completed' }));
+                                setActiveStep(null);
+                            }}
+                            className="text-[10px] md:text-xs bg-green-600/20 text-green-400 border border-green-500/30 px-2 md:px-3 py-1 rounded-full font-bold hover:bg-green-600/30 transition-all flex-shrink-0"
+                        >
+                            Zakończ wywiad
+                        </button>
+                    </div>
+                )}
 
                 <div
                     ref={scrollRef}
@@ -563,15 +581,54 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
 
                 <div className="p-4 bg-slate-800/80 border-t border-slate-700">
                     <div className="flex flex-col gap-3 max-w-4xl mx-auto">
+                        {!isFullScreen && (
+                            <div className="flex items-center justify-between gap-3 flex-wrap">
+                                <div className="flex items-center">
+                                    <label htmlFor="pro-deep-thinking-toggle" className="text-[10px] sm:text-xs leading-tight font-medium text-slate-400 mr-2 cursor-pointer flex flex-col items-center">
+                                        <span>Głębokie</span>
+                                        <span>Myślenie</span>
+                                    </label>
+                                    <button
+                                        id="pro-deep-thinking-toggle"
+                                        onClick={() => setIsDeepThinkingEnabled?.(!isDeepThinkingEnabled)}
+                                        className={`relative inline-flex items-center h-5 rounded-full w-10 transition-colors ${isDeepThinkingEnabled ? 'bg-cyan-600' : 'bg-slate-600'}`}
+                                    >
+                                        <span className={`inline-block w-3.5 h-3.5 transform bg-white rounded-full transition-transform ${isDeepThinkingEnabled ? 'translate-x-5.5' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setIsFullScreen?.(!isFullScreen)}
+                                        className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors border border-slate-700 bg-slate-800/50"
+                                        title={isFullScreen ? "Wyjdź z pełnego ekranu" : "Pełny ekran"}
+                                    >
+                                        {isFullScreen ? <ArrowsContractIcon className="h-5 w-5" /> : <ArrowsExpandIcon className="h-5 w-5" />}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Context Badge */}
-                        <div className="flex items-center gap-2 px-1 py-1 text-[10px] opacity-70">
-                            <ScaleIcon className="w-3 h-3 text-cyan-400 flex-shrink-0" />
-                            <span className="text-slate-400 font-semibold uppercase tracking-wider">Tryb: Strategia PRO</span>
-                            <span className="text-slate-600">|</span>
-                            <BriefcaseIcon className="w-3 h-3 text-amber-400 flex-shrink-0" />
-                            <span className="text-amber-400 font-semibold truncate uppercase tracking-wider">{topic}</span>
-                        </div>
+                        {!isFullScreen && (
+                            <div className="flex items-center gap-2 px-1 py-1 text-[10px] opacity-70">
+                                <ScaleIcon className="w-3 h-3 text-cyan-400 flex-shrink-0" />
+                                <span className="text-slate-400 font-semibold uppercase tracking-wider">Tryb: Strategia PRO</span>
+                                <span className="text-slate-600">|</span>
+                                <BriefcaseIcon className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                                <span className="text-amber-400 font-semibold truncate uppercase tracking-wider">{topic}</span>
+                            </div>
+                        )}
                         <div className="flex gap-2">
+                            {isFullScreen && (
+                                <button
+                                    onClick={() => setIsFullScreen?.(false)}
+                                    className="p-3 text-slate-400 hover:text-cyan-400 rounded-xl transition-colors border border-slate-700 bg-slate-900/50"
+                                    title="Wyjdź z pełnego ekranu"
+                                >
+                                    <ArrowsContractIcon className="w-5 h-5 transition-transform group-active:scale-90" />
+                                </button>
+                            )}
                             <input
                                 type="text"
                                 className="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-violet-500 transition-all"
@@ -629,21 +686,23 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
         return (
             <div className="flex flex-col h-full bg-slate-900 text-white overflow-hidden relative">
                 {/* Fixed Header */}
-                <div className="p-4 border-b border-slate-700 flex items-center justify-between bg-slate-800/50 backdrop-blur-md z-10">
-                    <button
-                        onClick={() => setActiveStep(null)}
-                        className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
-                    >
-                        <ArrowLeftIcon className="w-5 h-5" />
-                        <span>Pulpit sprawy</span>
-                    </button>
+                {!isFullScreen && (
+                    <div className="p-4 border-b border-slate-700 flex items-center justify-between bg-slate-800/50 backdrop-blur-md z-10 gap-2">
+                        <button
+                            onClick={() => setActiveStep(null)}
+                            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors flex-shrink-0"
+                        >
+                            <ArrowLeftIcon className="w-5 h-5" />
+                            <span className="hidden md:inline">Pulpit sprawy</span>
+                        </button>
 
-                    <h2 className="font-bold text-violet-400 flex items-center gap-2">
-                        Etap 3: Raport Strategiczny
-                        <InfoIcon onClick={() => setIsHelpOpen(true)} className="w-5 h-5" />
-                    </h2>
-                    <div className="w-24"></div> {/* Spacer for balance */}
-                </div>
+                        <h2 className="font-bold text-violet-400 flex items-center gap-1.5 text-xs md:text-base truncate">
+                            Etap 3: Raport Strategiczny
+                            <InfoIcon onClick={() => setIsHelpOpen(true)} className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+                        </h2>
+                        <div className="w-8 md:w-24 flex-shrink-0"></div> {/* Spacer for balance */}
+                    </div>
+                )}
 
                 {/* Centered Loading Overlay */}
                 {
@@ -723,15 +782,54 @@ const ProDashboard: React.FC<ProDashboardProps> = ({ userId, chatId, lawArea, to
                     reportMessage && (
                         <div className="p-4 bg-slate-800/80 border-t border-slate-700 backdrop-blur-md">
                             <div className="flex flex-col gap-3 max-w-4xl mx-auto">
-                                {/* Context Badge */}
-                                <div className="flex items-center gap-2 px-1 py-1 text-[10px] opacity-70">
-                                    <ScaleIcon className="w-3 h-3 text-cyan-400 flex-shrink-0" />
-                                    <span className="text-slate-400 font-semibold uppercase tracking-wider">Tryb: Analiza Strategiczna</span>
-                                    <span className="text-slate-600">|</span>
-                                    <BriefcaseIcon className="w-3 h-3 text-amber-400 flex-shrink-0" />
-                                    <span className="text-amber-400 font-semibold truncate uppercase tracking-wider">{topic}</span>
-                                </div>
+                                {!isFullScreen && (
+                                    <div className="flex items-center gap-2 px-1 py-1 text-[10px] opacity-70">
+                                        <ScaleIcon className="w-3 h-3 text-cyan-400 flex-shrink-0" />
+                                        <span className="text-slate-400 font-semibold uppercase tracking-wider">Tryb: Analiza Strategiczna</span>
+                                        <span className="text-slate-600">|</span>
+                                        <BriefcaseIcon className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                                        <span className="text-amber-400 font-semibold truncate uppercase tracking-wider">{topic}</span>
+                                    </div>
+                                )}
+
+                                {!isFullScreen && (
+                                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                                        <div className="flex items-center">
+                                            <label htmlFor="pro-analysis-deep-thinking-toggle" className="text-[10px] sm:text-xs leading-tight font-medium text-slate-400 mr-2 cursor-pointer flex flex-col items-center">
+                                                <span>Głębokie</span>
+                                                <span>Myślenie</span>
+                                            </label>
+                                            <button
+                                                id="pro-analysis-deep-thinking-toggle"
+                                                onClick={() => setIsDeepThinkingEnabled?.(!isDeepThinkingEnabled)}
+                                                className={`relative inline-flex items-center h-5 rounded-full w-10 transition-colors ${isDeepThinkingEnabled ? 'bg-cyan-600' : 'bg-slate-600'}`}
+                                            >
+                                                <span className={`inline-block w-3.5 h-3.5 transform bg-white rounded-full transition-transform ${isDeepThinkingEnabled ? 'translate-x-5.5' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => setIsFullScreen?.(!isFullScreen)}
+                                                className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors border border-slate-700 bg-slate-800/50"
+                                                title={isFullScreen ? "Wyjdź z pełnego ekranu" : "Pełny ekran"}
+                                            >
+                                                {isFullScreen ? <ArrowsContractIcon className="h-5 w-5" /> : <ArrowsExpandIcon className="h-5 w-5" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="flex gap-2">
+                                    {isFullScreen && (
+                                        <button
+                                            onClick={() => setIsFullScreen?.(false)}
+                                            className="p-3 text-slate-400 hover:text-cyan-400 rounded-xl transition-colors border border-slate-700 bg-slate-900/50"
+                                            title="Wyjdź z pełnego ekranu"
+                                        >
+                                            <ArrowsContractIcon className="w-5 h-5 transition-transform group-active:scale-90" />
+                                        </button>
+                                    )}
                                     <input
                                         type="text"
                                         className="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-violet-500 transition-all placeholder:text-slate-600"
