@@ -14,7 +14,8 @@ export enum InteractionMode {
   FindRulings = 'Znajdź Podobne Wyroki',
   Court = 'Tryb Sądowy',
   Negotiation = 'Konwersacja ze stroną przeciwną',
-  StrategicAnalysis = 'Strategiczne Prowadzenie Sprawy'
+  StrategicAnalysis = 'Strategiczne Prowadzenie Sprawy',
+  AppHelp = 'Pomoc w obsłudze aplikacji'
 }
 
 export enum CourtRole {

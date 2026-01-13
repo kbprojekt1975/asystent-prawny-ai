@@ -61,6 +61,7 @@ import DraggableButton from './components/DraggableButton';
 import GlobalAnnouncement from './components/GlobalAnnouncement';
 import AdminBroadcastInput from './components/AdminBroadcastInput';
 import PWAUpdateNotification from './components/PWAUpdateNotification';
+import AppHelpSidebar from './components/AppHelpSidebar';
 
 const initialProfile: UserProfile = {
   quickActions: [],
@@ -196,6 +197,7 @@ const App: React.FC = () => {
   const [isQuickActionsModalOpen, setIsQuickActionsModalOpen] = useState(false);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
   const [isCaseManagementModalOpen, setIsCaseManagementModalOpen] = useState(false);
+  const [isAppHelpSidebarOpen, setIsAppHelpSidebarOpen] = useState(false);
   const [chatHistories, setChatHistories] = useState<{ lawArea: LawArea; topic: string; interactionMode?: InteractionMode; lastUpdated?: any }[]>([]);
 
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -922,6 +924,7 @@ const App: React.FC = () => {
               })()
             }
             onProfileClick={() => setIsProfileModalOpen(true)}
+            onHelpClick={() => setIsAppHelpSidebarOpen(true)}
             onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}
             onHistoryClick={() => setIsHistoryPanelOpen(true)}
             onBackClick={
@@ -1115,6 +1118,11 @@ const App: React.FC = () => {
 
         <RemindersWidget user={user} />
         <CookieConsent />
+        <AppHelpSidebar
+          isOpen={isAppHelpSidebarOpen}
+          onClose={() => setIsAppHelpSidebarOpen(false)}
+          userId={user?.uid}
+        />
 
         {selectedTopic && interactionMode && servicePath !== 'pro' && (
           <footer className="bg-slate-900 p-4 border-t border-slate-700/50">

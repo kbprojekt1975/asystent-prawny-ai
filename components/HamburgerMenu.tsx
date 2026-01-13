@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MenuIcon, ProfileIcon, BookOpenIcon, HomeIcon, ClockIcon, SparklesIcon, ArrowsExpandIcon, DownloadIcon, UploadIcon } from './Icons';
+import { MenuIcon, ProfileIcon, BookOpenIcon, HomeIcon, ClockIcon, SparklesIcon, ArrowsExpandIcon, DownloadIcon, UploadIcon, QuestionMarkCircleIcon } from './Icons';
 import { SubscriptionInfo } from '../types';
 
 interface HamburgerMenuProps {
@@ -12,6 +12,7 @@ interface HamburgerMenuProps {
     onExportChat?: () => void;
     onImportChat?: (file: File) => void;
     onInstallApp?: () => void;
+    onHelpClick?: () => void;
     subscription?: SubscriptionInfo;
     totalCost?: number;
 }
@@ -26,6 +27,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     onExportChat,
     onImportChat,
     onInstallApp,
+    onHelpClick,
     subscription,
     totalCost
 }) => {
@@ -103,6 +105,18 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                         >
                             <BookOpenIcon className="h-5 w-5 text-yellow-500" />
                             <span>Baza Wiedzy</span>
+                        </button>
+
+                        <button
+                            onClick={() => { onHelpClick?.(); setIsOpen(false); }}
+                            className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-white bg-indigo-500/20 hover:bg-indigo-500/30 transition-colors border-y border-slate-700"
+                            role="menuitem"
+                        >
+                            <QuestionMarkCircleIcon className="h-5 w-5 text-indigo-400" />
+                            <span className="font-bold inline-flex items-center gap-2">
+                                Pomoc AI
+                                <span className="text-[8px] bg-indigo-500 text-white px-1 py-0.5 rounded uppercase tracking-tighter">NOWOŚĆ</span>
+                            </span>
                         </button>
 
                         {onHistoryClick && (

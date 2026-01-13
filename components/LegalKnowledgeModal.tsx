@@ -21,9 +21,7 @@ const LegalKnowledgeModal: React.FC<LegalKnowledgeModalProps> = ({ isOpen, onClo
     useEffect(() => {
         if (!isOpen || !userId) return;
 
-        setIsLoading(true); // Reset loading state when parameters change
-
-        // If no chatId is provided, we can only show global
+        setIsLoading(true);
         const activeMode = (!chatId) ? 'global' : viewMode;
 
         let q;

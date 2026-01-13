@@ -74,7 +74,7 @@ const getAiClient = () => {
 
 // --- TYPY I ENUMY ---
 type LawAreaType = 'Prawo Karne' | 'Prawo Rodzinne' | 'Prawo Cywilne' | 'Prawo Gospodarcze';
-type InteractionModeType = 'Porada Prawna' | 'Generowanie Pisma' | 'Szkolenie Prawne' | 'Zasugeruj Przepisy' | 'Znajdź Podobne Wyroki' | 'Tryb Sądowy' | 'Konwersacja ze stroną przeciwną' | 'Analiza Sprawy' | 'Strategiczne Prowadzenie Sprawy';
+type InteractionModeType = 'Porada Prawna' | 'Generowanie Pisma' | 'Szkolenie Prawne' | 'Zasugeruj Przepisy' | 'Znajdź Podobne Wyroki' | 'Tryb Sądowy' | 'Konwersacja ze stroną przeciwną' | 'Analiza Sprawy' | 'Strategiczne Prowadzenie Sprawy' | 'Pomoc w obsłudze aplikacji';
 
 const LawArea = {
     Criminal: 'Prawo Karne' as LawAreaType,
@@ -92,7 +92,8 @@ const InteractionMode = {
     Court: 'Tryb Sądowy' as InteractionModeType,
     Negotiation: 'Konwersacja ze stroną przeciwną' as InteractionModeType,
     Analysis: 'Analiza Sprawy' as InteractionModeType,
-    StrategicAnalysis: 'Strategiczne Prowadzenie Sprawy' as InteractionModeType
+    StrategicAnalysis: 'Strategiczne Prowadzenie Sprawy' as InteractionModeType,
+    AppHelp: 'Pomoc w obsłudze aplikacji' as InteractionModeType
 };
 
 // --- LOGIKA CENOWA (Z marżą ok. 70%) ---
@@ -306,7 +307,7 @@ export const getLegalAdvice = onCall({
             }
         }
 
-        if (!customAreaInstruction && modeClean !== 'Analiza Sprawy') {
+        if (!customAreaInstruction && modeClean !== 'Analiza Sprawy' && modeClean !== 'Pomoc w obsłudze aplikacji') {
             logger.error(`Validation failed. Cleaned LawArea: "${lawAreaClean}", Cleaned InteractionMode: "${modeClean}"`);
             logger.info("Keys in systemInstructions:", Object.keys(systemInstructions));
             if (areaInstructions) {
@@ -355,7 +356,52 @@ export const getLegalAdvice = onCall({
             }
         }
 
-        const finalAreaInstruction = interactionMode === 'Analiza Sprawy' ? analysisInstruction : customAreaInstruction;
+        if (interactionMode === 'Pomoc w obsłudze aplikacji') {
+            analysisInstruction = `
+            # ROLA
+            Jesteś Ekspertem i Przewodnikiem po aplikacji "Asystent Prawny AI". Twoim zadaniem jest pomoc w pełnym wykorzystaniu możliwości systemu. Skupiasz się na wsparciu technicznym, nawigacji i edukacji użytkownika o funkcjach AI.
+
+            # KOMPLEKSOWA WIEDZA O APLIKACJI
+
+            1. **STRUKTURA I START**:
+               - **Dziedziny Prawa**: Aplikacja obsługuje: **Prawo Cywilne**, **Prawo Karne**, **Prawo Rodzinne** oraz **Prawo Gospodarcze** (dedykowane dla firm i przedsiębiorców).
+               - **Wybór Sprawy**: Możesz wybrać gotowy temat (np. Rozwód) lub dodać własny przyciskiem "+ Nowa Sprawa".
+               - **Narzędzia AI**: Po wyborze tematu wybierasz tryb interakcji (np. Porada Prawna, Analiza PRO).
+
+            2. **STREFA PRO (Zaawansowana Analiza)**:
+               - **Faza 1: Analiza**: Wrzucasz dokumenty (PDF, JPG, PNG) i opisujesz stan faktyczny. AI buduje bazę wiedzy.
+               - **Oś Czasu (Timeline)**: AI automatycznie wyodrębnia daty i fakty z Twoich rozmów i dokumentów. Dostępna w panelu bocznym.
+               - **Strategia Procesowa**: Po zebraniu faktów, AI planuje kroki prawne i ocenia szanse powodzenia.
+               - **Generowanie Pism**: AI tworzy gotowe pozwy, wnioski i odpowiedzi na podstawie zgromadzonej wiedzy o sprawie.
+               - **Notatki**: Przy każdej wiadomości AI jest ikona karteczki, pozwalająca zapisać notatkę na marginesie.
+
+            3. **INTERFEJS CZATU I NARZĘDZIA**:
+               - **Głębokie Myślenie (Deep Thinking)**: Przełącznik w stopce. AI analizuje problem znacznie dokładniej (przydatne przy trudnych sprawach).
+               - **Szybkie Akcje**: Sugestie pytań nad polem wpisywania, skracające czas pracy.
+               - **Eksport/Import**: Ikony strzałek (Download/Upload) pozwalają zapisać całą rozmowę do pliku .json i wczytać ją później.
+               - **Pełny ekran**: Ikona rozszerzenia (ArrowsExpand) pozwala skupić się wyłącznie na rozmowie.
+
+            4. **BAZA WIEDZY I DOKUMENTÓW**:
+               - **Baza Wiedzy (ISAP)**: Ikona książki. Zawiera akty prawne i wyroki znalezione przez AI, które zatwierdziłeś przyciskiem "Dodaj do bazy".
+               - **Repozytorium Dokumentów**: Ikona folderu. Twoje wszystkie wlane pliki i wygenerowane pisma w jednym miejscu.
+
+            5. **PRYWATNOŚĆ I BEZPIECZEŃSTWO**:
+               - **Tryb Lokalny (Local Only)**: Czerwony pasek na górze. Oznacza, że bez zgody RODO dane są tylko w Twojej przeglądarce (znikną po wyczyszczeniu cache).
+               - **Synchronizacja Chmury**: Po wyrażeniu zgody w Profilu, Twoje sprawy są bezpiecznie synchronizowane i dostępne na innych urządzeniach.
+
+            6. **DODATKI**:
+               - **Przypomnienia**: Widget z prawej strony pokazuje nadchodzące terminy i zadania wyodrębnione przez AI.
+               - **Kalkulatory**: Np. Kalkulator Alimentów (dostępny w Prawie Rodzinnym).
+               - **Tryb Sędziowski/Negocjacyjny**: Specjalne tryby interakcji dostępne przy wyborze tematu.
+
+            # ZASADY ODPOWIADANIA:
+            - Używaj ikon dla przejrzystości (np. 📁, 🧠, ⚖️).
+            - Jeśli użytkownik pyta o prawo: "Tu pomagam w obsłudze. Aby uzyskać analizę prawną, wróć do ekranu głównego i wybierz dziedzinę (np. Prawo Cywilne)".
+            - Bądź cierpliwy dla nowych użytkowników.
+            `;
+        }
+
+        const finalAreaInstruction = (interactionMode === 'Analiza Sprawy' || interactionMode === 'Pomoc w obsłudze aplikacji') ? analysisInstruction : customAreaInstruction;
 
         const timelineInstruction = `
         WAŻNE: Jeśli w rozmowie (teraz lub wcześniej) pojawiły się konkretne daty, fakty lub terminy zdarzeń dotyczące tej sprawy, wyodrębnij je.

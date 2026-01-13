@@ -90,51 +90,42 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
             </div>
           )}
           <div>
-            {Object.keys(groupedHistories).length > 0 ? Object.entries(groupedHistories).map(([area, items]) => (
+            {Object.keys(groupedHistories).length > 0 ? (Object.entries(groupedHistories) as [string, typeof histories][]).map(([area, items]) => (
               <div key={area} className="mb-6">
-                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 px-1 flex items-center gap-2">
-                  <div className="w-1 h-3 bg-cyan-500 rounded-full" />
+                <h4 className="w-fit text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 px-1 pb-1 border-b-2 border-cyan-500/30">
                   {area}
                 </h4>
                 <div className="space-y-2">
-                  {(items as any[]).map(({ lawArea, topic, interactionMode, servicePath, docCount }, index) => (
-                    <div key={`${lawArea}-${topic}-${index}`} className="flex items-center justify-between bg-slate-700/50 rounded-lg group hover:bg-slate-700 transition-colors px-3">
-                      <button onClick={() => { onLoadHistory(lawArea as LawArea, topic, interactionMode, servicePath); onClose(); }} className="flex-grow flex items-center gap-3 py-3 text-left min-w-0">
-                        <div className={`w-10 h-10 ${servicePath === 'pro' ? 'bg-violet-600/20 text-violet-400' : 'bg-slate-600 text-cyan-400'} rounded-lg flex items-center justify-center flex-shrink-0 relative`}>
-                          <CaseIcon />
-                          {docCount && docCount > 0 ? (
-                            <div className="absolute -top-1 -right-1 bg-cyan-500 text-slate-900 text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center border-2 border-slate-800" title={`${docCount} dokumentów`}>
-                              {docCount}
-                            </div>
-                          ) : null}
-                        </div>
+                  {(items as typeof histories).map(({ lawArea, topic, interactionMode, servicePath, docCount }, index) => (
+                    <div key={`${lawArea}-${topic}-${index}`} className="flex items-center justify-between group hover:bg-slate-700/20 transition-colors px-1 border-b-2 border-slate-600/50">
+                      <button onClick={() => { onLoadHistory(lawArea as LawArea, topic, interactionMode, servicePath); onClose(); }} className="flex-grow flex items-center gap-3 py-4 text-left min-w-0">
                         <div className="overflow-hidden min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="text-sm text-white font-medium truncate">{topic}</p>
+                            <p className="text-sm text-slate-200 font-medium truncate group-hover:text-white transition-colors">{topic}</p>
                             {servicePath === 'pro' && (
-                              <span className="text-[9px] bg-violet-600 text-white px-1.5 py-0.5 rounded font-black tracking-tighter shrink-0">PRO</span>
+                              <span className="text-[8px] bg-violet-600/20 text-violet-400 border border-violet-500/20 px-1 py-0.5 rounded font-bold tracking-tight shrink-0">PRO</span>
                             )}
                           </div>
-                          <p className="text-xs text-slate-400 truncate">
-                            {interactionMode && <span className={`${servicePath === 'pro' ? 'text-violet-400/80' : 'text-cyan-500/80'}`}>{interactionMode}</span>}
-                            {!interactionMode && <span className="opacity-50 italic text-[10px]">Brak aktywnego trybu</span>}
+                          <p className="text-[11px] text-slate-500 truncate group-hover:text-slate-400 transition-colors">
+                            {interactionMode && <span className="">{interactionMode}</span>}
+                            {!interactionMode && <span className="opacity-50 italic">Brak aktywnego trybu</span>}
                           </p>
                         </div>
                       </button>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                         {onViewDocuments && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               onViewDocuments(lawArea, topic);
                             }}
-                            className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-600 rounded-lg transition-all relative"
+                            className="relative flex items-center justify-center p-2 text-slate-500 hover:text-cyan-400 transition-all"
                             title="Dokumenty Sprawy"
                           >
-                            <DocumentTextIcon className="w-5 h-5" />
-                            {docCount && docCount > 0 && (
-                              <span className="absolute top-1 right-1 w-2 h-2 bg-cyan-500 rounded-full border border-slate-800" />
-                            )}
+                            <DocumentTextIcon className="w-6 h-6" />
+                            <span className="absolute top-1 right-2 flex items-center justify-center text-[9px] font-black leading-none group-hover:text-cyan-300">
+                              {docCount || 0}
+                            </span>
                           </button>
                         )}
                         {onViewKnowledge && (
@@ -143,18 +134,21 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                               e.stopPropagation();
                               onViewKnowledge(lawArea, topic);
                             }}
-                            className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-600 rounded-lg transition-all"
+                            className="p-2 text-slate-500 hover:text-cyan-400 transition-all"
                             title="Baza Wiedzy Sprawy"
                           >
-                            <BookOpenIcon className="w-5 h-5" />
+                            <BookOpenIcon className="w-4 h-4" />
                           </button>
                         )}
                         <button
-                          onClick={() => onDeleteHistory(lawArea, topic)}
-                          className="text-slate-500 hover:text-red-500 transition-colors p-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteHistory(lawArea, topic);
+                          }}
+                          className="p-2 text-slate-700 hover:text-red-400 transition-all"
                           aria-label={`Usuń historię ${topic}`}
                         >
-                          <TrashIcon className="w-5 h-5" />
+                          <TrashIcon className="w-4 h-4" />
                         </button>
                       </div>
                     </div>

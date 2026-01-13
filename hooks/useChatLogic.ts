@@ -227,13 +227,17 @@ export const useChatLogic = ({
 
         const specializedPrompt = `
             SYSTEM: Użytkownik prosi o wygenerowanie kompletnej Bazy Wiedzy (Case File) dla tej konkretnej sprawy.
+            
             TWOJE ZADANIE:
-            1. Przeanalizuj dotychczasową rozmowę i zidentyfikuj kluczowe problemy prawne.
-            2. Użyj narzędzia 'search_legal_acts' aby znaleźć konkretne ustawy i rozporządzenia regulujące te kwestie.
-            3. Użyj narzędzia 'get_act_content' aby pobrać treść kluczowych aktów (lub ich fragmentów). PAMIĘTAJ o zapisywaniu ich do bazy.
-            4. Wylistuj najważniejsze, precedensowe orzecznictwo (wyroki SN, SA) pasujące do stanu faktycznego (skorzystaj ze swojej wiedzy, jeśli nie masz narzędzia do wyroków).
+            1. Przeanalizuj dotychczasową rozmowę i zidentyfikuj 2-3 kluczowe akty prawne (ustawy/kodeksy).
+            2. Użyj narzędzia 'search_legal_acts' aby znaleźć te akty.
+            3. Wybierz najbardziej trafne i UŻYJ narzędzia 'add_act_to_topic_knowledge', aby zapisać je TRWALE do bazy tej sprawy.
+            
+            WAŻNE: 
+            - Zgoda na TRWAŁE zapisanie (add_act_to_topic_knowledge) została JUŻ UDZIELONA przez użytkownika. Wykonaj zapis natychmiast dla wybranych aktów.
+            - Wylistuj również najważniejsze, precedensowe orzecznictwo (wyroki SN, SA) pasujące do sprawy.
 
-            Na koniec wyświetl podsumowanie: "Zaktualizowano Akt Sprawy. Dodano następujące pozycje: [Lista]".
+            Na koniec wyświetl podsumowanie: "Zaktualizowano Bazę Wiedzy sprawy. Dodano kluczowe akty prawne: [Lista]".
             `;
 
         const historyForAI = [...chatHistory, userMessage, { role: 'user', content: specializedPrompt } as ChatMessage];

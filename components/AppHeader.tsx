@@ -28,6 +28,7 @@ interface AppHeaderProps {
   onExportChat?: () => void;
   onImportChat?: (file: File) => void;
   onInstallApp?: () => void;
+  onHelpClick?: () => void;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({
@@ -50,7 +51,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   hasConsent = true,
   onExportChat,
   onImportChat,
-  onInstallApp
+  onInstallApp,
+  onHelpClick
 }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
@@ -236,6 +238,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           onExportChat={onExportChat}
           onImportChat={onImportChat}
           onInstallApp={onInstallApp}
+          onHelpClick={onHelpClick}
           subscription={subscription}
           totalCost={totalCost}
         />

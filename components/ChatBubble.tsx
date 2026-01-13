@@ -209,7 +209,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
           <div
             key={note.id}
             style={{ left: note.position.x, top: note.position.y }}
-            className="absolute z-10"
+            className="absolute z-20"
           >
             <div
               onMouseDown={(e) => handleDragStart(e, note)}
@@ -245,6 +245,41 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
               >
                 <PinSlashIcon className="w-3 h-3" />
               </button>
+
+              {/* INLINE EDITOR FOR POSITIONED NOTE */}
+              {activeNoteId === note.id && (
+                <div className="absolute top-full left-0 mt-2 w-64 bg-slate-800 border border-slate-700 rounded-xl p-3 shadow-2xl z-50 animate-in zoom-in-95 duration-200 backdrop-blur-md">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">Edycja notatki</span>
+                    <button onClick={() => setActiveNoteId(null)} className="text-slate-500 hover:text-white"><CheckIcon className="w-4 h-4" /></button>
+                  </div>
+                  <textarea
+                    className="w-full bg-transparent text-slate-200 text-xs focus:outline-none min-h-[80px] resize-none"
+                    value={noteContent}
+                    onChange={(e) => setNoteContent(e.target.value)}
+                    autoFocus
+                  />
+                  <div className="flex justify-end mt-2 gap-2">
+                    <button
+                      onClick={() => {
+                        if (confirm('Usunąć tę notatkę?')) {
+                          onDeleteNote?.(note.id);
+                          setActiveNoteId(null);
+                        }
+                      }}
+                      className="p-1.5 text-red-500 hover:bg-red-500/10 rounded"
+                    >
+                      <TrashIcon className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={handleSaveNote}
+                      className="px-3 py-1 bg-violet-600 text-white text-[10px] font-bold rounded-lg hover:bg-violet-500"
+                    >
+                      Zapisz
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -296,8 +331,8 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
               )}
             </div>
 
-            {/* Content Area for Active Note or New Note */}
-            {(activeNoteId || isAddingNote) && (
+            {/* Content Area for Active Note (DOCK/FOOTER) or New Note */}
+            {(isAddingNote || (activeNoteId && dockNotes?.some(n => n.id === activeNoteId))) && (
               <div className="bg-slate-800/95 border border-slate-700/50 rounded-xl p-3 animate-in zoom-in-95 duration-200 shadow-xl backdrop-blur-md relative">
                 <button
                   onClick={() => {
