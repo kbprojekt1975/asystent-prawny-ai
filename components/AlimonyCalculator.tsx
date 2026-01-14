@@ -282,23 +282,24 @@ ZASADY:
             <div className={`bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full flex flex-col h-[90vh] overflow-hidden animate-slide-up transition-all duration-500 ${showChat ? 'max-w-6xl' : 'max-w-2xl'}`}>
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-slate-700 bg-slate-800/50">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-pink-500/20 rounded-lg flex items-center justify-center text-pink-400">
+                <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-700 bg-slate-800/50">
+                    <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                        <div className="w-10 h-10 bg-pink-500/20 rounded-lg flex-shrink-0 flex items-center justify-center text-pink-400">
                             <CalculatorIcon className="w-6 h-6" />
                         </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-white">Rozbudowany Kalkulator Alimentów</h2>
-                            <p className="text-xs text-pink-400 font-medium tracking-wide uppercase">Symulacja wg art. 135 k.r.o.</p>
+                        <div className="min-w-0">
+                            <h2 className="text-lg md:text-xl font-bold text-white truncate">Kalkulator Alimentów</h2>
+                            <p className="text-[10px] md:text-xs text-pink-400 font-medium tracking-wide uppercase truncate">Symulacja wg art. 135 k.r.o.</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 md:gap-2 ml-2">
                         <button
                             onClick={() => setShowChat(!showChat)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${showChat ? 'bg-violet-600 text-white' : 'bg-slate-800 text-violet-400 hover:bg-slate-700'}`}
+                            className={`flex items-center gap-2 px-3 py-2 md:px-4 rounded-lg transition-all ${showChat ? 'bg-violet-600 text-white' : 'bg-slate-800 text-violet-400 hover:bg-slate-700'}`}
+                            title={showChat ? 'Ukryj Asystenta' : 'Zapytaj Asystenta'}
                         >
-                            <BotIcon className="w-5 h-5" />
-                            {showChat ? 'Ukryj Asystenta' : 'Zapytaj Asystenta'}
+                            <BotIcon className="w-5 h-5 flex-shrink-0" />
+                            <span className="hidden sm:inline">{showChat ? 'Ukryj' : 'Zapytaj'}<span className="hidden md:inline"> Asystenta</span></span>
                         </button>
                         <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700/50 rounded-lg">
                             <XIcon className="w-6 h-6" />
@@ -306,9 +307,9 @@ ZASADY:
                     </div>
                 </div>
 
-                <div className="flex flex-1 overflow-hidden">
+                <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
                     {/* Main Calculator Content */}
-                    <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${showChat ? 'w-1/2 border-r border-slate-700' : 'w-full'}`}>
+                    <div className={`flex flex-col overflow-hidden transition-all duration-300 ${showChat ? 'flex-[0.4] md:flex-1 border-b md:border-b-0 md:border-r border-slate-700' : 'flex-1'}`}>
                         {/* Tabs */}
                         <div className="flex border-b border-slate-700 bg-slate-800/30">
                             <button
@@ -552,7 +553,7 @@ ZASADY:
 
                     {/* Chat Panel */}
                     {showChat && (
-                        <div className="w-1/2 bg-slate-950/50 flex flex-col border-l border-slate-700 animate-in slide-in-from-right duration-300">
+                        <div className="flex-[0.6] md:flex-1 bg-slate-950/50 flex flex-col border-t md:border-t-0 md:border-l border-slate-700 animate-in slide-in-from-bottom md:slide-in-from-right duration-300">
                             <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between">
                                 <span className="text-sm font-bold text-violet-400 uppercase tracking-wider">Asystent Prawny AI</span>
                                 <button

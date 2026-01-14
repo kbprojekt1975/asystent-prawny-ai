@@ -108,6 +108,7 @@ export interface UserProfile {
   dataProcessingConsent?: boolean;
   consentDate?: any;
   manualLocalMode?: boolean;
+  hasSeenWelcomeAssistant?: boolean;
 }
 
 export interface LegalAct {

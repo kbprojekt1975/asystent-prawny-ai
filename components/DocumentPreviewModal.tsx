@@ -20,22 +20,54 @@ const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({ isOpen, onC
                     <head>
                         <title>${title}</title>
                         <style>
-                            body { font-family: "Times New Roman", Times, serif; padding: 40px; line-height: 1.5; color: black; }
-                            .document-content { white-space: pre-wrap; }
+                            @page { size: A4; margin: 0; }
+                            body { 
+                                margin: 0;
+                                padding: 0;
+                                color: black;
+                            }
+                            .document-wrapper {
+                                padding: 25mm 20mm 20mm 25mm;
+                                max-width: 210mm;
+                                margin: 0 auto;
+                            }
+                            .document-content { 
+                                white-space: pre-wrap; 
+                                text-align: justify;
+                                font-family: "Times New Roman", Times, serif; 
+                                font-size: 12pt;
+                                line-height: 1.5;
+                            }
+                            .sig-space {
+                                margin-top: 50px;
+                                text-align: right;
+                                padding-right: 50px;
+                                font-family: "Times New Roman", Times, serif; 
+                                font-size: 12pt;
+                            }
                             @media print {
-                                body { padding: 0; }
+                                .no-print { display: none; }
                             }
                         </style>
                     </head>
                     <body>
-                        <div class="document-content">${content}</div>
+                        <div class="document-wrapper">
+                            <div class="document-content">${content}</div>
+                            <div class="sig-space">
+                                <br><br>
+                                _______________________<br>
+                                (podpis)
+                            </div>
+                        </div>
                     </body>
                 </html>
             `);
             printWindow.document.close();
             printWindow.focus();
-            printWindow.print();
-            printWindow.close();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 250);
         }
     };
 
@@ -61,7 +93,7 @@ const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({ isOpen, onC
 
                 <main className="flex-1 overflow-y-auto p-8 md:p-12 bg-white text-slate-900">
                     <div ref={printRef} className="max-w-[210mm] mx-auto whitespace-pre-wrap font-serif text-[12pt] leading-relaxed">
-                        {content}
+                        {content.replace(/\*\*/g, '').replace(/\*/g, '').replace(/__/g, '').replace(/_/g, '')}
                     </div>
                 </main>
 

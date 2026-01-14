@@ -21,12 +21,15 @@ import {
     SendIcon,
     ArrowsExpandIcon,
     ArrowsContractIcon,
-    DocumentDuplicateIcon
+    DocumentDuplicateIcon,
+    GavelIcon
 } from './Icons';
 import { InfoIcon } from './InfoIcon';
 import HelpModal from './HelpModal';
 import ChatBubble from './ChatBubble';
 import NotesWidget from './NotesWidget';
+import CourtRoleSelector from './CourtRoleSelector';
+import { CourtRole } from '../types';
 
 interface ProDashboardProps {
     userId: string;
@@ -48,6 +51,7 @@ enum ProStep {
     Documents = 'docs',
     Interview = 'interview',
     Analysis = 'analysis',
+    Court = 'court',
     Notes = 'notes'
 }
 
@@ -74,8 +78,10 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
     const [stepStatus, setStepStatus] = useState({
         [ProStep.Documents]: 'idle',
         [ProStep.Interview]: 'idle',
-        [ProStep.Analysis]: 'idle'
+        [ProStep.Analysis]: 'idle',
+        [ProStep.Court]: 'idle'
     });
+    const [courtRole, setCourtRole] = useState<CourtRole | null>(null);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
 
     const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -292,10 +298,12 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
             const newHistory: ChatMessage[] = [...messages, { role: 'user', content: msg }];
             setMessages(newHistory);
 
+            const modeToUse = activeStep === ProStep.Court ? InteractionMode.Court : InteractionMode.StrategicAnalysis;
+
             const aiRes = await getLegalAdvice(
                 newHistory,
                 lawArea,
-                InteractionMode.StrategicAnalysis,
+                modeToUse,
                 topic,
                 true,
                 undefined,
@@ -311,6 +319,63 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                 servicePath: 'pro'
             }, { merge: true });
 
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSelectCourtRole = async (role: CourtRole) => {
+        if (!userId || !chatId) return;
+        setCourtRole(role);
+        setIsLoading(true);
+
+        let roleInstructions = "";
+        switch (role) {
+            case CourtRole.MyAttorney:
+                roleInstructions = "Twoja rola: MÓJ MECENAS. Przeprowadź symulację przygotowania do rozprawy. Zadawaj pytania, które może zadać sąd, i koryguj moje odpowiedzi. Bądź wspierający, ale wymagający.";
+                break;
+            case CourtRole.OpposingAttorney:
+                roleInstructions = "Twoja rola: MECENAS STRONY PRZECIWNEJ. Przeprowadź 'cross-examination'. Zadawaj podchwytliwe pytania, próbuj podważyć wiarygodność, wytykaj niespójności. Bądź ostry i dociekliwy.";
+                break;
+            case CourtRole.Judge:
+                roleInstructions = "Twoja rola: SĄD (SĘDZIA). Prowadź przesłuchanie w sposób formalny, bezstronny i stanowczy. Używaj języka prawniczego. Zadawaj pytania doprecyzujące fakty.";
+                break;
+            case CourtRole.Prosecutor:
+                roleInstructions = "Twoja rola: PROKURATOR. (Tryb karny). Zadawaj pytania oskarżycielskie, dąż do udowodnienia winy. Bądź surowy.";
+                break;
+        }
+
+        const systemContent = `[SYSTEM PRO: SYMULACJA SĄDOWA]
+        Rozpoczynamy symulację w Trybie Sądowym.
+        Specjalizacja: ${lawArea}. Temat: ${topic}.
+        ${roleInstructions}
+        
+        WAŻNE: Wykorzystaj całą dotychczasową wiedzę o sprawie zapisaną w historii czatu powyżej, w tym zgromadzone dokumenty i wyniki analizy strategicznej. Zachowaj pełną powagę i realizm symulacji.`;
+
+        let greeting = "";
+        if (role === CourtRole.MyAttorney) greeting = "Dzień dobry. Jestem Twoim pełnomocnikiem. Przeanalizowałem dotychczasowe informacje oraz raport strategiczny. Musimy przygotować się do rozprawy. Czy możemy przejść do pytań, które mogą paść na sali?";
+        if (role === CourtRole.Judge) greeting = "Sąd otwiera posiedzenie. Na podstawie zebranego materiału dowodowego i analizy sytuacyjnej, przystępujemy do przesłuchania. Proszę podejść do barierki. Czy jest Pan/Pani gotowy/a do złożenia zeznań?";
+        if (role === CourtRole.OpposingAttorney) greeting = "Witam. Reprezentuję stronę przeciwną. Zapoznałem się z Pana/Pani wersją wydarzeń oraz aktami sprawy. Mam do Pana/Pani kilka pytań.";
+        if (role === CourtRole.Prosecutor) greeting = "Prokuratura Rejonowa. Analiza akt i dowodów została zakończona. Przystępujemy do czynności procesowych. Czy podtrzymuje Pan/Pani swoje dotychczasowe wyjaśnienia?";
+
+        const newMessages: ChatMessage[] = [
+            ...messages,
+            { role: 'system', content: systemContent },
+            { role: 'user', content: `[SYSTEM: Rozpocznij symulację w roli: ${role}]` },
+            { role: 'model', content: greeting }
+        ];
+
+        try {
+            await setDoc(doc(db, 'users', userId, 'chats', chatId), {
+                messages: newMessages,
+                proStatus: { ...stepStatus, [ProStep.Court]: 'completed' },
+                lastUpdated: serverTimestamp()
+            }, { merge: true });
+
+            setMessages(newMessages);
+            setStepStatus(prev => ({ ...prev, [ProStep.Court]: 'completed' }));
         } catch (err) {
             console.error(err);
         } finally {
@@ -577,9 +642,9 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             <ArrowLeftIcon className="w-5 h-5" />
                             <span className="hidden md:inline">Pulpit sprawy</span>
                         </button>
-                        <h2 className="font-bold text-violet-400 flex items-center gap-1.5 text-xs md:text-base truncate">
-                            Etap 2: Wywiad Strategiczny
-                            <InfoIcon onClick={() => setIsHelpOpen(true)} className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+                        <h2 className="font-bold text-violet-400 flex items-center gap-1.5 text-xs md:text-base max-w-[60%] md:max-w-full">
+                            <span className="truncate">Etap 2: Wywiad Strategiczny</span>
+                            <InfoIcon onClick={() => setIsHelpOpen(true)} className="flex-shrink-0" />
                         </h2>
                         <button
                             onClick={() => {
@@ -598,7 +663,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                     className="flex-1 overflow-y-auto p-4 custom-scrollbar"
                 >
                     <div className="max-w-4xl mx-auto space-y-4">
-                        {messages.map((m, i) => (
+                        {messages.filter(m => m.role !== 'system' && !m.content.includes('[SYSTEM:')).map((m, i) => (
                             <ChatBubble
                                 key={i}
                                 message={m}
@@ -734,9 +799,9 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             <span className="hidden md:inline">Pulpit sprawy</span>
                         </button>
 
-                        <h2 className="font-bold text-violet-400 flex items-center gap-1.5 text-xs md:text-base truncate">
-                            Etap 3: Raport Strategiczny
-                            <InfoIcon onClick={() => setIsHelpOpen(true)} className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+                        <h2 className="font-bold text-violet-400 flex items-center gap-1.5 text-xs md:text-base max-w-[60%] md:max-w-full">
+                            <span className="truncate">Etap 3: Raport Strategiczny</span>
+                            <InfoIcon onClick={() => setIsHelpOpen(true)} className="flex-shrink-0" />
                         </h2>
                         <div className="w-8 md:w-24 flex-shrink-0"></div> {/* Spacer for balance */}
                     </div>
@@ -932,6 +997,139 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
         );
     }
 
+    // Sub-view: Step 5 - Court Simulation
+    if (activeStep === ProStep.Court) {
+        // Filter messages to only show those from the current simulation
+        const trialStartIndex = messages.findLastIndex(m => m.role === 'system' && m.content.includes('[SYSTEM PRO: SYMULACJA SĄDOWA]'));
+        const trialMessages = messages
+            .slice(trialStartIndex !== -1 ? trialStartIndex : 0)
+            .filter(m => m.role !== 'system' && !m.content.includes('[SYSTEM:'));
+
+        return (
+            <div className="flex flex-col h-full bg-slate-900 text-white overflow-hidden">
+                {!isFullScreen && (
+                    <div className="p-4 border-b border-slate-700 flex items-center justify-between bg-slate-800/50 backdrop-blur-md gap-2">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                            <button
+                                onClick={() => {
+                                    setActiveStep(null);
+                                    setCourtRole(null);
+                                }}
+                                className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors flex-shrink-0"
+                            >
+                                <ArrowLeftIcon className="w-5 h-5" />
+                                <span className="hidden md:inline">Pulpit sprawy</span>
+                            </button>
+                            <h2 className="font-bold text-cyan-400 flex items-center gap-1.5 text-xs md:text-base max-w-[60%] md:max-w-full overflow-hidden">
+                                <GavelIcon className="w-5 h-5 flex-shrink-0" />
+                                <span className="truncate">{courtRole ? `${courtRole}` : "Tryb Sądowy"}</span>
+                                <InfoIcon onClick={() => setIsHelpOpen(true)} className="flex-shrink-0" />
+                            </h2>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {courtRole && (
+                                <button
+                                    onClick={() => setCourtRole(null)}
+                                    className="text-[10px] md:text-xs text-slate-400 hover:text-white transition-colors px-2 py-1 rounded-lg border border-slate-700 font-medium"
+                                >
+                                    Zmień rolę
+                                </button>
+                            )}
+                            <button
+                                onClick={() => {
+                                    setStepStatus(prev => ({ ...prev, [ProStep.Court]: 'completed' }));
+                                    setActiveStep(null);
+                                    setCourtRole(null);
+                                }}
+                                className="text-[10px] md:text-xs bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 px-2 md:px-3 py-1 rounded-full font-bold hover:bg-cyan-600/30 transition-all flex-shrink-0"
+                            >
+                                Zakończ
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {!courtRole ? (
+                    <div className="flex-1 overflow-y-auto">
+                        <CourtRoleSelector onSelect={handleSelectCourtRole} />
+                    </div>
+                ) : (
+                    <>
+                        <div
+                            ref={scrollRef}
+                            className="flex-1 overflow-y-auto p-4 custom-scrollbar"
+                        >
+                            <div className="max-w-4xl mx-auto space-y-4">
+                                {trialMessages.map((m, i) => (
+                                    <ChatBubble
+                                        key={i}
+                                        message={m}
+                                        onAddNote={onAddNote ? (content, linkedMsg, noteId) => onAddNote(content, linkedMsg, noteId, m.role === 'model' ? 'model' : 'user') : undefined}
+                                        existingNotes={existingNotes?.filter(n =>
+                                            n.linkedMessage === m.content.substring(0, 50) &&
+                                            (!n.linkedRole || n.linkedRole === (m.role === 'model' ? 'model' : 'user'))
+                                        )}
+                                        onDeleteNote={onDeleteNote}
+                                        onUpdateNotePosition={onUpdateNotePosition}
+                                        lawArea={lawArea}
+                                        topic={topic}
+                                    />
+                                ))}
+                                {isLoading && <div className="text-slate-500 text-sm animate-pulse italic">Sąd analizuje odpowiedź...</div>}
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-slate-800/80 border-t border-slate-700">
+                            <div className="flex flex-col gap-3 max-w-4xl mx-auto">
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        className="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-500 transition-all"
+                                        placeholder="Wpisz swoją odpowiedź sędziemu lub adwokatowi..."
+                                        value={currentInput}
+                                        onChange={(e) => setCurrentInput(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                                        disabled={isLoading}
+                                    />
+                                    <button
+                                        onClick={handleSendMessage}
+                                        disabled={isLoading || !currentInput.trim()}
+                                        className="p-3 bg-cyan-600 rounded-xl hover:bg-cyan-500 transition-colors disabled:opacity-50"
+                                    >
+                                        <SendIcon className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                <HelpModal
+                    isOpen={isHelpOpen}
+                    onClose={() => setIsHelpOpen(false)}
+                    title="Tryb Sądowy - Pomoc"
+                >
+                    <div className="space-y-4 text-sm">
+                        <p>
+                            Tryb Sądowy pozwala na symulację prawdziwej rozprawy. AI wciela się w wybraną rolę, aby pomóc Ci oswoić się z sytuacją na sali sądowej.
+                        </p>
+                        <ul className="list-disc pl-5 space-y-2">
+                            <li>
+                                <strong>Rola Sędziego:</strong> Formalne przesłuchanie. Skup się na faktach i odpowiadaj krótko.
+                            </li>
+                            <li>
+                                <strong>Rola Adwokata:</strong> Przygotowanie strategii i ćwiczenie pytań, które mogą paść.
+                            </li>
+                            <li>
+                                <strong>Wiedza:</strong> AI wykorzystuje Twoje dokumenty i raport strategiczny, by symulacja była jak najbardziej realistyczna.
+                            </li>
+                        </ul>
+                    </div>
+                </HelpModal>
+            </div>
+        );
+    }
+
     // Sub-view: Step 4 - Notes
     if (activeStep === ProStep.Notes) {
         return (
@@ -977,9 +1175,10 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                         <div className="flex flex-col items-end">
                             <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Postęp strategiczny</span>
                             <div className="flex gap-1 mt-1">
-                                <div className={`h-1.5 w-12 rounded-full ${stepStatus[ProStep.Documents] === 'completed' ? 'bg-violet-500' : 'bg-slate-700'}`}></div>
-                                <div className={`h-1.5 w-12 rounded-full ${stepStatus[ProStep.Interview] === 'completed' ? 'bg-violet-500' : 'bg-slate-700'}`}></div>
-                                <div className={`h-1.5 w-12 rounded-full ${stepStatus[ProStep.Analysis] === 'completed' ? 'bg-violet-500' : 'bg-slate-700'}`}></div>
+                                <div className={`h-1.5 w-10 rounded-full ${stepStatus[ProStep.Documents] === 'completed' ? 'bg-violet-500' : 'bg-slate-700'}`}></div>
+                                <div className={`h-1.5 w-10 rounded-full ${stepStatus[ProStep.Interview] === 'completed' ? 'bg-violet-500' : 'bg-slate-700'}`}></div>
+                                <div className={`h-1.5 w-10 rounded-full ${stepStatus[ProStep.Analysis] === 'completed' ? 'bg-violet-500' : 'bg-slate-700'}`}></div>
+                                <div className={`h-1.5 w-10 rounded-full ${stepStatus[ProStep.Court] === 'completed' ? 'bg-cyan-500' : 'bg-slate-700'}`}></div>
                             </div>
                         </div>
                     </div>
@@ -1069,7 +1268,29 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             </div>
                         </div>
 
-                        {/* Kafel 4: Notatki */}
+                        {/* Kafel 4: Tryb Sądowy */}
+                        <div
+                            onClick={() => stepStatus[ProStep.Analysis] === 'completed' && setActiveStep(ProStep.Court)}
+                            className={`group relative bg-slate-800/40 border-2 rounded-[2.5rem] p-8 transition-all duration-300 overflow-hidden ${stepStatus[ProStep.Analysis] === 'completed' ? 'cursor-pointer border-slate-700/50 hover:border-cyan-500 hover:bg-slate-800/60' : 'cursor-not-allowed opacity-40 border-transparent'
+                                }`}
+                        >
+                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-8 transition-transform group-hover:scale-110 ${stepStatus[ProStep.Court] === 'completed' ? 'bg-green-600/20 text-green-400' : 'bg-cyan-600/20 text-cyan-400'
+                                }`}>
+                                <GavelIcon className="w-8 h-8" />
+                            </div>
+
+                            <h3 className="text-2xl font-bold mb-4">4. Tryb Sądowy</h3>
+                            <p className="text-slate-400 text-sm leading-relaxed mb-8">
+                                Przeprowadź symulację rozprawy. Wybierz rolę dla AI i sprawdź, jak poradzisz sobie w sali sądowej na podstawie zebranych dowodów.
+                            </p>
+
+                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-cyan-400">
+                                <span>ROZPOCZNIJ SYMULACJĘ</span>
+                                <ChevronRightIcon className="w-4 h-4" />
+                            </div>
+                        </div>
+
+                        {/* Kafel 5: Notatki */}
                         <div
                             onClick={() => chatId && setActiveStep(ProStep.Notes)}
                             className="group relative bg-slate-800/40 border-2 border-slate-700/50 rounded-[2.5rem] p-8 cursor-pointer transition-all duration-300 overflow-hidden hover:border-violet-500 hover:bg-slate-800/60"
@@ -1078,7 +1299,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                 <DocumentTextIcon className="w-8 h-8" />
                             </div>
 
-                            <h3 className="text-2xl font-bold mb-4">4. Moje Notatki</h3>
+                            <h3 className="text-2xl font-bold mb-4">5. Moje Notatki</h3>
                             <p className="text-slate-400 text-sm leading-relaxed mb-8">
                                 Zapisuj własne przemyślenia, pytania do adwokata lub ważne fakty. Notatki są bezpieczne i widoczne tylko dla Ciebie.
                             </p>

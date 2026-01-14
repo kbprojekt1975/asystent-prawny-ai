@@ -62,7 +62,8 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                             displayName: finalDisplayName,
                             isActive: true,
                             dataProcessingConsent: isConsentDefaulted,
-                            consentDate: isConsentDefaulted ? serverTimestamp() : null
+                            consentDate: isConsentDefaulted ? serverTimestamp() : null,
+                            hasSeenWelcomeAssistant: false
                         },
                         totalCost: 0,
                         createdAt: serverTimestamp(),

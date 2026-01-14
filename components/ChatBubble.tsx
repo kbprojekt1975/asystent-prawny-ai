@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChatMessage } from '../types';
-import { UserIcon, BotIcon, ArchiveIcon, DocumentTextIcon, CalendarIcon, ListIcon, ExternalLinkIcon, DocumentDuplicateIcon, CheckIcon, PinSlashIcon, TrashIcon, NotebookIcon, PencilIcon } from './Icons';
+import { UserIcon, BotIcon, ArchiveIcon, DocumentTextIcon, CalendarIcon, ListIcon, ExternalLinkIcon, DocumentDuplicateIcon, CheckIcon, PinSlashIcon, TrashIcon, NotebookIcon, PencilIcon, DownloadIcon, PrinterIcon } from './Icons';
 
 interface ChatBubbleProps {
   message: ChatMessage;
@@ -152,6 +152,77 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
     });
   };
 
+  const handleDownloadPDF = () => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      const title = topic || 'Porada Prawna';
+      const cleanContent = message.content
+        .replace(/--- PROJEKT PISMA ---[\s\S]*?--- PROJEKT PISMA ---/g, '')
+        .replace(/--- PROJEKT TERMINU ---[\s\S]*?--- PROJEKT TERMINU ---/g, '')
+        .replace(/--- PROJEKT ZADANIA ---[\s\S]*?--- PROJEKT ZADANIA ---/g, '')
+        .replace(/\*\*/g, '')
+        .replace(/\*/g, '')
+        .replace(/__/g, '')
+        .replace(/_/g, '')
+        .trim();
+
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>${title}</title>
+            <style>
+              @page { size: A4; margin: 0; }
+              body { 
+                margin: 0;
+                padding: 0;
+                color: #000;
+              }
+              .document-wrapper {
+                padding: 25mm 20mm 20mm 25mm;
+                max-width: 210mm;
+                margin: 0 auto;
+              }
+              .content { 
+                white-space: pre-wrap; 
+                font-size: 12pt; 
+                font-family: "Times New Roman", Times, serif;
+                text-align: justify;
+                line-height: 1.5;
+              }
+              .sig-space {
+                margin-top: 50px;
+                text-align: right;
+                padding-right: 50px;
+                font-family: "Times New Roman", Times, serif;
+                font-size: 12pt;
+              }
+              @media print {
+                .no-print { display: none; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="document-wrapper">
+              <div class="content">${cleanContent}</div>
+              <div class="sig-space">
+                <br><br>
+                _______________________<br>
+                (podpis)
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      // Giving it a bit more time for fonts to load if needed
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    }
+  };
+
   const formatContentWithISAPLinks = (text: string) => {
     const regex = /(?:Art\.|art\.)\s+(\d+[a-z]*)(?:\s+§\s+\d+)?\s+(?:k\.?c\.?|k\.?p\.?|k\.?k\.?|k\.?r\.?o\.?|k\.?p\.?c\.?|k\.?p\.?k\.?|k\.?s\.?h\.?|ustawy)/gi;
     if (!text) return null;
@@ -204,6 +275,18 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
           : 'bg-slate-700/80 backdrop-blur-sm text-slate-200 rounded-t-2xl rounded-br-2xl'
           }`}
       >
+        {/* Download PDF Button */}
+        <button
+          onClick={handleDownloadPDF}
+          className={`absolute top-2 right-2 p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 z-10 ${isUser
+            ? 'text-white/70 hover:text-white hover:bg-white/20'
+            : 'text-slate-400 hover:text-white hover:bg-slate-600/50'
+            }`}
+          title="Pobierz PDF / Drukuj"
+        >
+          <DownloadIcon className="w-4 h-4" />
+        </button>
+
         {/* Render Positioned Notes */}
         {positionedNotes?.map((note: any) => (
           <div

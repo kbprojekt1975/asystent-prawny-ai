@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MenuIcon, ProfileIcon, BookOpenIcon, HomeIcon, ClockIcon, SparklesIcon, ArrowsExpandIcon, DownloadIcon, UploadIcon, QuestionMarkCircleIcon } from './Icons';
+import { MenuIcon, ProfileIcon, BookOpenIcon, HomeIcon, ClockIcon, SparklesIcon, DownloadIcon, UploadIcon, QuestionMarkCircleIcon } from './Icons';
 import { SubscriptionInfo } from '../types';
 
 interface HamburgerMenuProps {
@@ -8,7 +8,6 @@ interface HamburgerMenuProps {
     onHomeClick?: () => void;
     onHistoryClick?: () => void;
     onQuickActionsClick?: () => void;
-    onFullScreenClick?: () => void;
     onExportChat?: () => void;
     onImportChat?: (file: File) => void;
     onInstallApp?: () => void;
@@ -23,7 +22,6 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     onHomeClick,
     onHistoryClick,
     onQuickActionsClick,
-    onFullScreenClick,
     onExportChat,
     onImportChat,
     onInstallApp,
@@ -138,17 +136,6 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                             >
                                 <SparklesIcon className="h-5 w-5 text-purple-400" />
                                 <span>Szybkie Akcje</span>
-                            </button>
-                        )}
-
-                        {onFullScreenClick && (
-                            <button
-                                onClick={() => { onFullScreenClick(); setIsOpen(false); }}
-                                className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors md:hidden"
-                                role="menuitem"
-                            >
-                                <ArrowsExpandIcon className="h-5 w-5 text-slate-400" />
-                                <span>Pełny Ekran</span>
                             </button>
                         )}
 

@@ -16,9 +16,6 @@ import QuickActions from './components/QuickActions';
 import {
   PaperClipIcon,
   SendIcon,
-  SparklesIcon,
-  ArrowsExpandIcon,
-  ArrowsContractIcon,
   ClockIcon,
   HomeIcon,
   ProfileIcon,
@@ -26,7 +23,10 @@ import {
   CaseIcon,
   ChevronRightIcon,
   DownloadIcon,
-  UploadIcon
+  UploadIcon,
+  ArrowsExpandIcon,
+  ArrowsContractIcon,
+  AdjustmentsHorizontalIcon
 } from './components/Icons';
 import AppHeader from './components/AppHeader';
 import CourtRoleSelector from './components/CourtRoleSelector';
@@ -182,7 +182,7 @@ const App: React.FC = () => {
     setDeferredPrompt(null);
   };
 
-  const toggleFullScreen = () => setIsFullScreen(!isFullScreen);
+
 
   const onConfirmTopicDeletion = async () => {
     if (topicToDelete) {
@@ -210,7 +210,19 @@ const App: React.FC = () => {
   const [isSplashDismissed, setIsSplashDismissed] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [documentsModalChatId, setDocumentsModalChatId] = useState<string | null>(null);
+  const [isWelcomeAssistantOpen, setIsWelcomeAssistantOpen] = useState(false);
   const [welcomeModalInitialViewMode, setWelcomeModalInitialViewMode] = useState<'selection' | 'input'>('selection');
+
+  // Trigger Welcome Assistant for new users
+  useEffect(() => {
+    if (user && userProfile && userProfile.hasSeenWelcomeAssistant === false) {
+      // Delay slightly for smooth transition after splash/auth
+      const timer = setTimeout(() => {
+        setIsWelcomeAssistantOpen(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [user, userProfile?.hasSeenWelcomeAssistant]);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -790,6 +802,8 @@ const App: React.FC = () => {
           setIsCaseManagementModalOpen(false);
         }}
         isLocalOnly={isLocalOnly}
+        isWelcomeAssistantOpen={isWelcomeAssistantOpen}
+        setIsWelcomeAssistantOpen={setIsWelcomeAssistantOpen}
       />
 
       <PlanSelectionModal
@@ -799,15 +813,7 @@ const App: React.FC = () => {
         isLoading={isLoading}
       />
 
-      {isFullScreen && (
-        <button
-          onClick={() => setIsFullScreen(false)}
-          className="fixed top-4 right-4 z-[100] bg-slate-800/90 hover:bg-slate-700 text-slate-200 p-3 rounded-full shadow-2xl border border-slate-600 transition-all group active:scale-95 hidden md:block"
-          title="Wyjdź z pełnego ekranu"
-        >
-          <ArrowsContractIcon className="h-6 w-6 group-hover:text-cyan-400 transition-colors" />
-        </button>
-      )}
+
 
 
 
@@ -933,7 +939,6 @@ const App: React.FC = () => {
                 : undefined
             }
             onHomeClick={handleGoHome}
-            onFullScreenClick={toggleFullScreen}
             totalCost={totalCost}
             subscription={userProfile?.subscription}
             onKnowledgeClick={interactionMode ? () => setIsKnowledgeModalOpen(true) : undefined}
@@ -1183,6 +1188,13 @@ const App: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1 md:hidden">
                         <button
+                          onClick={() => setIsFullScreen(!isFullScreen)}
+                          className={`p-1.5 text-slate-300 hover:text-white rounded-lg transition-colors border border-slate-700 ${isFullScreen ? 'bg-cyan-900/50 text-cyan-400 border-cyan-500/50' : 'bg-slate-800/50'}`}
+                          title={isFullScreen ? "Wyjdź z pełnego ekranu" : "Pełny ekran"}
+                        >
+                          {isFullScreen ? <ArrowsContractIcon className="w-4 h-4" /> : <ArrowsExpandIcon className="w-4 h-4" />}
+                        </button>
+                        <button
                           onClick={() => {
                             setIsCaseManagementModalOpen(true);
                           }}
@@ -1190,18 +1202,9 @@ const App: React.FC = () => {
                           aria-label="Zarządzaj sprawą"
                           title="Zarządzaj sprawą"
                         >
-                          <CaseIcon className="h-5 w-5 text-cyan-400" />
+                          <AdjustmentsHorizontalIcon className="h-5 w-5 text-cyan-400" />
                         </button>
-                        {selectedTopic && interactionMode && (
-                          <button
-                            onClick={() => setIsFullScreen(true)}
-                            className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
-                            aria-label="Pełny ekran"
-                            title="Pełny ekran"
-                          >
-                            <ArrowsExpandIcon className="h-5 w-5" />
-                          </button>
-                        )}
+
                       </div>
                     </div>
                   </div>
@@ -1233,7 +1236,7 @@ const App: React.FC = () => {
                   {isFullScreen && (
                     <button
                       onClick={() => setIsFullScreen(false)}
-                      className="p-2 text-slate-400 hover:text-cyan-400 rounded-lg transition-colors border border-slate-700 mr-1"
+                      className="p-2 text-slate-400 hover:text-cyan-400 rounded-lg border border-slate-700 bg-slate-900/50"
                       title="Wyjdź z pełnego ekranu"
                     >
                       <ArrowsContractIcon className="w-5 h-5" />

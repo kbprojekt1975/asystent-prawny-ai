@@ -10,6 +10,7 @@ import ConfirmationModal from './ConfirmationModal';
 import PlanSelectionModal from './PlanSelectionModal';
 import DocumentPreviewModal from './DocumentPreviewModal';
 import CaseManagementModal from './CaseManagementModal';
+import WelcomeAssistantModal from './WelcomeAssistantModal';
 
 interface AppModalsProps {
     isProfileModalOpen: boolean;
@@ -58,6 +59,9 @@ interface AppModalsProps {
     currentChatId: string | null;
     onChangeMode?: () => void;
     isLocalOnly: boolean;
+
+    isWelcomeAssistantOpen: boolean;
+    setIsWelcomeAssistantOpen: (open: boolean) => void;
 }
 
 const AppModals: React.FC<AppModalsProps> = ({
@@ -70,10 +74,17 @@ const AppModals: React.FC<AppModalsProps> = ({
     isDeleteModalOpen, cancelDeleteTopic, confirmDeleteTopic,
     isPreviewModalOpen, setIsPreviewModalOpen, previewContent, previewTitle,
     isCaseManagementModalOpen, setIsCaseManagementModalOpen, currentChatId, onChangeMode,
-    isLocalOnly
+    isLocalOnly,
+    isWelcomeAssistantOpen, setIsWelcomeAssistantOpen
 }) => {
     return (
         <>
+            <WelcomeAssistantModal
+                isOpen={isWelcomeAssistantOpen}
+                onClose={() => setIsWelcomeAssistantOpen(false)}
+                userProfile={userProfile}
+                onUpdateProfile={handleUpdateProfile}
+            />
             <UserProfileModal
                 isOpen={isProfileModalOpen}
                 onClose={() => setIsProfileModalOpen(false)}

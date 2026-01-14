@@ -1,6 +1,6 @@
 import React from 'react';
 import HamburgerMenu from './HamburgerMenu';
-import { SparklesIcon, ClockIcon, HomeIcon, ArrowsExpandIcon, CreditCardIcon, ProfileIcon, BookOpenIcon, DownloadIcon, UploadIcon, ArrowLeftIcon, BrainIcon } from './Icons';
+import { SparklesIcon, ClockIcon, HomeIcon, CreditCardIcon, ProfileIcon, BookOpenIcon, DownloadIcon, UploadIcon, ArrowLeftIcon, BrainIcon } from './Icons';
 import CostCounter from './CostCounter';
 import { SubscriptionInfo, SubscriptionStatus } from '../types';
 import HelpModal from './HelpModal';
@@ -197,16 +197,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             <SparklesIcon className="h-6 w-6" />
           </button>
         )}
-        {onFullScreenClick && (
-          <button
-            onClick={onFullScreenClick}
-            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden md:block"
-            aria-label="Pełny Ekran"
-            title="Pełny Ekran"
-          >
-            <ArrowsExpandIcon className="h-6 w-6" />
-          </button>
-        )}
+
         <button
           onClick={onProfileClick}
           className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors relative hidden xs:block"
@@ -234,7 +225,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           onHomeClick={onHomeClick}
           onHistoryClick={onHistoryClick}
           onQuickActionsClick={onQuickActionsClick}
-          onFullScreenClick={onFullScreenClick}
           onExportChat={onExportChat}
           onImportChat={onImportChat}
           onInstallApp={onInstallApp}
@@ -257,7 +247,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             <li><BookOpenIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Baza Wiedzy:</strong> Twoje zapisane akty prawne i przepisy.</li>
             <li><ClockIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Zegar/Historia:</strong> Dostęp do Twoich poprzednich rozmów.</li>
             <li><SparklesIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Różdżka/Szybkie Akcje:</strong> Gotowe scenariusze (np. "Napisz pozew").</li>
-            <li><ArrowsExpandIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Strzałki:</strong> Tryb pełnoekranowy dla czytelniejszej pracy z tekstem.</li>
             <li><ProfileIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Profil:</strong> Twoje dane, subskrypcja i ustawienia.</li>
           </ul>
         </div>
