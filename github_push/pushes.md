@@ -1,40 +1,43 @@
 # Historia zmian i wdrożeń (GitHub Pushes Log)
 
-Data: 2026-01-16
+**Data:** 2026-01-16
 
-### 1. Aktualizacja zależności backendu
-- **Plik**: `functions/package.json`
-- **Zmiana**: Podbicie wersji `firebase-functions` z `^7.0.0` na `^7.0.3`.
-- **Cel**: Usunięcie ostrzeżeń CLI o nieaktualnej wersji podczas deploymentu.
+---
 
-### 2. Rozwiązanie blokad infrastrukturalnych
-- **Akcja**: Włączenie API w Google Cloud (Cloud Build, Compute Engine, Pub/Sub).
-- **Cel**: Umożliwienie poprawnego pakowania i wdrażania funkcji Firebase v2.
+### [fd1ed61] feat: implement FAQ translations, update dependencies, and fix splash screen typo
+**Zadania:**
+1. **Aktualizacja zależności backendu** (`functions/package.json`): Podbito `firebase-functions` do `^7.0.3`.
+2. **Rozwiązanie blokad infrastrukturalnych**: Włączono wymagane API (Cloud Build, Compute Engine, Pub/Sub).
+3. **Poprawka tłumaczeń FAQ (Backend)** (`functions/src/index.ts`): Wsparcie dla parametru `language`.
+4. **Poprawka tłumaczeń FAQ (Frontend)** (`components/LegalFAQ.tsx`): Tłumaczenie nagłówków dziedzin prawa.
+5. **Finalny Deployment**: Wdrążenie funkcji Firebase.
 
-### 3. Poprawka tłumaczeń FAQ (Backend)
-- **Plik**: `functions/src/index.ts`
-- **Zmiana**: Aktualizacja funkcji `getLegalFAQ`.
-- **Opis**: Dodano obsługę parametru `language`. Teraz AI generuje pytania FAQ w języku angielskim, jeśli aplikacja jest przełączona na ten język.
+---
 
-### 4. Poprawka tłumaczeń FAQ (Frontend)
-- **Plik**: `components/LegalFAQ.tsx`
-- **Zmiana**: Użycie hooka `t` do tłumaczenia nazwy dziedziny prawa w nagłówku.
-- **Opis**: Zmieniono wyświetlanie surowej nazwy (np. "Prawo Rodzinne") na klucz tłumaczenia `law.areas.*`, co pozwala na poprawne wyświetlanie nagłówka po angielsku.
+### [bec13df] fix: ensure Knowledge Base is accessible from side menu on all screens
+**Zadania:**
+- **Poprawka dostępności Bazy Wiedzy** (`App.tsx`): Usunięto warunkowe blokowanie przycisku "Baza Wiedzy" w menu bocznym. Przycisk jest teraz zawsze dostępny.
 
-### 5. Finalny Deployment
-- **Komenda**: `npx firebase deploy --only functions`
-- **Status**: Sukces. Wszystkie funkcje są aktywne i wspierają wielojęzyczność.
+---
 
-### 6. Poprawka literówki/napisów na Splash Screen
-- **Pliki**: `public/locales/pl/translation.json`, `public/locales/en/translation.json`
-- **Opis**: Ustawiono dokładną treść napisów: `Powered by LOV2XLR8 & AI` oraz `Bezpieczne środowisko prawne`.
+### [da5e3f2] style: update splash screen credit and environment text
+**Zadania:**
+- **Aktualizacja napisów na Splash Screenie**: Zmieniono treść na `Powered by LOV2XLR8 & AI` oraz dłuższy opis środowiska prawnego.
 
-### 7. Naprawa błędów kodowania i składni JSON
-- **Opis**: Rozwiązano problem "white screen" poprzez naprawę struktury plików JSON i przywrócenie poprawnego kodowania znaków (UTF-8). Wszystkie funkcje aplikacji działają poprawnie.
+---
 
-### 8. Poprawka dostępności Bazy Wiedzy
-- **Plik**: `App.tsx`
-- **Opis**: Usunięto warunkowe blokowanie przycisku "Baza Wiedzy" w menu bocznym. Teraz jest on dostępny zawsze, umożliwiając podgląd globalnej bazy z dowolnego miejsca w aplikacji.
+### [a16ddd5] style: exactly match splash screen text as requested
+**Zadania:**
+- **Korekta napisów na Splash Screenie**: Skrócono opis środowiska do: `Bezpieczne środowisko prawne`.
 
-### 9. Deployment Produkcyjny (Hosting & Functions)
-- **Status**: Zakończono pełne wdrożenie frontendu (`Hosting`) oraz backendu (`Functions`). Wszystkie nowe funkcjonalności i poprawki są aktywne pod adresem: https://low-assit.web.app
+---
+
+### [f68b69b] docs: final update to session log and splash screen text refinement
+**Zadania:**
+- **Aktualizacja logów**: Uzupełnienie `pushes.md` o najnowsze zadania i naprawę błędów JSON oraz kodowania (UTF-8).
+
+---
+
+### [ZADANIE BIEŻĄCE]
+- **Cel**: Dodanie nazw commitów do `pushes.md` dla każdego wypchnięcia zmian.
+- **Wdrożenie**: Hosting & Functions są aktualne (https://low-assit.web.app).
