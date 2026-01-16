@@ -1,0 +1,884 @@
+{
+    "app": {
+        "title": "AI Legal Assistant",
+        "back": "Back",
+        "change": "Change",
+        "home": "Home",
+        "knowledgeBase": "Knowledge Base",
+        "generateKnowledge": "Generate Knowledge Base (Download Acts and Judgments)",
+        "exportChat": "Export Chat",
+        "importChat": "Import Chat",
+        "history": "Case History",
+        "quickActions": "Quick Actions",
+        "userProfile": "User Profile",
+        "localMode": "LOCAL MODE",
+        "noGdprConsent": "NO GDPR CONSENT",
+        "buyPlan": "BUY NEW PLAN",
+        "currentPlan": "CURRENT PLAN"
+    },
+    "auth": {
+        "title": "AI Legal Assistant",
+        "resetPasswordTitle": "Reset your password",
+        "loginTitle": "Login to continue",
+        "registerTitle": "Create account to start",
+        "email": "E-mail",
+        "nickname": "Nickname",
+        "emailPlaceholder": "Email address",
+        "nicknamePlaceholder": "Your Nickname",
+        "passwordPlaceholder": "Password",
+        "sendResetLink": "Send reset link",
+        "sending": "Sending...",
+        "backToLogin": "Back to login",
+        "forgotPassword": "Forgot password?",
+        "loginButton": "Log In",
+        "registerButton": "Sign Up",
+        "processing": "Processing...",
+        "orContinueWith": "or continue with",
+        "googleLogin": "Google",
+        "noAccount": "Don't have an account? ",
+        "hasAccount": "Already have an account? ",
+        "newInAssistant": "New to Assistant?",
+        "seeHowItWorks": "See how the app works",
+        "security": {
+            "title": "ACCOUNT SECURITY",
+            "desc": "Account based on nickname only prevents traditional password recovery. Remember to keep your password in a safe place, as we won't be able to reset it via email if lost."
+        },
+        "privacy": {
+            "accept": "I accept ",
+            "policy": "Privacy Policy",
+            "consent": " and I consent to storing my data in the cloud.",
+            "noConsent": "(No consent = data only in browser memory)"
+        },
+        "errors": {
+            "googleLogin": "An error occurred during Google login.",
+            "provideEmail": "Please provide an email address.",
+            "resetError": "An error occurred during password reset.",
+            "userNotFound": "User not found with this email.",
+            "invalidEmail": "Invalid email format.",
+            "generic": "An error occurred.",
+            "invalidCredential": "Invalid credentials.",
+            "userNotFoundNick": "User not found with this nickname.",
+            "wrongPassword": "Wrong password.",
+            "nickTaken": "This nickname is already taken.",
+            "emailTaken": "This email is already registered.",
+            "weakPassword": "Password must be at least 6 characters.",
+            "invalidNick": "Invalid nickname format.",
+            "nickPattern": "Nickname can only contain letters, numbers, underscores and hyphens."
+        },
+        "success": {
+            "resetSent": "Password reset link has been sent to your email."
+        }
+    },
+    "plan": {
+        "starter": {
+            "title": "AI Starter Pack",
+            "desc": "Get full access to the legal assistant for a week. Use 10 PLN credit for advanced Gemini 1.5 Pro/Flash analysis.",
+            "creditLabel": "Credit",
+            "validityLabel": "Validity",
+            "validityValue": "7 Days",
+            "selectButton": "Select this plan - 10 PLN",
+            "manualActivation": "Manual activation by administrator required"
+        },
+        "pending": {
+            "title": "Awaiting Activation",
+            "desc": "Your request has been sent. Please make a payment (10 PLN). The administrator will activate your account shortly.",
+            "statusLabel": "Status: AWAITING_PAYMENT"
+        },
+        "expired": {
+            "title": "Plan Expired",
+            "desc": "Your credit has run out or the validity period has expired. Select a plan again to continue.",
+            "renewButton": "Renew access - 10 PLN"
+        },
+        "help": {
+            "title": "Starter Pack - Details",
+            "intro": "Using the AI Legal Assistant requires an active package.",
+            "creditTitle": "Credit 10 PLN:",
+            "creditDesc": "These funds are used for queries to the AI model (Gemini 1.5 Pro/Flash). Each question, document analysis, or document generation costs a fraction of a penny or a few pennies, depending on the length.",
+            "validityTitle": "Validity 7 Days:",
+            "validityDesc": "Credit and access are valid for a week from activation. Unused funds are forfeited after this time.",
+            "activationTitle": "Activation:",
+            "activationDesc": "Currently, the system operates in \"Early Access\" mode. After selecting a plan, contact the administrator to manually activate your account (transfer confirmation)."
+        }
+    },
+    "activation": {
+        "title": "Awaiting Activation",
+        "description": "Your plan has been selected. Access to the assistant will be unlocked immediately after payment is booked and activated by the administrator.",
+        "statusTitle": "Request Status:",
+        "planLabel": "Plan:",
+        "planValue": "Starter Pack (10 PLN)",
+        "paymentLabel": "Payment Status:",
+        "paymentValue": "Pending",
+        "verificationLabel": "Verification Time:",
+        "verificationValue": "usually up to 24h",
+        "logout": "Log Out"
+    },
+    "menu": {
+        "about": "About App",
+        "myProfile": "User Panel",
+        "knowledgeBase": "Knowledge Base",
+        "helpAi": "AI Help",
+        "new": "NEW",
+        "history": "Case History",
+        "quickActions": "Quick Actions",
+        "export": "Export Chat",
+        "import": "Import Chat",
+        "install": "Install App",
+        "help": "Help",
+        "logout": "Logout",
+        "home": "Home",
+        "myPlan": "My Plan",
+        "balance": "Balance"
+    },
+    "law": {
+        "header": "Select a legal area or use intelligent analysis.",
+        "analyzeMyCase": "Analyze My Case",
+        "analyzeDesc": "Not sure which category to choose? Describe your situation and the assistant will match the appropriate law and mode.",
+        "importJson": "Import chat history (.json)",
+        "areas": {
+            "prawo karne": "Criminal Law",
+            "prawo karne_desc": "Criminal cases, defense, prosecution.",
+            "prawo rodzinne": "Family Law",
+            "prawo rodzinne_desc": "Divorce, alimony, child custody.",
+            "prawo cywilne": "Civil Law",
+            "prawo cywilne_desc": "Contracts, damages, inheritance.",
+            "prawo handlowe": "Commercial Law",
+            "prawo handlowe_desc": "Companies, contracts, business activity."
+        },
+        "localMode": {
+            "title": "\"Local Save Only\" Mode",
+            "desc": "Your data will not be sent to the cloud (Firestore). You will receive advice, but history and documents will vanish irrevocably after closing or refreshing.",
+            "note": "Disabling this mode is possible after granting GDPR consent in the user panel.",
+            "on": "ON",
+            "off": "OFF",
+            "tooltip": "GDPR consent required in user panel"
+        }
+    },
+    "topic": {
+        "header": "Select or create a case topic.",
+        "changeMode": "Change Mode / AI Tools",
+        "modeDesc": "Analysis Mode, Writing, Negotiation...",
+        "yourCases": "Your Cases",
+        "analysisAndAdvice": "Analysis & Advice",
+        "negotiationsAndMediation": "Negotiations & Mediation",
+        "noActiveCases": "No active cases in this section.",
+        "noNegotiations": "No negotiations started yet.",
+        "newCase": "New Case",
+        "newCasePlaceholder": "E.g., Alimony case, Rental agreement",
+        "analyze": "Analyze",
+        "newConversation": "New Conversation",
+        "negotiationDesc": "Mediation & Negotiation",
+        "negotiationPlaceholder": "E.g., Child contact, Debt repayment",
+        "start": "Start"
+    },
+    "service": {
+        "header": "Choose how to resolve your case",
+        "description": "For the selected area ({{lawArea}}), we offer two approaches:",
+        "pro": {
+            "title": "PRO: Manage My Case",
+            "desc": "Comprehensive strategic path. Analysis of the entire case file, assessment of winning chances, and building a procedural strategy.",
+            "recommended": "RECOMMENDED",
+            "action": "Start PRO Analysis"
+        },
+        "hub": {
+            "title": "AI Tools & Advice",
+            "desc": "Ask a legal question, generate a specific document, search regulations, or undergo interactive training.",
+            "action": "Open Toolset"
+        },
+        "footer": "AI Legal Assistant &bull; Intelligent Procedural Support",
+        "help": {
+            "title": "Selection of Work Method",
+            "intro": "You have two paths to work with the Assistant, depending on the needs of your case:",
+            "proTitle": "1. PRO Zone (Long-term Strategy)",
+            "proDesc": "Choose this option if you have a complex court case, many documents, and need long-term analysis. The Assistant will help you manage the \"case file\", assess the chances of winning, and conduct a hearing simulation.",
+            "hubTitle": "2. AI Tools & Advice (Quick Help)",
+            "hubDesc": "Perfect for quick actions. If you only need to write one letter, check a regulation, ask about a specific situation, or undergo quick legal training - this is the option for you."
+        }
+    },
+    "modal": {
+        "caseManagement": "Case Management"
+    },
+    "interaction": {
+        "header": "Select the type of help you need.",
+        "modes": {
+            "strategic_analysis": "Strategic Case Management",
+            "strategic_analysis_desc": "Deep analysis of the case file, assessment of chances, risks, and winning strategy.",
+            "analysis": "Case Analysis",
+            "advice": "Legal Advice",
+            "advice_desc": "Get analysis and advice on your case.",
+            "document": "Document Generation",
+            "document_desc": "Generate a lawsuit, application, or other letter.",
+            "legal_training": "Legal Training",
+            "legal_training_desc": "Take interactive training on a given topic.",
+            "suggest_regulations": "Suggest Regulations",
+            "suggest_regulations_desc": "Describe the problem, and AI will find matching regulations.",
+            "find_rulings": "Find Similar Rulings",
+            "find_rulings_desc": "Search for sample rulings in similar cases.",
+            "court": "Court Mode",
+            "court_desc": "Prepare for contact with the court in a precise, formal mode.",
+            "negotiation": "Conversation with Opposing Party",
+            "negotiation_desc": "Develop strategy and content of communication with the other side of the dispute."
+        },
+        "resources": {
+            "header": "YOUR RESOURCES",
+            "documents": "My Documents",
+            "documents_desc": "Generated documents",
+            "history": "Case History",
+            "history_desc": "Browse chats",
+            "knowledge": "Knowledge Base",
+            "knowledge_desc": "Saved regulations"
+        },
+        "help": {
+            "title": "Available Tools",
+            "intro": "The Assistant offers a range of specialized tools tailored to your needs:",
+            "list": {
+                "strategic_analysis": "Comprehensive documentation analysis, evidence assessment, and procedural outcome prediction.",
+                "advice": "General problem analysis and preliminary tips.",
+                "document": "Document creator (lawsuits, applications, summons).",
+                "legal_training": "Educational module teaching the basics of a given topic.",
+                "suggest_regulations": "Search engine for specific legal articles matching the situation.",
+                "find_rulings": "Case law database to help find precedents.",
+                "court": "Court conversation simulation - formal language and precise answers.",
+                "negotiation": "Mediation support, writing emails/SMS, and building a settlement strategy."
+            }
+        }
+    },
+    "breadcrumbs": {
+        "home": "AI Legal Assistant",
+        "pro_zone": "PRO Zone",
+        "ai_tools": "AI Tools"
+    },
+    "guide": {
+        "title": "Your Personal Legal Assistant",
+        "subtitle": "Discover the full potential of the application in 3 simple steps. Click the cards below to see details.",
+        "analysis": {
+            "title": "1. Intelligent Case Analysis",
+            "subtitle": "Understanding your problem and indicating the legal path",
+            "desc": "Our AI will analyze your case based on descriptions and documents. You will receive specific paragraphs, chance assessment, and an action plan."
+        },
+        "generator": {
+            "title": "2. Document Generator",
+            "subtitle": "Creating pleadings, summons, and applications",
+            "desc": "Based on the chat, you can generate a ready-made pleading. The system will automatically complete your data and legal basis."
+        },
+        "knowledge": {
+            "title": "3. Knowledge Base & Memory",
+            "subtitle": "Secure archive of your cases and documents",
+            "desc": "All analyses are saved. You can return to them at any time in the \"Knowledge Base\" section."
+        },
+        "pro": {
+            "title": "4. PRO Zone",
+            "new": "NEW",
+            "subtitle": "Procedural strategy and management of the complete case file",
+            "desc": "A professional tool for conducting complex cases. Create files, add documents from the opposing party, simulate court hearings, and build a winning strategy."
+        },
+        "ready": {
+            "title": "Ready?",
+            "text": "Choose the method of operation that suits you best. Remember that you can return to this guide at any time.",
+            "button": "Go to Application"
+        }
+    },
+    "faq": {
+        "title": "FREQUENTLY ASKED QUESTIONS",
+        "fallbacks": [
+            "What are my first steps in this case?",
+            "What documents should I prepare?",
+            "What costs might be involved?",
+            "How long does such a case usually take?"
+        ]
+    },
+    "welcome": {
+        "title": "Your AI Guide",
+        "subtitle": "Discover the app's capabilities",
+        "intro_message": "Welcome to the AI Legal Assistant! 👋 I am here to help you navigate the application. \n\nI can guide you through the process of setting up your first case, translating regulations, or preparing court documents. How can I help you get started?",
+        "error_message": "Sorry, an error occurred. Please try asking the question again.",
+        "input_placeholder": "Ask a question about the app...",
+        "tip_title": "Tip",
+        "tip_text": "I have many programmed functions. If you want to do something and don't see it - just write in the chat window what you need.",
+        "tip_subtext": "Basically, I have unlimited functions.",
+        "dont_show": "Don't show again",
+        "close": "Close"
+    },
+    "app_help": {
+        "title": "App Guide",
+        "intro": "Welcome to AI Legal Assistant!",
+        "icons_intro": "Here is what the icons mean:",
+        "home": "Home",
+        "home_desc": "Return to the home screen.",
+        "knowledge": "Knowledge Base",
+        "knowledge_desc": "Your saved legal acts and regulations.",
+        "history": "Clock/History",
+        "history_desc": "Access to your previous conversations.",
+        "magic": "Wand/Quick Actions",
+        "magic_desc": "Ready-made scenarios (e.g. \"Write a lawsuit\").",
+        "profile": "Profile",
+        "profile_desc": "Your data, subscription and settings."
+    },
+    "evidence": {
+        "title": "Your Evidence",
+        "upload": "I have it",
+        "missing": "I need to get it",
+        "collected": "Collected"
+    },
+    "handover": {
+        "title": "Prepare me for conversation",
+        "subtitle": "5 key questions to ask an expert",
+        "export_pdf": "Export to PDF",
+        "tip": "Tip: By asking these questions, you show that you understand the process and expect a substantive approach.",
+        "pdf_title": "Preparation for conversation",
+        "pdf_footer": "This document is for illustrative purposes only and does not constitute legal advice."
+    },
+    "notes": {
+        "title": "Case Notes",
+        "placeholder": "Enter note content...",
+        "cancel": "CANCEL",
+        "save": "SAVE",
+        "empty_title": "No notes for this topic.",
+        "empty_desc": "Click + to add your first note.",
+        "copy": "Copy",
+        "delete": "Delete",
+        "saving": "Saving..."
+    },
+    "history": {
+        "title": "Case History",
+        "local_mode_active": "Active Local Mode",
+        "no_consent": "No GDPR Consent",
+        "local_desc": "Your data is stored only in your browser. Cloud history is hidden.",
+        "no_consent_desc": "Your cloud history is hidden because consent to data processing was not given.",
+        "no_active_mode": "No active mode",
+        "documents": "Case Documents",
+        "knowledge_base": "Case Knowledge Base",
+        "delete_tooltip": "Delete history",
+        "empty": "No saved cases.",
+        "close": "Close",
+        "help_intro": "Here you will find a list of all your previous conversations and analyses.",
+        "help_click": "Click on",
+        "help_click_bold": "case title/topic",
+        "help_click_end": "to return to the conversation.",
+        "help_delete": "Use the",
+        "help_delete_bold": "trash icon",
+        "help_delete_end": "to permanently delete a thread.",
+        "help_warning": "Remember that deleting history is irreversible."
+    },
+    "chat": {
+        "deepThinking": "Deep Thinking",
+        "deepThinking_l1": "Deep",
+        "deepThinking_l2": "Thinking",
+        "messagePlaceholder": "Write a message...",
+        "welcome": "Welcome! Starting a new case in: **{{lawArea}}**. Topic: **{{topic}}**.",
+        "steps_intro": "To start effectively, please take one of the following steps:",
+        "step_1": "1. **Briefly describe your situation** – write what happened and what you need help with.",
+        "step_2": "2. **Upload documents** – if you have letters, contracts, or applications related to the case, use the paperclip icon to add them for analysis.",
+        "step_3": "3. **Ask a question** – if you have specific legal doubts, just write them down.",
+        "ready": "I am ready to help!",
+        "quick_actions": {
+            "advice": {
+                "create_doc": "Create a document based on this advice",
+                "regulations": "What regulations apply here?",
+                "explain": "Explain in simpler language"
+            },
+            "document": {
+                "check": "Check formal correctness",
+                "next_steps": "What are the next steps?",
+                "justify": "Add factual justification"
+            },
+            "suggest_regulations": {
+                "explain": "Explain these regulations simply",
+                "apply": "How to apply this to my case?",
+                "create_doc": "Create a document based on these regulations"
+            },
+            "find_rulings": {
+                "impact": "How do these rulings affect my situation?",
+                "summarize": "Summarize the most important ruling",
+                "more": "Find more similar rulings"
+            },
+            "legal_training": {
+                "summarize": "Summarize key points",
+                "question": "I have an additional question",
+                "examples": "Give practical examples"
+            }
+        },
+        "court_mode": {
+            "my_attorney": "Good morning. I am your attorney. I have analyzed the information so far. We must prepare for the hearing. Can we proceed to the questions that may be asked in the courtroom?",
+            "judge": "The Court is now in session. Based on the gathered evidence, we proceed to the hearing. Please approach the bar. Are you ready to testify?",
+            "opposing_attorney": "Hello. I represent the opposing party. I have familiarized myself with your version of events. I have a few questions for you.",
+            "prosecutor": "District Prosecutor's Office. Case file analysis is complete. We are proceeding with the activities. Do you maintain your previous explanations?",
+            "simulation_start": "MODE CHANGE: Starting Court Simulation.",
+            "role_system_prefix": "[SYSTEM: Start simulation as: {{role}}]"
+        }
+    },
+    "dashboard": {
+        "panel_title": "Case Management Panel",
+        "click_collapse": "Click to collapse",
+        "subtitle_collapsed": "Documents, Timeline, Tasks",
+        "change_mode": "Change Mode / AI Tools",
+        "mode_desc": "Analysis, Letters, Negotiation Mode...",
+        "help_intro": "This is your case command center. You will find three key sections here:",
+        "help_timeline": "Timeline:",
+        "help_timeline_desc": "Visualization of your case progress. Thanks to it, you won't get lost in dates and events.",
+        "help_docs": "Documents:",
+        "help_docs_desc": "Store files related to the case here. You can add and view them in one place.",
+        "help_checklist": "Checklist:",
+        "help_checklist_desc": "A simple 'to-do' list that helps you control the next steps (e.g., 'Send letter', 'Pay fee').",
+        "help_notes": "Notes:",
+        "help_notes_desc": "Your personal place for thoughts, questions for a lawyer, or important facts you want to keep handy."
+    },
+    "law_help": {
+        "intro": "At this stage, you decide which area of law you want to talk about.",
+        "manual_title": "Manual Selection:",
+        "manual_desc": "If you know your case concerns e.g. inheritance, choose",
+        "manual_civ": "Civil Law",
+        "manual_fam": "Family Law",
+        "manual_fam_pre": "If it concerns divorce -",
+        "ai_title": "AI Analysis (\"Analyze My Case\"):",
+        "ai_desc": "Best choice if you are unsure. Describe the situation, and the assistant will classify the case and move you to the appropriate department."
+    },
+    "splash": {
+        "start": "GET STARTED",
+        "preparing": "Preparing...",
+        "messages": [
+            "Your personal assistant in the world of law.",
+            "Preparing a comprehensive analysis of your case...",
+            "Intelligent legal support available 24/7.",
+            "From document analysis to litigation strategy.",
+            "Enter the courtroom with a ready plan.",
+            "Law becomes simpler. Initializing...",
+            "Everything you need to win your case, in one place.",
+            "Your support in difficult conversations and negotiations.",
+            "The power of AI in the service of justice.",
+            "Intelligent legal analysis based on your documents.",
+            "Combining legal knowledge with the latest technology.",
+            "Your data is secure and encrypted.",
+            "Privacy and law in your hands.",
+            "Secure connection to your legal assistant..."
+        ],
+        "credit": "Created in close collaboration between LOV2XLR6 and AI",
+        "environment": "Secure Legal Environment"
+    },
+    "pro": {
+        "steps": {
+            "docs": "Documents",
+            "interview": "Strategic Interview",
+            "analysis": "Strategic Analysis",
+            "court": "Court Simulation",
+            "notes": "Notes"
+        },
+        "dashboard": {
+            "back_to_dashboard": "Back to Case Dashboard",
+            "load_docs_title": "Upload Documents",
+            "load_docs_desc": "The system will analyze your documents to understand the facts.",
+            "preliminary_interview_label": "Preliminary Interview",
+            "preliminary_interview": "Preliminary Interview",
+            "continue_interview": "CONTINUE INTERVIEW / ENTER CHAT",
+            "my_docs": "My Documents",
+            "my_docs_desc": "Lawsuits, your letters, your evidence",
+            "select_files": "SELECT FILES",
+            "opposing_docs": "Opposing Party Docs",
+            "opposing_docs_desc": "Letters from the other side, their evidence",
+            "loaded_files": "Loaded Files List",
+            "opposing_party": "Opposing Party",
+            "my_party": "Mine",
+            "preview": "Preview",
+            "delete": "Delete",
+            "no_docs": "No documents. Upload files above.",
+            "analyze_button": "ANALYZE DOCUMENTS (AI)",
+            "no_docs_link": "I don't have documents - I want to describe the case",
+            "fullscreen": "Full Screen",
+            "exit_fullscreen": "Exit Full Screen",
+            "initiating": "Initiating...",
+            "help_title": "Stage 1: Documents - Help",
+            "help_desc": "Why is this important? AI needs to know the \"hard data\" before advising.",
+            "help_my_docs": "My Documents: Upload everything that supports your case (contracts, proofs of payment, sent letters).",
+            "help_opposing_docs": "Opposing Party Docs: Upload letters you received. This allows AI to assess risks.",
+            "help_footer": "We support PDF, images, and text files. If you don't have digital documents, you can skip this step (\"I don't have documents\") and describe the case in the next stage.",
+            "interview_stage": "Stage 2: Strategic Interview",
+            "finish_interview": "Finish Interview",
+            "analyzing": "Assistant is analyzing facts...",
+            "deep_thinking": "Deep Thinking",
+            "context_mode": "Mode: PRO Strategy",
+            "input_placeholder": "Type your answer to AI questions...",
+            "interview_help_title": "Stage 2: Interview - Help",
+            "interview_help_desc": "Documents rarely say everything. In this step, the Assistant acts as an experienced lawyer and asks follow-up questions.",
+            "interview_help_honest": "Answer honestly: The Assistant is here to help, not judge. The more details you provide, the better the strategy.",
+            "interview_help_dunno": "Don't know? If you don't know the answer, just write \"I don't know\" or \"I don't remember\".",
+            "interview_help_finish": "Finish: When you think you've said everything, click the \"Finish Interview\" button in the top right.",
+            "tile_docs_title": "1. Upload Documents",
+            "tile_docs_desc": "Upload lawsuits, letters, and evidence. The AI will analyze their contents and detecting key facts. You can also describe the case without documents.",
+            "tile_docs_btn": "START",
+            "tile_docs_btn_manage": "MANAGE",
+            "tile_interview_title": "2. Strategic Interview",
+            "tile_interview_desc": "The AI will ask precise follow-up questions based on your documents. This is key to understanding the \"other side\".",
+            "tile_interview_btn": "START INTERVIEW",
+            "tile_analysis_title": "3. Analysis & Chances",
+            "tile_analysis_desc": "Know your strengths and weaknesses. The AI will present winning chances and areas requiring special attention.",
+            "tile_analysis_btn": "GENERATE REPORT",
+            "tile_court_title": "4. Court Mode",
+            "tile_court_desc": "Simulate a hearing. Choose a role for the AI and see how you handle the courtroom based on the collected evidence.",
+            "tile_court_btn": "START SIMULATION",
+            "tile_notes_title": "5. My Notes",
+            "tile_notes_desc": "Save your own thoughts, questions for a lawyer, or important facts. Notes are secure and visible only to you.",
+            "tile_notes_btn": "OPEN NOTEBOOK",
+            "main_help_title": "PRO Zone - How it works?",
+            "main_help_desc": "The PRO Zone is an advanced process for building your litigation strategy. It consists of 3 steps:",
+            "main_help_point_1": "Upload Documents: Upload everything you have - lawsuits, applications, evidence. It is important to separate your documents (Mine) from the other party's documents (Opposing). This will help us understand both perspectives.",
+            "main_help_point_2": "Strategic Interview: The AI will ask you a series of follow-up questions. Often documents don't say everything - here you can explain the context, your goals, and fears.",
+            "main_help_point_3": "Analysis and Report: Comparison of the process. You will receive a document with a SWOT analysis (strengths/weaknesses), an estimate of the chances of winning, and concrete \"step-by-step\" recommendations.",
+            "main_help_footer": "Remember: You can return to any step at any time to add new documents or update information.",
+            "strategy_title": "Intelligent Strategy",
+            "strategy_desc": "\"The PRO System combines analysis of your documents with an in-depth AI interview. In the end, you will receive a complete litigation strategy that will help you win the case.\"",
+            "progress_title": "Strategic Progress",
+            "dashboard_label": "Case Dashboard"
+        },
+        "analysis": {
+            "step_title": "Stage 3: Strategic Report",
+            "creating_report": "Creating strategic report...",
+            "analyzing_desc": "Assistant is analyzing facts and winning chances",
+            "main_title": "Analysis and Strategy",
+            "refresh_btn": "REFRESH REPORT"
+        },
+        "initiator": {
+            "back": "Change Solution Method",
+            "header_title": "PRO Case Management",
+            "main_title": "What is this case about?",
+            "main_desc": "Enter a short case title. The PRO system will prepare a dedicated strategic analysis process for you.",
+            "placeholder": "E.g., Alimony dispute, Payment lawsuit...",
+            "start_button": "START",
+            "previous_cases": "YOUR PREVIOUS CASES",
+            "delete_tooltip": "Delete case",
+            "help_title": "Creating a New PRO Case",
+            "help_desc": "Give your case a short but descriptive title. This will help you find it easily later and give the Assistant initial context.",
+            "examples_title": "Good examples:",
+            "example_1": "\"Inheritance from uncle in America\"",
+            "example_2": "\"Divorce with fault adjudication\"",
+            "example_3": "\"Traffic accident 12.01.2024\"",
+            "help_footer": "Remember: You can handle multiple cases simultaneously. All will be saved in your profile."
+        }
+    },
+    "userProfile": {
+        "title": "User Panel",
+        "closeLabel": "Close panel",
+        "tabs": {
+            "personal": "My Data",
+            "quickActions": "Quick Actions",
+            "calendar": "Calendar",
+            "guide": "Guide"
+        },
+        "swipeHint": "Swipe to see more options",
+        "personal": {
+            "logout": "Logout",
+            "dataForDocuments": "Data for Documents",
+            "dataDescription": "Fill in your data to automatically insert it into generated documents.",
+            "fullName": "Full Name",
+            "address": "Residential Address",
+            "postalCode": "Postal Code",
+            "city": "City",
+            "pesel": "PESEL",
+            "idNumber": "ID Number",
+            "sessionOnly": "Save only for this session (data will disappear after closing the browser)",
+            "saveButton": "Save Personal Data",
+            "consentTitle": "Data Processing Consent",
+            "consentGranted": "GRANTED",
+            "consentMissing": "MISSING",
+            "giveConsent": "GIVE CONSENT",
+            "consentGrantedDesc": "Consent has been granted. Your data is securely stored in the cloud and synchronized across devices.",
+            "consentMissingDesc": "You are currently working in local mode. Your data is saved only in this browser and will disappear after clearing its memory.",
+            "consentDate": "Date of consent",
+            "localModeTitle": "\"Save Locally Only\" Mode",
+            "localModeDesc": "Your data will not be sent to the cloud (Firestore). You receive advice, but history and documents will disappear after closing the browser.",
+            "localModeEnabled": "ENABLED",
+            "localModeDisabled": "DISABLED",
+            "localModeNote": "Disabling this mode is only available after granting data processing consent above.",
+            "privacyNote": "Providing this data is voluntary, but necessary to generate legal documents. The data administrator is [Administrator]. Details in",
+            "privacyPolicy": "Privacy Policy",
+            "dangerZone": "Danger Zone",
+            "wipeData": "Clear Everything (Chats, Files, Data)",
+            "wipeDataNote": "WARNING: Clears all chats, uploaded files, and profile data, keeping the account itself.",
+            "deleteAccount": "Permanently Delete My Account",
+            "deleteAccountNote": "Complete removal of profile and system access.",
+            "adminOptions": "ADMINISTRATOR OPTIONS",
+            "resetDatabase": "RESET ENTIRE DATABASE",
+            "resetDatabaseNote": "WARNING: Deletes data of ALL system users! Active accounts will be preserved."
+        },
+        "quickActions": {
+            "title": "Quick Actions",
+            "description": "Add shortcuts to the most frequently used areas or topics for quick access.",
+            "noActions": "No quick actions defined.",
+            "addNew": "Add new shortcut",
+            "selectLawArea": "Select law area...",
+            "selectTopic": "Any topic / General",
+            "addButton": "Add shortcut",
+            "deleteLabel": "Delete shortcut"
+        },
+        "help": {
+            "title": "User Panel - Help",
+            "intro": "In this panel you can manage your settings and data.",
+            "quickActionsTitle": "Quick Actions:",
+            "quickActionsDesc": "Define shortcuts to the most frequently used topics. This way you will always have them at hand in the main menu.",
+            "dataTitle": "Data for Documents:",
+            "dataDesc": "Fill in your data once, and the system will automatically insert it into generated lawsuits and applications. It's a time saver!",
+            "sessionTitle": "Session save:",
+            "sessionDesc": "You can choose whether data should be remembered permanently or only until the browser is closed."
+        },
+        "confirmations": {
+            "wipeTitle": "Clear everything?",
+            "wipeMessage": "This operation will PERMANENTLY delete: entire chat history, all uploaded files, your saved cases, and profile data. Your associated account and subscription will remain active.",
+            "wipeConfirm": "Yes, clear everything",
+            "deleteTitle": "Permanently delete account?",
+            "deleteMessage": "WARNING: This action is IRREVERSIBLE. All your data, files, and history will be permanently deleted, and system access will be closed.",
+            "deleteConfirm": "Yes, delete my account",
+            "resetTitle": "RESET ENTIRE DATABASE?",
+            "resetMessage": "CRITICAL: Operation will delete data of ALL system users. This tool is for the main administrator only.",
+            "resetConfirm": "YES, RESET EVERYTHING",
+            "cancel": "Cancel"
+        },
+        "alerts": {
+            "dataDeleted": "Your personal data and history have been deleted.",
+            "accountDeleted": "Your account has been deleted.",
+            "databaseReset": "Database has been successfully reset.",
+            "error": "An error occurred while performing the operation."
+        },
+        "footer": {
+            "privacyPolicy": "Privacy Policy",
+            "close": "Close"
+        },
+        "calendar": {
+            "months": [
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December"
+            ],
+            "daysShort": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat",
+                "Sun"
+            ],
+            "addReminder": "Add reminder",
+            "noEvents": "No events on this day",
+            "case": "Case",
+            "newReminder": "New Reminder",
+            "day": "Day",
+            "title": "Title",
+            "titlePlaceholder": "E.g., Call to court",
+            "description": "Description (optional)",
+            "descriptionPlaceholder": "Add details...",
+            "addToCalendar": "Add to calendar"
+        }
+    },
+    "alimonyCalculator": {
+        "title": "Alimony Calculator",
+        "subtitle": "Simulation acc. to Art. 135 Family Code",
+        "askAssistant": "Ask Assistant",
+        "hideAssistant": "Hide Assistant",
+        "assistant": "Assistant",
+        "tabs": {
+            "costs": "1. Child Costs",
+            "finance": "2. Parents' Finances",
+            "care": "3. Care & Others"
+        },
+        "nav": {
+            "nextFinance": "Next: Finances",
+            "nextCare": "Next: Care",
+            "back": "Back"
+        },
+        "costs": {
+            "title": "Monthly Maintenance Costs",
+            "food": "Food & Hygiene",
+            "foodDesc": "Food, hygiene products, cosmetics",
+            "housing": "Housing (share)",
+            "housingDesc": "Rent, electricity, water (divided by persons)",
+            "health": "Health",
+            "healthDesc": "Meds, visits, dentist, glasses",
+            "education": "Education",
+            "educationDesc": "School, books, committee",
+            "development": "Development",
+            "developmentDesc": "Extra classes, hobbies, languages",
+            "fun": "Fun",
+            "funDesc": "Vacation (split by 12), cinema, toys"
+        },
+        "parents": {
+            "me": "Parent 1 (You)",
+            "other": "Parent 2 (Defendant)",
+            "income": "NET INCOME (ON HAND)",
+            "incomePlaceholder": "e.g. 5000",
+            "potential": "EARNING POTENTIAL",
+            "potentialDesc": "How much could they earn?",
+            "potentialPlaceholder": "e.g. 7000 (if hiding income)",
+            "education": "EDUCATION / SKILLS",
+            "educationPlaceholder": "e.g. Higher technical, English C1, driver's license...",
+            "livingCosts": "PARENT'S OWN COSTS",
+            "livingCostsPlaceholder": "e.g. 2500 (rent, meds)"
+        },
+        "care": {
+            "title": "Care Scope & Contacts",
+            "sharedCustody": "Shared Custody (Equivalent Care)",
+            "sharedCustodyDesc": "Check if child spends equal time with both parents.",
+            "daysWithOther": "Days/month with other parent (overnight)",
+            "daysWithOtherDesc": "The more time the child spends with a parent, the more current costs they cover directly.",
+            "extraTitle": "Additional Variables",
+            "800plus": "800+ Benefit",
+            "800plusDesc": "By law, this benefit <strong>does not reduce</strong> the alimony obligation. It is an extra for the child, not the parent. Our calculator does not deduct this amount from needs.",
+            "otherDependents": "Other children dependent on Parent 2 (obligor)",
+            "otherDependentsPlaceholder": "e.g. 1",
+            "otherDependentsDesc": "If the parent has other children, their earning capacity is divided among more people.",
+            "calculateBtn": "CALCULATE ALIMONY"
+        },
+        "results": {
+            "title": "Simulation Result",
+            "needs": "Child Needs",
+            "financialShare": "Financial Share",
+            "you": "You",
+            "otherSide": "Other Side",
+            "suggested": "Suggested Alimony",
+            "disclaimer": "Amount considers earning potential of both parties and direct care scope. Remember that court considers 'factual state', which may differ from declarations."
+        },
+        "chat": {
+            "title": "AI Legal Assistant",
+            "clearHistory": "Clear history",
+            "welcome": "Hi! I am the alimony assistant. I will help you fill out this calculator. Tell me about your financial situation and child maintenance costs, and I will fill in the appropriate fields.",
+            "error": "Sorry, a connection error occurred with the Assistant.",
+            "updated": "I have updated the data in the calculator.",
+            "inputPlaceholder": "E.g. I earn 4000 PLN, and I spend 600 PLN on food for the child..."
+        }
+    },
+    "quickActionsModal": {
+        "title": "Quick Actions",
+        "noActions": "No quick actions defined. You can add them in the User Panel."
+    },
+    "welcomeAnalysis": {
+        "header": {
+            "title": "Welcome to Legal Assistant",
+            "subtitle": "Choose how you want to work."
+        },
+        "mode": {
+            "basic": {
+                "title": "Basic Version",
+                "desc": "Simply describe your problem. The intelligent agent will recognize the topic, select the appropriate law, and guide the conversation.",
+                "action": "Start chat"
+            },
+            "advanced": {
+                "title": "Advanced Version",
+                "desc": "Full control. Manually select the area of law, specific topic, and work mode (e.g., training, searching for rulings).",
+                "action": "Go to application"
+            }
+        },
+        "input": {
+            "back": "Back to selection",
+            "label": "Describe your situation:",
+            "placeholder": "E.g., I received a termination notice from work and I do not agree with the justification...",
+            "analyze": "Analyzing...",
+            "start": "Start conversation"
+        },
+        "help": {
+            "title": "Work Mode Selection",
+            "intro": "You can use the assistant in two ways:",
+            "basicTitle": "Basic Version",
+            "basicDesc": "Perfect for starting. Simply describe your problem in your own words. The system will recognize whether it is a criminal, civil, or other case and ask you appropriate questions.",
+            "advancedTitle": "Advanced Version",
+            "advancedDesc": "For people who know what they are looking for. Allows you to manually select a field of law (e.g. Criminal Law) and a specific tool (e.g. \"Create a letter\" or \"Search for judgments\")."
+        }
+    },
+    "privacyPolicy": {
+        "title": "Privacy Policy",
+        "intro": {
+            "title": "1. Introduction",
+            "text": "This Privacy Policy describes the rules for processing personal data of users of the AI Legal Assistant application. We care about your privacy and make every effort to ensure your data is secure."
+        },
+        "admin": {
+            "title": "2. Personal Data Administrator",
+            "text": "The administrator of your personal data is [Your Company Name/Full Name], [Address], [Contact: e-mail address]."
+        },
+        "scope": {
+            "title": "3. Scope of Processed Data and Purposes of Processing",
+            "login": {
+                "title": "3.1. Login and Identification Data",
+                "scope": "Scope",
+                "scopeVal": "E-mail address, unique user identifier (UID).",
+                "goal": "Purpose",
+                "goalVal": "Enabling secure login, account access authorization, user identification in the system.",
+                "legal": "Legal basis",
+                "legalVal": "Necessity for the performance of a contract for the provision of electronic services (Art. 6(1)(b) GDPR)."
+            },
+            "docs": {
+                "title": "3.2. Data for Pleadings (Personal Data)",
+                "scope": "Scope",
+                "scopeVal": "First name, last name, residential address, optionally PESEL or other data required by courts.",
+                "goal": "Purpose",
+                "goalVal": "Automatic generation of official legal documents, lawsuits, and applications at the express request of the user.",
+                "legal": "Legal basis",
+                "legalVal": "User consent (Art. 6(1)(a) GDPR).",
+                "info": "Additional information",
+                "infoVal": "Providing the PESEL number is optional and depends on the requirements of a specific pleading."
+            },
+            "history": {
+                "title": "3.3. Case History and Conversations (User Content)",
+                "scope": "Scope",
+                "scopeVal": "Content of conversations with the AI Assistant, case descriptions, uploaded files/documents for analysis.",
+                "goal": "Purpose",
+                "goalVal": "Ensuring continuity of service (Assistant's \"memory\"), analysis of the case context to provide accurate legal advice.",
+                "legal": "Legal basis",
+                "legalVal": "Legitimate interest of the administrator (Art. 6(1)(f) GDPR).",
+                "info": "Additional information",
+                "infoVal": "The user has the option to delete chat history at any time."
+            },
+            "tech": {
+                "title": "3.4. Technical Data and Preferences",
+                "scope": "Scope",
+                "scopeVal": "Session information, consent acceptance flags, interface preferences.",
+                "goal": "Purpose",
+                "goalVal": "Maintaining login session, correct page display."
+            }
+        },
+        "recipients": {
+            "title": "4. Data Recipients",
+            "list": [
+                "Hosting provider (data storage on servers).",
+                "Firebase/Google Cloud cloud provider.",
+                "Authorized employees and associates of the administrator."
+            ]
+        },
+        "rights": {
+            "title": "5. User Rights",
+            "intro": "You have the right to:",
+            "list": [
+                "Access your personal data.",
+                "Rectify your personal data.",
+                "Delete your personal data (\"right to be forgotten\").",
+                "Restrict the processing of your personal data.",
+                "Transfer your personal data.",
+                "Object to processing.",
+                "Withdraw consent to data processing.",
+                "Lodge a complaint with the supervisory authority (UODO)."
+            ]
+        },
+        "security": {
+            "title": "6. Data Security",
+            "text": "We apply appropriate technical and organizational measures to protect your data against unauthorized access, loss, or destruction (including SSL connection encryption, secure cloud infrastructure)."
+        },
+        "cookies": {
+            "title": "7. Cookies",
+            "text": "Our website uses cookies. Detailed information on the types of cookies, purposes of their use, and ways to manage them can be found in our Cookies Policy."
+        },
+        "changes": {
+            "title": "8. Changes to the Privacy Policy",
+            "text": "This Privacy Policy may change. We will inform users about any changes in advance."
+        },
+        "accept": {
+            "label": "I have read the Privacy Policy and accept its provisions",
+            "close": "Close",
+            "cancel": "Cancel",
+            "continue": "Continue"
+        }
+    }
+}

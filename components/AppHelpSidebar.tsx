@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { InteractionMode, ChatMessage } from '../types';
 import { getLegalAdvice } from '../services/geminiService';
 import { XIcon, SendIcon, SparklesIcon, ScaleIcon } from './Icons';
@@ -11,6 +12,7 @@ interface AppHelpSidebarProps {
 }
 
 const AppHelpSidebar: React.FC<AppHelpSidebarProps> = ({ isOpen, onClose, userId }) => {
+    const { i18n } = useTranslation();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +50,8 @@ const AppHelpSidebar: React.FC<AppHelpSidebarProps> = ({ isOpen, onClose, userId
                 'Asystent Aplikacji',
                 false,
                 undefined,
-                'help-sidebar'
+                'help-sidebar',
+                i18n.language
             );
 
             if (response && response.text) {

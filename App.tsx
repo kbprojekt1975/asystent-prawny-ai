@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LawArea, ChatMessage, InteractionMode, UserProfile, QuickAction, SubscriptionStatus, SubscriptionInfo, CourtRole, CaseNote } from './types';
 import { analyzeLegalCase } from './services/geminiService';
 import LawSelector from './components/LawSelector';
@@ -69,6 +70,8 @@ const initialProfile: UserProfile = {
 };
 
 const App: React.FC = () => {
+
+
   const {
     selectedLawArea, setSelectedLawArea,
     selectedTopic, setSelectedTopic,
@@ -84,6 +87,8 @@ const App: React.FC = () => {
     backToLawArea,
     initialTopics
   } = useAppNavigation();
+
+  const { t } = useTranslation(); // Hook initialization
 
   const [isAlimonyModalOpen, setIsAlimonyModalOpen] = useState(false);
 
@@ -731,24 +736,24 @@ const App: React.FC = () => {
           <div className="w-16 h-16 bg-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <ClockIcon className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">Oczekiwanie na aktywację</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">{t('activation.title')}</h2>
           <p className="text-slate-400 mb-8 leading-relaxed">
-            Twój plan został wybrany. Dostęp do asystenta zostanie odblokowany natychmiast po zaksięgowaniu wpłaty i aktywacji przez administratora.
+            {t('activation.description')}
           </p>
           <div className="space-y-4">
             <div className="bg-slate-700/30 p-4 rounded-xl text-xs text-slate-500 text-left">
-              <p className="font-semibold text-slate-400 mb-1">Status zgłoszenia:</p>
+              <p className="font-semibold text-slate-400 mb-1">{t('activation.statusTitle')}</p>
               <ul className="list-disc pl-4 space-y-1">
-                <li>Plan: Pakiet Startowy (10 PLN)</li>
-                <li>Status płatności: <span className="text-amber-500">Oczekiwanie</span></li>
-                <li>Czas weryfikacji: zazwyczaj do 24h</li>
+                <li>{t('activation.planLabel')} {t('activation.planValue')}</li>
+                <li>{t('activation.paymentLabel')} <span className="text-amber-500">{t('activation.paymentValue')}</span></li>
+                <li>{t('activation.verificationLabel')} {t('activation.verificationValue')}</li>
               </ul>
             </div>
             <button
               onClick={() => auth.signOut()}
               className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-colors font-medium"
             >
-              Wyloguj się
+              {t('activation.logout')}
             </button>
           </div>
         </div>
@@ -857,7 +862,7 @@ const App: React.FC = () => {
                 // Level 1: Service Path (Home/Base)
                 if (servicePath) {
                   breadcrumbParts.push({
-                    label: servicePath === 'pro' ? 'Strefa PRO' : 'Narzędzia AI',
+                    label: servicePath === 'pro' ? t('breadcrumbs.pro_zone') : t('breadcrumbs.ai_tools'),
                     color: 'text-slate-400 hover:text-white',
                     onClick: handleGoHome
                   });
@@ -866,7 +871,7 @@ const App: React.FC = () => {
                 // Level 2: Law Area
                 if (selectedLawArea) {
                   breadcrumbParts.push({
-                    label: selectedLawArea,
+                    label: t(`law.areas.${selectedLawArea.toLowerCase()}`),
                     color: 'text-slate-400 hover:text-white',
                     onClick: () => {
                       setSelectedTopic(null);
@@ -879,8 +884,21 @@ const App: React.FC = () => {
 
                 // Level 3: Interaction Mode (Tool)
                 if (interactionMode) {
+                  const interactionModeMap: Record<string, string> = {
+                    [InteractionMode.Advice]: 'advice',
+                    [InteractionMode.Analysis]: 'analysis',
+                    [InteractionMode.Document]: 'document',
+                    [InteractionMode.LegalTraining]: 'legal_training',
+                    [InteractionMode.SuggestRegulations]: 'suggest_regulations',
+                    [InteractionMode.FindRulings]: 'find_rulings',
+                    [InteractionMode.Court]: 'court',
+                    [InteractionMode.Negotiation]: 'negotiation',
+                    [InteractionMode.StrategicAnalysis]: 'strategic_analysis',
+                    [InteractionMode.AppHelp]: 'app_help' // Fallback if exists or handle explicitly?
+                  };
+
                   breadcrumbParts.push({
-                    label: interactionMode,
+                    label: t(`interaction.modes.${interactionModeMap[interactionMode] || 'advice'}`),
                     color: 'text-slate-400 hover:text-white',
                     icon: ScaleIcon,
                     onClick: () => {
@@ -901,7 +919,7 @@ const App: React.FC = () => {
 
                 // Fallback if no breadcrumb
                 if (breadcrumbParts.length === 0) {
-                  return "Asystent Prawny AI";
+                  return t('breadcrumbs.home');
                 }
 
                 return (
@@ -1138,8 +1156,8 @@ const App: React.FC = () => {
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center">
                       <label htmlFor="deep-thinking-toggle" className="text-[10px] sm:text-xs leading-tight font-medium text-slate-400 mr-2 cursor-pointer flex flex-col items-center">
-                        <span>Głębokie</span>
-                        <span>Myślenie</span>
+                        <span>{t('chat.deepThinking_l1')}</span>
+                        <span>{t('chat.deepThinking_l2')}</span>
                       </label>
                       <button
                         id="deep-thinking-toggle"
@@ -1210,13 +1228,29 @@ const App: React.FC = () => {
                   </div>
                 )}
                 {/* Context Badge */}
-                {(interactionMode || selectedTopic) && (
+                {!isFullScreen && (interactionMode || selectedTopic) && (
                   <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/50 border-t border-slate-700/30 text-xs">
                     {interactionMode && (
                       <>
                         <ScaleIcon className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                        <span className="text-slate-400">Tryb:</span>
-                        <span className="text-cyan-400 font-semibold">{interactionMode}</span>
+                        <span className="text-slate-400">{t('interaction.header')}:</span>
+                        <span className="text-cyan-400 font-semibold">
+                          {(() => {
+                            const interactionModeMap: Record<string, string> = {
+                              [InteractionMode.Advice]: 'advice',
+                              [InteractionMode.Analysis]: 'analysis',
+                              [InteractionMode.Document]: 'document',
+                              [InteractionMode.LegalTraining]: 'legal_training',
+                              [InteractionMode.SuggestRegulations]: 'suggest_regulations',
+                              [InteractionMode.FindRulings]: 'find_rulings',
+                              [InteractionMode.Court]: 'court',
+                              [InteractionMode.Negotiation]: 'negotiation',
+                              [InteractionMode.StrategicAnalysis]: 'strategic_analysis',
+                              [InteractionMode.AppHelp]: 'app_help'
+                            };
+                            return t(`interaction.modes.${interactionModeMap[interactionMode] || 'advice'}`);
+                          })()}
+                        </span>
                       </>
                     )}
                     {interactionMode && selectedTopic && (
@@ -1225,7 +1259,7 @@ const App: React.FC = () => {
                     {selectedTopic && (
                       <>
                         <CaseIcon className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                        <span className="text-slate-400">Sprawa:</span>
+                        <span className="text-slate-400">{t('topic.header')}:</span>
                         <span className="text-amber-400 font-semibold truncate">{selectedTopic}</span>
                       </>
                     )}
@@ -1244,7 +1278,7 @@ const App: React.FC = () => {
                   )}
                   <button onClick={() => document.getElementById('chat-file-upload')?.click()} className="p-2 text-slate-400 hover:text-cyan-400 rounded-lg"><PaperClipIcon className="w-5 h-5" /></button>
                   <input id="chat-file-upload" type="file" className="hidden" onChange={async (e) => { const file = e.target.files?.[0]; if (file) await handleFileUpload(file); e.target.value = ''; }} />
-                  <textarea ref={textareaRef} value={currentMessage} onChange={(e) => setCurrentMessage(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }} placeholder="Napisz wiadomość..." className="w-full bg-transparent text-slate-200 placeholder-slate-400 focus:outline-none resize-none max-h-48" rows={1} disabled={isLoading} />
+                  <textarea ref={textareaRef} value={currentMessage} onChange={(e) => setCurrentMessage(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }} placeholder={t('chat.messagePlaceholder')} className="w-full bg-transparent text-slate-200 placeholder-slate-400 focus:outline-none resize-none max-h-48" rows={1} disabled={isLoading} />
                   <button onClick={() => handleSendMessage()} disabled={isLoading || !currentMessage.trim()} className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white p-2.5 rounded-full"><SendIcon /></button>
                 </div>
               </div>

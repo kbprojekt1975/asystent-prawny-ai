@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { collection, query, orderBy, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { CaseNote } from '../types';
@@ -10,6 +11,7 @@ interface NotesWidgetProps {
 }
 
 const NotesWidget: React.FC<NotesWidgetProps> = ({ userId, chatId }) => {
+    const { t, i18n } = useTranslation();
     const [notes, setNotes] = useState<CaseNote[]>([]);
     const [newNote, setNewNote] = useState('');
     const [isAdding, setIsAdding] = useState(false);
@@ -74,7 +76,7 @@ const NotesWidget: React.FC<NotesWidgetProps> = ({ userId, chatId }) => {
             <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-800/30">
                 <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
                     <DocumentDuplicateIcon className="w-5 h-5 text-violet-400" />
-                    Notatki do sprawy
+                    {t('notes.title')}
                 </h3>
                 <button
                     onClick={() => setIsAdding(!isAdding)}
@@ -89,7 +91,7 @@ const NotesWidget: React.FC<NotesWidgetProps> = ({ userId, chatId }) => {
                     <div className="bg-slate-800/80 border border-violet-500/30 rounded-2xl p-4 animate-in slide-in-from-top-2">
                         <textarea
                             className="w-full bg-transparent text-slate-200 text-sm focus:outline-none min-h-[100px] resize-none"
-                            placeholder="Wpisz treść notatki..."
+                            placeholder={t('notes.placeholder')}
                             value={newNote}
                             onChange={(e) => setNewNote(e.target.value)}
                             autoFocus
@@ -99,14 +101,14 @@ const NotesWidget: React.FC<NotesWidgetProps> = ({ userId, chatId }) => {
                                 onClick={() => setIsAdding(false)}
                                 className="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white transition-colors"
                             >
-                                ANULUJ
+                                {t('notes.cancel')}
                             </button>
                             <button
                                 onClick={handleAddNote}
                                 disabled={!newNote.trim()}
                                 className="px-4 py-2 bg-violet-600 text-white text-xs font-bold rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-all shadow-lg shadow-violet-900/20"
                             >
-                                ZAPISZ
+                                {t('notes.save')}
                             </button>
                         </div>
                     </div>
@@ -121,20 +123,20 @@ const NotesWidget: React.FC<NotesWidgetProps> = ({ userId, chatId }) => {
                         <div key={note.id} className="group bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 hover:border-violet-500/30 transition-all">
                             <div className="flex justify-between items-start mb-2">
                                 <span className="text-[10px] text-slate-500 font-mono">
-                                    {note.createdAt instanceof Timestamp ? note.createdAt.toDate().toLocaleString('pl-PL') : 'Zapisywanie...'}
+                                    {note.createdAt instanceof Timestamp ? note.createdAt.toDate().toLocaleString(i18n.language) : t('notes.saving')}
                                 </span>
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
                                         onClick={() => handleCopy(note.content, note.id)}
                                         className="p-1.5 text-slate-500 hover:text-cyan-400 transition-colors"
-                                        title="Kopiuj"
+                                        title={t('notes.copy')}
                                     >
                                         {copyId === note.id ? <CheckIcon className="w-4 h-4" /> : <DocumentDuplicateIcon className="w-4 h-4" />}
                                     </button>
                                     <button
                                         onClick={() => handleDeleteNote(note.id)}
                                         className="p-1.5 text-slate-500 hover:text-red-400 transition-colors"
-                                        title="Usuń"
+                                        title={t('notes.delete')}
                                     >
                                         <TrashIcon className="w-4 h-4" />
                                     </button>
@@ -146,8 +148,8 @@ const NotesWidget: React.FC<NotesWidgetProps> = ({ userId, chatId }) => {
                 ) : !isAdding && (
                     <div className="text-center py-20 opacity-40">
                         <DocumentDuplicateIcon className="w-12 h-12 mx-auto mb-4 text-slate-700" />
-                        <p className="text-sm italic">Brak notatek dla tego tematu.</p>
-                        <p className="text-xs mt-2">Kliknij +, aby dodać pierwszą notatkę.</p>
+                        <p className="text-sm italic">{t('notes.empty_title')}</p>
+                        <p className="text-xs mt-2">{t('notes.empty_desc')}</p>
                     </div>
                 )}
             </div>

@@ -29,7 +29,8 @@ export const getLegalAdvice = async (
     topic: string,
     isDeepThinkingEnabled: boolean,
     articles: string | undefined, // Zmieniono na undefined, aby było zgodne z back-endem
-    chatId: string // <<< ZMIANA >>>: Dodano wymagane ID czatu
+    chatId: string, // <<< ZMIANA >>>: Dodano wymagane ID czatu
+    language: string = 'pl' // Added language parameter with default 'pl'
 ): Promise<{ text: string, sources?: any[], usage?: TokenUsage }> => {
     try {
         const getLegalAdviceFunction = httpsCallable(functions, 'getLegalAdvice');
@@ -42,7 +43,8 @@ export const getLegalAdvice = async (
             topic,
             isDeepThinkingEnabled,
             articles,
-            chatId // <<< ZMIANA >>>: Dodano do ładunku wysyłanego do back-endu
+            chatId, // <<< ZMIANA >>>: Dodano do ładunku wysyłanego do back-endu
+            language // Pass language to backend
         });
 
         const data = result.data as LegalAdviceResponse;
@@ -72,10 +74,10 @@ export const analyzeLegalCase = async (description: string): Promise<{ result: {
     }
 };
 
-export const getLegalFAQ = async (lawArea: LawArea): Promise<string[]> => {
+export const getLegalFAQ = async (lawArea: LawArea, language: string = 'pl'): Promise<string[]> => {
     try {
         const getLegalFAQFunction = httpsCallable(functions, 'getLegalFAQ');
-        const result = await getLegalFAQFunction({ lawArea });
+        const result = await getLegalFAQFunction({ lawArea, language });
         const data = result.data as { questions: string[] };
         return data.questions || [];
     } catch (error) {

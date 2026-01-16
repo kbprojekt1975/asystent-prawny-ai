@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { XIcon, CalculatorIcon, RefreshIcon, CoinsIcon, HomeIcon, HeartPulseIcon, GraduationCapIcon, TrophyIcon, PalmtreeIcon, UserGroupIcon, ScaleIcon, BotIcon, SendIcon } from './Icons';
 import { InfoIcon } from './InfoIcon';
 import { LawArea } from '../types';
@@ -27,6 +28,7 @@ interface ParentParams {
 }
 
 const AlimonyCalculator: React.FC<AlimonyCalculatorProps> = ({ isOpen, onClose, lawArea }) => {
+    const { t, i18n } = useTranslation();
     // --- State ---
     const [activeTab, setActiveTab] = useState<'costs' | 'finance' | 'care'>('costs');
 
@@ -49,7 +51,7 @@ const AlimonyCalculator: React.FC<AlimonyCalculatorProps> = ({ isOpen, onClose, 
     const [showChat, setShowChat] = useState(false);
     const [chatInput, setChatInput] = useState('');
     const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'model', content: string }[]>([
-        { role: 'model', content: "Cześć! Jestem asystentem alimentacyjnym. Pomogę Ci wypełnić ten kalkulator. Opowiedz mi o swojej sytuacji finansowej i kosztach utrzymania dziecka, a ja uzupełnię odpowiednie pola." }
+        { role: 'model', content: t('alimonyCalculator.chat.welcome') }
     ]);
     const [isTyping, setIsTyping] = useState(false);
     const [calcSessionId] = useState(`alimony-calc-${Date.now()}`);
@@ -152,7 +154,7 @@ const AlimonyCalculator: React.FC<AlimonyCalculatorProps> = ({ isOpen, onClose, 
 
     const resetChat = () => {
         setChatHistory([
-            { role: 'model', content: "Cześć! Jestem asystentem alimentacyjnym. Pomogę Ci wypełnić ten kalkulator. Opowiedz mi o swojej sytuacji finansowej i kosztach utrzymania dziecka, a ja uzupełnię odpowiednie pola." }
+            { role: 'model', content: t('alimonyCalculator.chat.welcome') }
         ]);
         setChatInput('');
         setIsTyping(false);
@@ -238,7 +240,8 @@ ZASADY:
                 "Kalkulator Alimentów - Asystent",
                 false,
                 undefined,
-                calcSessionId
+                calcSessionId,
+                i18n.language
             );
 
             const aiText = response.text;
@@ -258,7 +261,7 @@ ZASADY:
                     }
 
                     const cleanText = aiText.replace(/```json[\s\S]*?```/, '').trim();
-                    setChatHistory(prev => [...prev, { role: 'model', content: cleanText || "Zaktualizowałem dane w kalkulatorze." }]);
+                    setChatHistory(prev => [...prev, { role: 'model', content: cleanText || t('alimonyCalculator.chat.updated') }]);
                 } catch (e) {
                     console.error("Failed to parse AI JSON", e);
                     setChatHistory(prev => [...prev, { role: 'model', content: aiText }]);
@@ -269,7 +272,7 @@ ZASADY:
 
         } catch (error) {
             console.error(error);
-            setChatHistory(prev => [...prev, { role: 'model', content: "Przepraszam, wystąpił błąd połączenia z Asystentem." }]);
+            setChatHistory(prev => [...prev, { role: 'model', content: t('alimonyCalculator.chat.error') }]);
         } finally {
             setIsTyping(false);
         }
@@ -288,18 +291,18 @@ ZASADY:
                             <CalculatorIcon className="w-6 h-6" />
                         </div>
                         <div className="min-w-0">
-                            <h2 className="text-lg md:text-xl font-bold text-white truncate">Kalkulator Alimentów</h2>
-                            <p className="text-[10px] md:text-xs text-pink-400 font-medium tracking-wide uppercase truncate">Symulacja wg art. 135 k.r.o.</p>
+                            <h2 className="text-lg md:text-xl font-bold text-white truncate">{t('alimonyCalculator.title')}</h2>
+                            <p className="text-[10px] md:text-xs text-pink-400 font-medium tracking-wide uppercase truncate">{t('alimonyCalculator.subtitle')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-1 md:gap-2 ml-2">
                         <button
                             onClick={() => setShowChat(!showChat)}
                             className={`flex items-center gap-2 px-3 py-2 md:px-4 rounded-lg transition-all ${showChat ? 'bg-violet-600 text-white' : 'bg-slate-800 text-violet-400 hover:bg-slate-700'}`}
-                            title={showChat ? 'Ukryj Asystenta' : 'Zapytaj Asystenta'}
+                            title={showChat ? t('alimonyCalculator.hideAssistant') : t('alimonyCalculator.askAssistant')}
                         >
                             <BotIcon className="w-5 h-5 flex-shrink-0" />
-                            <span className="hidden sm:inline">{showChat ? 'Ukryj' : 'Zapytaj'}<span className="hidden md:inline"> Asystenta</span></span>
+                            <span className="hidden sm:inline">{showChat ? t('alimonyCalculator.hideAssistant').split(' ')[0] : t('alimonyCalculator.askAssistant').split(' ')[0]}<span className="hidden md:inline"> {t('alimonyCalculator.assistant')}</span></span>
                         </button>
                         <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700/50 rounded-lg">
                             <XIcon className="w-6 h-6" />
@@ -316,19 +319,19 @@ ZASADY:
                                 onClick={() => setActiveTab('costs')}
                                 className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'costs' ? 'border-pink-500 text-pink-400 bg-pink-500/5' : 'border-transparent text-slate-400 hover:text-white'}`}
                             >
-                                1. Koszty Dziecka
+                                {t('alimonyCalculator.tabs.costs')}
                             </button>
                             <button
                                 onClick={() => setActiveTab('finance')}
                                 className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'finance' ? 'border-pink-500 text-pink-400 bg-pink-500/5' : 'border-transparent text-slate-400 hover:text-white'}`}
                             >
-                                2. Finanse Rodziców
+                                {t('alimonyCalculator.tabs.finance')}
                             </button>
                             <button
                                 onClick={() => setActiveTab('care')}
                                 className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'care' ? 'border-pink-500 text-pink-400 bg-pink-500/5' : 'border-transparent text-slate-400 hover:text-white'}`}
                             >
-                                3. Opieka i Inne
+                                {t('alimonyCalculator.tabs.care')}
                             </button>
                         </div>
 
@@ -341,47 +344,47 @@ ZASADY:
                                     <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
                                         <h3 className="font-bold text-white mb-4 flex items-center gap-2">
                                             <CoinsIcon className="w-5 h-5 text-yellow-400" />
-                                            Miesięczne Koszty Utrzymania
+                                            {t('alimonyCalculator.costs.title')}
                                         </h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <CostInput
-                                                label="Wyżywienie i chemia"
-                                                sublabel="Jedzenie, środki higieny, kosmetyki"
+                                                label={t('alimonyCalculator.costs.food')}
+                                                sublabel={t('alimonyCalculator.costs.foodDesc')}
                                                 value={costs.food}
                                                 onChange={(v) => handleCostChange('food', v)}
                                                 icon={<HeartPulseIcon className="w-4 h-4" />}
                                             />
                                             <CostInput
-                                                label="Mieszkanie (udział)"
-                                                sublabel="Czynsz, prąd, woda (dzielone na osoby)"
+                                                label={t('alimonyCalculator.costs.housing')}
+                                                sublabel={t('alimonyCalculator.costs.housingDesc')}
                                                 value={costs.housing}
                                                 onChange={(v) => handleCostChange('housing', v)}
                                                 icon={<HomeIcon className="w-4 h-4" />}
                                             />
                                             <CostInput
-                                                label="Zdrowie"
-                                                sublabel="Leki, wizyty, dentysta, okulary"
+                                                label={t('alimonyCalculator.costs.health')}
+                                                sublabel={t('alimonyCalculator.costs.healthDesc')}
                                                 value={costs.health}
                                                 onChange={(v) => handleCostChange('health', v)}
                                                 icon={<HeartPulseIcon className="w-4 h-4 text-red-400" />}
                                             />
                                             <CostInput
-                                                label="Edukacja"
-                                                sublabel="Szkoła, podręczniki, komitet"
+                                                label={t('alimonyCalculator.costs.education')}
+                                                sublabel={t('alimonyCalculator.costs.educationDesc')}
                                                 value={costs.education}
                                                 onChange={(v) => handleCostChange('education', v)}
                                                 icon={<GraduationCapIcon className="w-4 h-4" />}
                                             />
                                             <CostInput
-                                                label="Rozwój"
-                                                sublabel="Zajęcia dodatkowe, hobby, języki"
+                                                label={t('alimonyCalculator.costs.development')}
+                                                sublabel={t('alimonyCalculator.costs.developmentDesc')}
                                                 value={costs.development}
                                                 onChange={(v) => handleCostChange('development', v)}
                                                 icon={<TrophyIcon className="w-4 h-4" />}
                                             />
                                             <CostInput
-                                                label="Rozrywka"
-                                                sublabel="Wakacje (podziel na 12), kino, zabawki"
+                                                label={t('alimonyCalculator.costs.fun')}
+                                                sublabel={t('alimonyCalculator.costs.funDesc')}
                                                 value={costs.fun}
                                                 onChange={(v) => handleCostChange('fun', v)}
                                                 icon={<PalmtreeIcon className="w-4 h-4" />}
@@ -394,7 +397,7 @@ ZASADY:
                                             onClick={() => setActiveTab('finance')}
                                             className="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-colors"
                                         >
-                                            Dalej: Finanse &rarr;
+                                            {t('alimonyCalculator.nav.nextFinance')} &rarr;
                                         </button>
                                     </div>
                                 </div>
@@ -406,14 +409,14 @@ ZASADY:
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {/* Parent Me */}
                                         <ParentSection
-                                            title="Rodzic 1 (Ty)"
+                                            title={t('alimonyCalculator.parents.me')}
                                             vals={parentMe}
                                             onChange={(f, v) => handleParentChange('me', f, v)}
                                             color="text-emerald-400"
                                         />
                                         {/* Parent Other */}
                                         <ParentSection
-                                            title="Rodzic 2 (Pozwany)"
+                                            title={t('alimonyCalculator.parents.other')}
                                             vals={parentOther}
                                             onChange={(f, v) => handleParentChange('other', f, v)}
                                             color="text-blue-400"
@@ -425,13 +428,13 @@ ZASADY:
                                             onClick={() => setActiveTab('costs')}
                                             className="px-6 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 font-medium transition-colors"
                                         >
-                                            &larr; Wróć
+                                            &larr; {t('alimonyCalculator.nav.back')}
                                         </button>
                                         <button
                                             onClick={() => setActiveTab('care')}
                                             className="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-colors"
                                         >
-                                            Dalej: Opieka &rarr;
+                                            {t('alimonyCalculator.nav.nextCare')} &rarr;
                                         </button>
                                     </div>
                                 </div>
@@ -443,7 +446,7 @@ ZASADY:
                                     <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700/50 space-y-6">
                                         <h3 className="font-bold text-white flex items-center gap-2">
                                             <UserGroupIcon className="w-5 h-5 text-indigo-400" />
-                                            Zakres Opieki i Kontakty
+                                            {t('alimonyCalculator.care.title')}
                                         </h3>
 
                                         <div className="space-y-4">
@@ -455,15 +458,15 @@ ZASADY:
                                                     className="w-5 h-5 rounded border-slate-600 bg-slate-800 text-pink-600 focus:ring-pink-500"
                                                 />
                                                 <div>
-                                                    <span className="text-white font-medium">Opieka Naprzemienna (Piecza Równoważna)</span>
-                                                    <p className="text-xs text-slate-500">Zaznacz, jeśli dziecko spędza tyle samo czasu z każdym z rodziców.</p>
+                                                    <span className="text-white font-medium">{t('alimonyCalculator.care.sharedCustody')}</span>
+                                                    <p className="text-xs text-slate-500">{t('alimonyCalculator.care.sharedCustodyDesc')}</p>
                                                 </div>
                                             </div>
 
                                             {!isSharedCustody && (
                                                 <div className="pl-8">
                                                     <label className="block text-sm font-medium text-slate-300 mb-2">
-                                                        Liczba dni w miesiącu u drugiego rodzica (z noclegiem)
+                                                        {t('alimonyCalculator.care.daysWithOther')}
                                                     </label>
                                                     <input
                                                         type="number"
@@ -472,7 +475,7 @@ ZASADY:
                                                         onChange={(e) => setDaysWithOther(Number(e.target.value))}
                                                         className="w-32 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
                                                     />
-                                                    <p className="text-xs text-slate-500 mt-1">Im więcej czasu dziecko spędza u rodzica, tym więcej kosztów bieżących on pokrywa bezpośrednio.</p>
+                                                    <p className="text-xs text-slate-500 mt-1">{t('alimonyCalculator.care.daysWithOtherDesc')}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -481,23 +484,21 @@ ZASADY:
                                     <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700/50 space-y-4">
                                         <h3 className="font-bold text-white flex items-center gap-2">
                                             <ScaleIcon className="w-5 h-5 text-orange-400" />
-                                            Dodatkowe Zmienne
+                                            {t('alimonyCalculator.care.extraTitle')}
                                         </h3>
 
                                         <div className="grid grid-cols-1 gap-6">
                                             <div className="flex items-start gap-3 bg-slate-700/30 p-3 rounded-lg">
                                                 <InfoIcon className="w-5 h-5 text-blue-400 mt-0.5" />
                                                 <div>
-                                                    <span className="text-sm font-bold text-white">Świadczenie 800+</span>
-                                                    <p className="text-xs text-slate-400 mt-1">
-                                                        Zgodnie z prawem, świadczenie to <strong>nie pomniejsza</strong> obowiązku alimentacyjnego. Jest to dodatek ekstra dla dziecka, nie dla rodzica. Nasz kalkulator nie odejmuje tej kwoty od potrzeb.
-                                                    </p>
+                                                    <span className="text-sm font-bold text-white">{t('alimonyCalculator.care.800plus')}</span>
+                                                    <p className="text-xs text-slate-400 mt-1" dangerouslySetInnerHTML={{ __html: t('alimonyCalculator.care.800plusDesc') }}></p>
                                                 </div>
                                             </div>
 
                                             <div>
                                                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                                                    Inne dzieci na utrzymaniu Rodzica 2 (zobowiązanego)
+                                                    {t('alimonyCalculator.care.otherDependents')}
                                                 </label>
                                                 <input
                                                     type="number"
@@ -505,9 +506,9 @@ ZASADY:
                                                     value={otherDependents}
                                                     onChange={(e) => setOtherDependents(Number(e.target.value))}
                                                     className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none"
-                                                    placeholder="np. 1"
+                                                    placeholder={t('alimonyCalculator.care.otherDependentsPlaceholder')}
                                                 />
-                                                <p className="text-xs text-slate-500 mt-1">Jeśli rodzic ma inne dzieci, jego możliwości zarobkowe są dzielone na więcej osób.</p>
+                                                <p className="text-xs text-slate-500 mt-1">{t('alimonyCalculator.care.otherDependentsDesc')}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -517,7 +518,7 @@ ZASADY:
                                         className="w-full py-4 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-bold rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                                     >
                                         <CalculatorIcon className="w-5 h-5" />
-                                        OBLICZ ALIMENTY
+                                        {t('alimonyCalculator.care.calculateBtn')}
                                     </button>
                                 </div>
                             )}
@@ -525,26 +526,26 @@ ZASADY:
                             {/* RESULTS AREA */}
                             {result && (
                                 <div className="mt-8 p-6 bg-slate-800 border border-violet-500/30 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-500">
-                                    <h3 className="text-lg font-bold text-white mb-6 text-center border-b border-slate-700 pb-4">Wynik Symulacji</h3>
+                                    <h3 className="text-lg font-bold text-white mb-6 text-center border-b border-slate-700 pb-4">{t('alimonyCalculator.results.title')}</h3>
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 text-center">
                                         <div>
-                                            <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Potrzeby Dziecka</div>
+                                            <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">{t('alimonyCalculator.results.needs')}</div>
                                             <div className="text-2xl font-black text-white">{Math.round(result.totalNeeds)} PLN</div>
                                         </div>
                                         <div>
-                                            <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Udział Finansowy</div>
-                                            <div className="font-bold text-emerald-400">{Math.round(result.shareMe)}% Ty</div>
-                                            <div className="font-bold text-blue-400">{Math.round(result.shareOther)}% Druga Strona</div>
+                                            <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">{t('alimonyCalculator.results.financialShare')}</div>
+                                            <div className="font-bold text-emerald-400">{Math.round(result.shareMe)}% {t('alimonyCalculator.results.you')}</div>
+                                            <div className="font-bold text-blue-400">{Math.round(result.shareOther)}% {t('alimonyCalculator.results.otherSide')}</div>
                                         </div>
                                         <div>
-                                            <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Sugerowane Alimenty</div>
+                                            <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">{t('alimonyCalculator.results.suggested')}</div>
                                             <div className="text-3xl font-black text-pink-500">{Math.round(result.suggestedAlimony)} PLN</div>
                                         </div>
                                     </div>
 
                                     <div className="text-xs text-slate-500 italic text-center bg-slate-900/50 p-3 rounded-lg">
-                                        Kwota uwzględnia potencjał zarobkowy obu stron oraz zakres osobistej opieki nad dzieckiem. Pamiętaj, że sąd bierze pod uwagę "stan faktyczny", który może różnić się od deklaracji.
+                                        {t('alimonyCalculator.results.disclaimer')}
                                     </div>
                                 </div>
                             )}
@@ -555,11 +556,11 @@ ZASADY:
                     {showChat && (
                         <div className="flex-[0.6] md:flex-1 bg-slate-950/50 flex flex-col border-t md:border-t-0 md:border-l border-slate-700 animate-in slide-in-from-bottom md:slide-in-from-right duration-300">
                             <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between">
-                                <span className="text-sm font-bold text-violet-400 uppercase tracking-wider">Asystent Prawny AI</span>
+                                <span className="text-sm font-bold text-violet-400 uppercase tracking-wider">{t('alimonyCalculator.chat.title')}</span>
                                 <button
                                     onClick={resetChat}
                                     className="p-1.5 text-slate-500 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-                                    title="Wyczyść historię"
+                                    title={t('alimonyCalculator.chat.clearHistory')}
                                 >
                                     <RefreshIcon className="w-4 h-4" />
                                 </button>
@@ -595,7 +596,7 @@ ZASADY:
                                         type="text"
                                         value={chatInput}
                                         onChange={(e) => setChatInput(e.target.value)}
-                                        placeholder="Np. Zarabiam 4000 zł, a na jedzenie dla dziecka wydaję 600 zł..."
+                                        placeholder={t('alimonyCalculator.chat.inputPlaceholder')}
                                         className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-4 pr-12 text-sm text-white focus:border-violet-500 outline-none"
                                     />
                                     <button
@@ -634,57 +635,60 @@ const CostInput = ({ label, sublabel, value, onChange, icon }: { label: string, 
     </div>
 );
 
-const ParentSection = ({ title, vals, onChange, color, isOther }: { title: string, vals: ParentParams, onChange: (f: keyof ParentParams, v: string) => void, color: string, isOther?: boolean }) => (
-    <div className="space-y-4">
-        <h3 className={`font-bold ${color} text-lg border-b border-slate-700/50 pb-2`}>{title}</h3>
+const ParentSection = ({ title, vals, onChange, color, isOther }: { title: string, vals: ParentParams, onChange: (f: keyof ParentParams, v: string) => void, color: string, isOther?: boolean }) => {
+    const { t } = useTranslation();
+    return (
+        <div className="space-y-4">
+            <h3 className={`font-bold ${color} text-lg border-b border-slate-700/50 pb-2`}>{title}</h3>
 
-        <div>
-            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Dochód Netto (na rękę)</label>
-            <input
-                type="number"
-                value={vals.income}
-                onChange={(e) => onChange('income', e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-pink-500 outline-none"
-                placeholder="np. 5000"
-            />
-        </div>
-
-        <div>
-            <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-bold uppercase text-slate-500">Możliwości Zarobkowe</label>
-                <span className="text-[10px] text-slate-400 italic">Ile mógłby zarobić?</span>
+            <div>
+                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('alimonyCalculator.parents.income')}</label>
+                <input
+                    type="number"
+                    value={vals.income}
+                    onChange={(e) => onChange('income', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-pink-500 outline-none"
+                    placeholder={t('alimonyCalculator.parents.incomePlaceholder')}
+                />
             </div>
-            <input
-                type="number"
-                value={vals.potential}
-                onChange={(e) => onChange('potential', e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-pink-500 outline-none"
-                placeholder="np. 7000 (jeśli ukrywa dochód)"
-            />
-        </div>
 
-        <div>
-            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Wykształcenie / Umiejętności</label>
-            <textarea
-                value={vals.education}
-                onChange={(e) => onChange('education', e.target.value)}
-                rows={2}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-pink-500 outline-none resize-none"
-                placeholder="np. Wyższe techniczne, angielski C1, prawo jazdy..."
-            />
-        </div>
+            <div>
+                <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold uppercase text-slate-500">{t('alimonyCalculator.parents.potential')}</label>
+                    <span className="text-[10px] text-slate-400 italic">{t('alimonyCalculator.parents.potentialDesc')}</span>
+                </div>
+                <input
+                    type="number"
+                    value={vals.potential}
+                    onChange={(e) => onChange('potential', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-pink-500 outline-none"
+                    placeholder={t('alimonyCalculator.parents.potentialPlaceholder')}
+                />
+            </div>
 
-        <div>
-            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Koszty własne rodzica</label>
-            <input
-                type="number"
-                value={vals.livingCosts}
-                onChange={(e) => onChange('livingCosts', e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-pink-500 outline-none"
-                placeholder="np. 2500 (mieszkanie, leki)"
-            />
+            <div>
+                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('alimonyCalculator.parents.education')}</label>
+                <textarea
+                    value={vals.education}
+                    onChange={(e) => onChange('education', e.target.value)}
+                    rows={2}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-pink-500 outline-none resize-none"
+                    placeholder={t('alimonyCalculator.parents.educationPlaceholder')}
+                />
+            </div>
+
+            <div>
+                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('alimonyCalculator.parents.livingCosts')}</label>
+                <input
+                    type="number"
+                    value={vals.livingCosts}
+                    onChange={(e) => onChange('livingCosts', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-pink-500 outline-none"
+                    placeholder={t('alimonyCalculator.parents.livingCostsPlaceholder')}
+                />
+            </div>
         </div>
-    </div>
-);
+    )
+};
 
 export default AlimonyCalculator;

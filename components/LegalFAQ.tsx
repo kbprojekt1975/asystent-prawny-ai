@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LawArea } from '../types';
 import { getLegalFAQ } from '../services/geminiService';
 import { LightbulbIcon } from './Icons';
@@ -10,6 +11,7 @@ interface LegalFAQProps {
 }
 
 const LegalFAQ: React.FC<LegalFAQProps> = ({ lawArea, onSelectQuestion }) => {
+    const { t, i18n } = useTranslation();
     const [questions, setQuestions] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -17,17 +19,25 @@ const LegalFAQ: React.FC<LegalFAQProps> = ({ lawArea, onSelectQuestion }) => {
         const fetchFAQ = async () => {
             setIsLoading(true);
             try {
-                const faqs = await getLegalFAQ(lawArea);
-                setQuestions(faqs);
+                // Pass current language to the service
+                const faqs = await getLegalFAQ(lawArea, i18n.language);
+
+                // If service returns empty array (e.g. backend issue), fall back to translated defaults
+                if (faqs && faqs.length > 0) {
+                    setQuestions(faqs);
+                } else {
+                    setQuestions(t('faq.fallbacks', { returnObjects: true }) as string[]);
+                }
             } catch (error) {
                 console.error("Failed to load FAQ:", error);
+                setQuestions(t('faq.fallbacks', { returnObjects: true }) as string[]);
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchFAQ();
-    }, [lawArea]);
+    }, [lawArea, i18n.language, t]);
 
     if (isLoading) {
         return (
@@ -48,7 +58,7 @@ const LegalFAQ: React.FC<LegalFAQProps> = ({ lawArea, onSelectQuestion }) => {
         <div className="mt-10">
             <div className="flex items-center gap-2 mb-4 text-cyan-400">
                 <LightbulbIcon className="w-5 h-5 text-cyan-500" />
-                <h4 className="font-semibold text-sm uppercase tracking-wider">Często Zadawane Pytania: {lawArea}</h4>
+                <h4 className="font-semibold text-sm uppercase tracking-wider">{t('faq.title')}: {lawArea}</h4>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {questions.map((q, index) => (

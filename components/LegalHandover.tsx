@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { DownloadIcon, SparklesIcon } from './Icons';
 
 interface LegalHandoverProps {
@@ -7,6 +8,7 @@ interface LegalHandoverProps {
 }
 
 const LegalHandover: React.FC<LegalHandoverProps> = ({ questions, caseTitle }) => {
+    const { t } = useTranslation();
     const handleExportPDF = () => {
         const printWindow = window.open('', '_blank');
         if (!printWindow) return;
@@ -28,11 +30,11 @@ const LegalHandover: React.FC<LegalHandoverProps> = ({ questions, caseTitle }) =
           </style>
         </head>
         <body>
-          <h1>Przygotowanie do rozmowy: ${caseTitle}</h1>
+          <h1>${t('handover.pdf_title')}: ${caseTitle}</h1>
           <p class="meta">Wygenerowano przez e-Asystenta Prawnego AI</p>
-          <p>Zadaj te pytania swojemu prawnikowi lub urzędnikowi, aby upewnić się, że Twoja sprawa jest prowadzona rzetelnie:</p>
+          <p>${t('handover.subtitle')}:</p>
           <ul>${questionsHtml}</ul>
-          <div class="footer">Niniejszy dokument ma charakter pomocniczy i nie stanowi porady prawnej.</div>
+          <div class="footer">${t('handover.pdf_footer')}</div>
           <script>
             window.onload = function() { window.print(); window.close(); }
           </script>
@@ -48,9 +50,9 @@ const LegalHandover: React.FC<LegalHandoverProps> = ({ questions, caseTitle }) =
                 <div>
                     <h3 className="text-xl font-bold text-white flex items-center gap-2">
                         <SparklesIcon className="w-6 h-6 text-cyan-400" />
-                        Przygotuj mnie do rozmowy
+                        {t('handover.title')}
                     </h3>
-                    <p className="text-sm text-slate-400 mt-1">5 kluczowych pytań, które warto zadać ekspertowi</p>
+                    <p className="text-sm text-slate-400 mt-1">{t('handover.subtitle')}</p>
                 </div>
 
                 <button
@@ -58,7 +60,7 @@ const LegalHandover: React.FC<LegalHandoverProps> = ({ questions, caseTitle }) =
                     className="flex items-center justify-center gap-2 px-6 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg shadow-cyan-600/20 whitespace-nowrap"
                 >
                     <DownloadIcon className="w-5 h-5" />
-                    Eksportuj do PDF
+                    {t('handover.export_pdf')}
                 </button>
             </div>
 
@@ -77,7 +79,7 @@ const LegalHandover: React.FC<LegalHandoverProps> = ({ questions, caseTitle }) =
 
             <div className="mt-6 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                 <p className="text-xs text-amber-200/70 italic text-center">
-                    Wskazówka: Zadając te pytania, pokazujesz, że rozumiesz proces i oczekujesz merytorycznego podejścia.
+                    {t('handover.tip')}
                 </p>
             </div>
         </div>

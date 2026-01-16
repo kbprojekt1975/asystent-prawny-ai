@@ -1,5 +1,6 @@
 import React from 'react';
 import { XIcon } from './Icons';
+import { useTranslation } from 'react-i18next';
 
 interface PrivacyPolicyModalProps {
     isOpen: boolean;
@@ -9,6 +10,7 @@ interface PrivacyPolicyModalProps {
 }
 
 const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose, showAcceptance, onAccept }) => {
+    const { t } = useTranslation();
     const [hasRead, setHasRead] = React.useState(false);
 
     React.useEffect(() => {
@@ -29,7 +31,7 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose
                 onClick={e => e.stopPropagation()}
             >
                 <header className="flex items-center justify-between p-6 border-b border-slate-700 bg-slate-800/50 rounded-t-2xl">
-                    <h2 className="text-xl font-bold text-white">Polityka Prywatności</h2>
+                    <h2 className="text-xl font-bold text-white">{t('privacyPolicy.title')}</h2>
                     <button
                         onClick={onClose}
                         className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-full transition-colors"
@@ -40,95 +42,90 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose
 
                 <div className="flex-1 overflow-y-auto p-6 md:p-8 text-slate-300 space-y-6 custom-scrollbar">
                     <section>
-                        <h3 className="text-lg font-bold text-white mb-3">1. Wprowadzenie</h3>
-                        <p>Niniejsza Polityka Prywatności opisuje zasady przetwarzania danych osobowych użytkowników aplikacji Asystent Prawny AI. Dbamy o Twoją prywatność i dokładamy wszelkich starań, aby Twoje dane były bezpieczne.</p>
-                    </section>
-                    {/* ... (rest of the sections remain the same) ... */}
-                    <section>
-                        <h3 className="text-lg font-bold text-white mb-3">2. Administrator Danych Osobowych</h3>
-                        <p>Administratorem Twoich danych osobowych jest [Nazwa Twojej Firmy/Imię i Nazwisko], [Adres], [Kontakt: adres e-mail].</p>
+                        <h3 className="text-lg font-bold text-white mb-3">{t('privacyPolicy.intro.title')}</h3>
+                        <p>{t('privacyPolicy.intro.text')}</p>
                     </section>
 
                     <section>
-                        <h3 className="text-lg font-bold text-white mb-3">3. Zakres Przetwarzanych Danych i Cele Przetwarzania</h3>
+                        <h3 className="text-lg font-bold text-white mb-3">{t('privacyPolicy.admin.title')}</h3>
+                        <p>{t('privacyPolicy.admin.text')}</p>
+                    </section>
+
+                    <section>
+                        <h3 className="text-lg font-bold text-white mb-3">{t('privacyPolicy.scope.title')}</h3>
 
                         <div className="space-y-4 pl-4 border-l-2 border-slate-700">
                             <div>
-                                <h4 className="font-semibold text-cyan-400 mb-2">3.1. Dane Logowania i Identyfikacyjne</h4>
+                                <h4 className="font-semibold text-cyan-400 mb-2">{t('privacyPolicy.scope.login.title')}</h4>
                                 <ul className="list-disc pl-5 space-y-1 text-sm">
-                                    <li><strong>Zakres:</strong> Adres e-mail, unikalny identyfikator użytkownika (UID).</li>
-                                    <li><strong>Cel:</strong> Umożliwienie bezpiecznego logowania, autoryzacja dostępu do konta, identyfikacja użytkownika w systemie.</li>
-                                    <li><strong>Podstawa prawna:</strong> Niezbędność do wykonania umowy o świadczenie usług drogą elektroniczną (art. 6 ust. 1 lit. b RODO).</li>
+                                    <li><strong>{t('privacyPolicy.scope.login.scope')}:</strong> {t('privacyPolicy.scope.login.scopeVal')}</li>
+                                    <li><strong>{t('privacyPolicy.scope.login.goal')}:</strong> {t('privacyPolicy.scope.login.goalVal')}</li>
+                                    <li><strong>{t('privacyPolicy.scope.login.legal')}:</strong> {t('privacyPolicy.scope.login.legalVal')}</li>
                                 </ul>
                             </div>
 
                             <div>
-                                <h4 className="font-semibold text-cyan-400 mb-2">3.2. Dane do Pism Procesowych (Dane Osobowe)</h4>
+                                <h4 className="font-semibold text-cyan-400 mb-2">{t('privacyPolicy.scope.docs.title')}</h4>
                                 <ul className="list-disc pl-5 space-y-1 text-sm">
-                                    <li><strong>Zakres:</strong> Imię, nazwisko, adres zamieszkania, opcjonalnie PESEL lub inne dane wymagane przez sądy.</li>
-                                    <li><strong>Cel:</strong> Automatyczne generowanie oficjalnych dokumentów prawnych, pozwów i wniosków na wyraźne żądanie użytkownika.</li>
-                                    <li><strong>Podstawa prawna:</strong> Zgoda użytkownika (art. 6 ust. 1 lit. a RODO).</li>
-                                    <li><strong>Informacja dodatkowa:</strong> Podanie numeru PESEL jest opcjonalne i zależy od wymogów konkretnego pisma procesowego.</li>
+                                    <li><strong>{t('privacyPolicy.scope.docs.scope')}:</strong> {t('privacyPolicy.scope.docs.scopeVal')}</li>
+                                    <li><strong>{t('privacyPolicy.scope.docs.goal')}:</strong> {t('privacyPolicy.scope.docs.goalVal')}</li>
+                                    <li><strong>{t('privacyPolicy.scope.docs.legal')}:</strong> {t('privacyPolicy.scope.docs.legalVal')}</li>
+                                    <li><strong>{t('privacyPolicy.scope.docs.info')}:</strong> {t('privacyPolicy.scope.docs.infoVal')}</li>
                                 </ul>
                             </div>
 
                             <div>
-                                <h4 className="font-semibold text-cyan-400 mb-2">3.3. Historia Spraw i Konwersacji (Treści Użytkownika)</h4>
+                                <h4 className="font-semibold text-cyan-400 mb-2">{t('privacyPolicy.scope.history.title')}</h4>
                                 <ul className="list-disc pl-5 space-y-1 text-sm">
-                                    <li><strong>Zakres:</strong> Treść rozmów z Asystentem AI, opisy spraw, przesłane pliki/dokumenty do analizy.</li>
-                                    <li><strong>Cel:</strong> Zapewnienie ciągłości obsługi ("pamięć" Asystenta), analiza kontekstu sprawy w celu udzielenia trafnej porady prawnej.</li>
-                                    <li><strong>Podstawa prawna:</strong> Uzasadniony interes administratora (art. 6 ust. 1 lit. f RODO).</li>
-                                    <li><strong>Informacja dodatkowa:</strong> Użytkownik ma możliwość usunięcia historii czatu w dowolnym momencie.</li>
+                                    <li><strong>{t('privacyPolicy.scope.history.scope')}:</strong> {t('privacyPolicy.scope.history.scopeVal')}</li>
+                                    <li><strong>{t('privacyPolicy.scope.history.goal')}:</strong> {t('privacyPolicy.scope.history.goalVal')}</li>
+                                    <li><strong>{t('privacyPolicy.scope.history.legal')}:</strong> {t('privacyPolicy.scope.history.legalVal')}</li>
+                                    <li><strong>{t('privacyPolicy.scope.history.info')}:</strong> {t('privacyPolicy.scope.history.infoVal')}</li>
                                 </ul>
                             </div>
 
                             <div>
-                                <h4 className="font-semibold text-cyan-400 mb-2">3.4. Dane Techniczne i Preferencje</h4>
+                                <h4 className="font-semibold text-cyan-400 mb-2">{t('privacyPolicy.scope.tech.title')}</h4>
                                 <ul className="list-disc pl-5 space-y-1 text-sm">
-                                    <li><strong>Zakres:</strong> Informacje o sesji, flagi akceptacji zgód, preferencje interfejsu.</li>
-                                    <li><strong>Cel:</strong> Utrzymanie sesji zalogowania, poprawne wyświetlanie strony.</li>
+                                    <li><strong>{t('privacyPolicy.scope.tech.scope')}:</strong> {t('privacyPolicy.scope.tech.scopeVal')}</li>
+                                    <li><strong>{t('privacyPolicy.scope.tech.goal')}:</strong> {t('privacyPolicy.scope.tech.goalVal')}</li>
                                 </ul>
                             </div>
                         </div>
                     </section>
 
                     <section>
-                        <h3 className="text-lg font-bold text-white mb-3">4. Odbiorcy Danych</h3>
+                        <h3 className="text-lg font-bold text-white mb-3">{t('privacyPolicy.recipients.title')}</h3>
                         <ul className="list-disc pl-5 space-y-1">
-                            <li>Dostawca hostingu (przechowywanie danych na serwerach).</li>
-                            <li>Dostawca chmury Firebase/Google Cloud.</li>
-                            <li>Upoważnieni pracownicy i współpracownicy administratora.</li>
+                            {(t('privacyPolicy.recipients.list', { returnObjects: true }) as string[]).map((item, index) => (
+                                <li key={index}>{item}</li>
+                            ))}
                         </ul>
                     </section>
 
                     <section>
-                        <h3 className="text-lg font-bold text-white mb-3">5. Prawa Użytkownika</h3>
-                        <p className="mb-2">Masz prawo do:</p>
+                        <h3 className="text-lg font-bold text-white mb-3">{t('privacyPolicy.rights.title')}</h3>
+                        <p className="mb-2">{t('privacyPolicy.rights.intro')}</p>
                         <ul className="list-disc pl-5 space-y-1 text-sm">
-                            <li>Dostępu do swoich danych osobowych.</li>
-                            <li>Sprostowania swoich danych osobowych.</li>
-                            <li>Usunięcia swoich danych osobowych ("prawo do bycia zapomnianym").</li>
-                            <li>Ograniczenia przetwarzania swoich danych osobowych.</li>
-                            <li>Przenoszenia swoich danych osobowych.</li>
-                            <li>Wniesienia sprzeciwu wobec przetwarzania.</li>
-                            <li>Wycofania zgody na przetwarzanie danych.</li>
-                            <li>Wniesienia skargi do organu nadzorczego (UODO).</li>
+                            {(t('privacyPolicy.rights.list', { returnObjects: true }) as string[]).map((item, index) => (
+                                <li key={index}>{item}</li>
+                            ))}
                         </ul>
                     </section>
 
                     <section>
-                        <h3 className="text-lg font-bold text-white mb-3">6. Bezpieczeństwo Danych</h3>
-                        <p>Stosujemy odpowiednie środki techniczne i organizacyjne w celu ochrony Twoich danych przed nieuprawnionym dostępem, utratą lub zniszczeniem (m.in. szyfrowanie połączeń SSL, bezpieczna infrastruktura chmurowa).</p>
+                        <h3 className="text-lg font-bold text-white mb-3">{t('privacyPolicy.security.title')}</h3>
+                        <p>{t('privacyPolicy.security.text')}</p>
                     </section>
 
                     <section>
-                        <h3 className="text-lg font-bold text-white mb-3">7. Pliki Cookies</h3>
-                        <p>Nasza strona internetowa wykorzystuje pliki cookies. Szczegółowe informacje o rodzajach cookies, celach ich stosowania i sposobach zarządzania nimi znajdziesz w naszej Polityce Cookies.</p>
+                        <h3 className="text-lg font-bold text-white mb-3">{t('privacyPolicy.cookies.title')}</h3>
+                        <p>{t('privacyPolicy.cookies.text')}</p>
                     </section>
 
                     <section>
-                        <h3 className="text-lg font-bold text-white mb-3">8. Zmiany w Polityce Prywatności</h3>
-                        <p>Niniejsza Polityka Prywatności może ulegać zmianom. O wszelkich zmianach będziemy informować użytkowników z odpowiednim wyprzedzeniem.</p>
+                        <h3 className="text-lg font-bold text-white mb-3">{t('privacyPolicy.changes.title')}</h3>
+                        <p>{t('privacyPolicy.changes.text')}</p>
                     </section>
                 </div>
 
@@ -143,7 +140,7 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose
                                 className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-slate-900"
                             />
                             <label htmlFor="accept-policy" className="text-sm text-slate-300 font-medium cursor-pointer">
-                                Zapoznałem się z Polityką Prywatności i akceptuję jej postanowienia
+                                {t('privacyPolicy.accept.label')}
                             </label>
                         </div>
                     )}
@@ -152,7 +149,7 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose
                             onClick={onClose}
                             className="flex-1 md:flex-none px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors border border-slate-600"
                         >
-                            {showAcceptance ? 'Anuluj' : 'Zamknij'}
+                            {showAcceptance ? t('privacyPolicy.accept.cancel') : t('privacyPolicy.accept.close')}
                         </button>
                         {showAcceptance && (
                             <button
@@ -165,7 +162,7 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose
                                 disabled={!hasRead}
                                 className="flex-1 md:flex-none px-8 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all shadow-lg shadow-cyan-600/20"
                             >
-                                Kontynuuj
+                                {t('privacyPolicy.accept.continue')}
                             </button>
                         )}
                     </div>

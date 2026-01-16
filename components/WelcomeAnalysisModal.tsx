@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MagicWandIcon, SendIcon, XIcon, MenuIcon, SparklesIcon } from './Icons';
 import HelpModal from './HelpModal';
 import { InfoIcon } from './InfoIcon';
@@ -15,6 +16,7 @@ interface WelcomeAnalysisModalProps {
 type ViewMode = 'selection' | 'input';
 
 const WelcomeAnalysisModal: React.FC<WelcomeAnalysisModalProps> = ({ isOpen, onClose, onAnalyze, isLoading, initialViewMode = 'selection' }) => {
+    const { t } = useTranslation();
     const [description, setDescription] = useState('');
     const [isVisible, setIsVisible] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
@@ -61,8 +63,8 @@ const WelcomeAnalysisModal: React.FC<WelcomeAnalysisModalProps> = ({ isOpen, onC
                             <MagicWandIcon className="w-6 h-6 text-violet-400" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white">Witaj w Asystencie Prawnym</h2>
-                            <p className="text-slate-400 text-sm">Wybierz, w jaki sposób chcesz pracować.</p>
+                            <h2 className="text-xl font-bold text-white">{t('welcomeAnalysis.header.title')}</h2>
+                            <p className="text-slate-400 text-sm">{t('welcomeAnalysis.header.subtitle')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -70,7 +72,7 @@ const WelcomeAnalysisModal: React.FC<WelcomeAnalysisModalProps> = ({ isOpen, onC
                         <button
                             onClick={onClose}
                             className="text-slate-500 hover:text-white transition-colors p-2 hover:bg-slate-700/50 rounded-full"
-                            title="Zamknij"
+                            title={t('welcomeAnalysis.help.close')}
                         >
                             <XIcon className="w-6 h-6" />
                         </button>
@@ -88,12 +90,12 @@ const WelcomeAnalysisModal: React.FC<WelcomeAnalysisModalProps> = ({ isOpen, onC
                                 <div className="w-12 h-12 rounded-full bg-violet-500/20 flex items-center justify-center mb-4 group-hover:bg-violet-500 group-hover:text-white text-violet-400 transition-colors">
                                     <SparklesIcon className="w-6 h-6" />
                                 </div>
-                                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-violet-300 transition-colors">Wersja Podstawowa</h3>
+                                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-violet-300 transition-colors">{t('welcomeAnalysis.mode.basic.title')}</h3>
                                 <p className="text-slate-400 text-sm leading-relaxed">
-                                    Po prostu opisz swój problem. Inteligentny agent sam rozpozna temat, dobierze odpowiednie prawo i poprowadzi rozmowę.
+                                    {t('welcomeAnalysis.mode.basic.desc')}
                                 </p>
                                 <div className="mt-auto pt-4 flex items-center text-violet-400 text-sm font-semibold group-hover:translate-x-1 transition-transform">
-                                    Rozpocznij czat &rarr;
+                                    {t('welcomeAnalysis.mode.basic.action')} &rarr;
                                 </div>
                             </button>
 
@@ -105,12 +107,12 @@ const WelcomeAnalysisModal: React.FC<WelcomeAnalysisModalProps> = ({ isOpen, onC
                                 <div className="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center mb-4 group-hover:bg-cyan-600 group-hover:text-white text-cyan-400 transition-colors">
                                     <MenuIcon className="w-6 h-6" />
                                 </div>
-                                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors">Wersja Zaawansowana</h3>
+                                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors">{t('welcomeAnalysis.mode.advanced.title')}</h3>
                                 <p className="text-slate-400 text-sm leading-relaxed">
-                                    Pełna kontrola. Samodzielnie wybierz dziedzinę prawa, konkretny temat oraz tryb pracy (np. szkolenie, szukanie wyroków).
+                                    {t('welcomeAnalysis.mode.advanced.desc')}
                                 </p>
                                 <div className="mt-auto pt-4 flex items-center text-cyan-400 text-sm font-semibold group-hover:translate-x-1 transition-transform">
-                                    Przejdź do aplikacji &rarr;
+                                    {t('welcomeAnalysis.mode.advanced.action')} &rarr;
                                 </div>
                             </button>
                         </div>
@@ -123,15 +125,15 @@ const WelcomeAnalysisModal: React.FC<WelcomeAnalysisModalProps> = ({ isOpen, onC
                                     onClick={() => setViewMode('selection')}
                                     className="text-sm text-slate-400 hover:text-white flex items-center gap-1 mb-2 transition-colors"
                                 >
-                                    &larr; Wróć do wyboru
+                                    &larr; {t('welcomeAnalysis.input.back')}
                                 </button>
                                 <label className="block text-white font-medium mb-2">
-                                    Opisz swoją sytuację:
+                                    {t('welcomeAnalysis.input.label')}
                                 </label>
                                 <textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
-                                    placeholder="Np. Otrzymałem wypowiedzenie z pracy i nie zgadzam się z uzasadnieniem..."
+                                    placeholder={t('welcomeAnalysis.input.placeholder')}
                                     className="w-full h-40 bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-base text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none transition-all"
                                     disabled={isLoading}
                                     autoFocus
@@ -150,11 +152,11 @@ const WelcomeAnalysisModal: React.FC<WelcomeAnalysisModalProps> = ({ isOpen, onC
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            Analizuję...
+                                            {t('welcomeAnalysis.input.analyze')}
                                         </>
                                     ) : (
                                         <>
-                                            Rozpocznij rozmowę
+                                            {t('welcomeAnalysis.input.start')}
                                             <SendIcon />
                                         </>
                                     )}
@@ -168,30 +170,28 @@ const WelcomeAnalysisModal: React.FC<WelcomeAnalysisModalProps> = ({ isOpen, onC
             <HelpModal
                 isOpen={isHelpOpen}
                 onClose={() => setIsHelpOpen(false)}
-                title="Wybór trybu pracy"
+                title={t('welcomeAnalysis.help.title')}
             >
                 <div className="space-y-4">
                     <p>
-                        Możesz korzystać z asystenta na dwa sposoby:
+                        {t('welcomeAnalysis.help.intro')}
                     </p>
                     <div className="space-y-4">
                         <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
                             <h4 className="flex items-center gap-2 font-bold text-violet-400 mb-1">
-                                <SparklesIcon className="w-4 h-4" /> Wersja Podstawowa
+                                <SparklesIcon className="w-4 h-4" /> {t('welcomeAnalysis.help.basicTitle')}
                             </h4>
                             <p className="text-sm">
-                                Idealna na start. Po prostu opisz swój problem własnymi słowami.
-                                System sam rozpozna, czy to sprawa karna, cywilna czy inna, i zada Ci odpowiednie pytania.
+                                {t('welcomeAnalysis.help.basicDesc')}
                             </p>
                         </div>
 
                         <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
                             <h4 className="flex items-center gap-2 font-bold text-cyan-400 mb-1">
-                                <MenuIcon className="w-4 h-4" /> Wersja Zaawansowana
+                                <MenuIcon className="w-4 h-4" /> {t('welcomeAnalysis.help.advancedTitle')}
                             </h4>
                             <p className="text-sm">
-                                Dla osób, które wiedzą czego szukają.
-                                Pozwala ręcznie wybrać dziedzinę prawa (np. Prawo Karne) i konkretne narzędzie (np. "Stwórz pismo" lub "Wyszukaj wyroki").
+                                {t('welcomeAnalysis.help.advancedDesc')}
                             </p>
                         </div>
                     </div>

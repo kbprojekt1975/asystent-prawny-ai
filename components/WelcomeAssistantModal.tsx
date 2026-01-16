@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { InteractionMode, ChatMessage, UserProfile } from '../types';
+
 import { getLegalAdvice } from '../services/geminiService';
 import { XIcon, SendIcon, SparklesIcon, ScaleIcon } from './Icons';
 import LoadingSpinner from './LoadingSpinner';
@@ -12,6 +14,7 @@ interface WelcomeAssistantModalProps {
 }
 
 const WelcomeAssistantModal: React.FC<WelcomeAssistantModalProps> = ({ isOpen, onClose, userProfile, onUpdateProfile }) => {
+    const { t, i18n } = useTranslation();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -23,11 +26,11 @@ const WelcomeAssistantModal: React.FC<WelcomeAssistantModalProps> = ({ isOpen, o
             setMessages([
                 {
                     role: 'model',
-                    content: 'Witaj w Asystencie Prawnym AI! 👋 Jestem tutaj, aby pomóc Ci odnaleźć się w aplikacji. \n\nMogę Cię przeprowadzić przez proces zakładania pierwszej sprawy, tłumaczenia przepisów czy przygotowania pism do sądu. W czym mogę Ci pomóc na start?'
+                    content: t('welcome.intro_message')
                 }
             ]);
         }
-    }, [isOpen, messages.length]);
+    }, [isOpen, messages.length, t]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -50,7 +53,8 @@ const WelcomeAssistantModal: React.FC<WelcomeAssistantModalProps> = ({ isOpen, o
                 'Asystent Aplikacji',
                 false,
                 undefined,
-                'welcome-assistant'
+                'welcome-assistant',
+                i18n.language
             );
 
             if (response && response.text) {
@@ -58,7 +62,7 @@ const WelcomeAssistantModal: React.FC<WelcomeAssistantModalProps> = ({ isOpen, o
             }
         } catch (error) {
             console.error('Welcome Assistant Error:', error);
-            setMessages([...newMessages, { role: 'model', content: 'Przepraszam, wystąpił błąd. Spróbuj zadać pytanie ponownie.' }]);
+            setMessages([...newMessages, { role: 'model', content: t('welcome.error_message') }]);
         } finally {
             setIsLoading(false);
         }
@@ -86,8 +90,8 @@ const WelcomeAssistantModal: React.FC<WelcomeAssistantModalProps> = ({ isOpen, o
                             <SparklesIcon className="w-6 h-6 text-cyan-400" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white">Twój Przewodnik AI</h2>
-                            <p className="text-xs text-slate-400">Poznaj możliwości aplikacji</p>
+                            <h2 className="text-xl font-bold text-white">{t('welcome.title')}</h2>
+                            <p className="text-xs text-slate-400">{t('welcome.subtitle')}</p>
                         </div>
                     </div>
                     <button
@@ -107,10 +111,10 @@ const WelcomeAssistantModal: React.FC<WelcomeAssistantModalProps> = ({ isOpen, o
                         </div>
                         <div>
                             <p className="text-sm text-cyan-50 text-white leading-relaxed font-medium">
-                                Posiadam wiele zaprogramowanych funkcji. Jeśli chcesz coś zrobić, a nie widzisz tego – po prostu napisz w oknie czatu czego potrzebujesz.
+                                {t('welcome.tip_text')}
                             </p>
                             <p className="text-xs text-cyan-400 mt-1 font-bold">
-                                W zasadzie posiadam nieograniczoną ilość funkcji.
+                                {t('welcome.tip_subtext')}
                             </p>
                         </div>
                     </div>
@@ -149,7 +153,7 @@ const WelcomeAssistantModal: React.FC<WelcomeAssistantModalProps> = ({ isOpen, o
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                                placeholder="Zadaj pytanie o aplikację..."
+                                placeholder={t('welcome.input_placeholder')}
                                 className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors shadow-inner"
                                 disabled={isLoading}
                             />
@@ -176,14 +180,14 @@ const WelcomeAssistantModal: React.FC<WelcomeAssistantModalProps> = ({ isOpen, o
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </div>
-                                <span className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">Nie pokazuj więcej</span>
+                                <span className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">{t('welcome.dont_show')}</span>
                             </label>
 
                             <button
                                 onClick={handleClose}
                                 className="text-sm font-medium text-slate-400 hover:text-white transition-colors"
                             >
-                                Zamknij
+                                {t('welcome.close')}
                             </button>
                         </div>
                     </div>

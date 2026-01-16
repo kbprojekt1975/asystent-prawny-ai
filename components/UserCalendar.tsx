@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Reminder } from '../types';
 import {
     CalendarIcon,
@@ -25,6 +26,7 @@ const UserCalendar: React.FC<UserCalendarProps> = ({
     onDeleteReminder,
     onToggleReminder
 }) => {
+    const { t } = useTranslation();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -53,10 +55,7 @@ const UserCalendar: React.FC<UserCalendarProps> = ({
         days.push(dateStr);
     }
 
-    const monthNames = [
-        "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
-        "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"
-    ];
+    const monthNames = t('userProfile.calendar.months', { returnObjects: true }) as string[];
 
     const changeMonth = (offset: number) => {
         const newDate = new Date(year, month + offset, 1);
@@ -97,7 +96,7 @@ const UserCalendar: React.FC<UserCalendarProps> = ({
                 {/* Calendar Grid */}
                 <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
                     <div className="grid grid-cols-7 gap-1 mb-2">
-                        {['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'].map(d => (
+                        {(t('userProfile.calendar.daysShort', { returnObjects: true }) as string[]).map(d => (
                             <div key={d} className="text-center text-[10px] font-bold text-slate-500 uppercase py-1">{d}</div>
                         ))}
                         {days.map((day, idx) => (
@@ -135,7 +134,7 @@ const UserCalendar: React.FC<UserCalendarProps> = ({
                             className="bg-cyan-600/20 text-cyan-400 hover:bg-cyan-600/30 p-1.5 rounded-lg transition-colors border border-cyan-600/30 flex items-center gap-1 text-xs"
                         >
                             <PlusIcon className="w-4 h-4" />
-                            <span>Dodaj przypomnienie</span>
+                            <span>{t('userProfile.calendar.addReminder')}</span>
                         </button>
                     </div>
 
@@ -168,7 +167,7 @@ const UserCalendar: React.FC<UserCalendarProps> = ({
                                         {event.topic && (
                                             <div className="mt-2 ml-5 flex items-center gap-1 text-[10px] text-purple-400/80 font-medium italic">
                                                 <BriefcaseIcon className="w-3 h-3" />
-                                                Sprawa: {event.topic}
+                                                {t('userProfile.calendar.case')}: {event.topic}
                                             </div>
                                         )}
                                     </div>
@@ -197,7 +196,7 @@ const UserCalendar: React.FC<UserCalendarProps> = ({
                         ) : (
                             <div className="flex flex-col items-center justify-center py-8 text-slate-500 animate-pulse">
                                 <CalendarIcon className="w-8 h-8 mb-2 opacity-20" />
-                                <p className="text-xs">Brak wydarzeń na ten dzień</p>
+                                <p className="text-xs">{t('userProfile.calendar.noEvents')}</p>
                             </div>
                         )}
                     </div>
@@ -209,28 +208,28 @@ const UserCalendar: React.FC<UserCalendarProps> = ({
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-all duration-300">
                     <div className="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-sm shadow-2xl transform scale-100">
                         <div className="flex items-center justify-between mb-4">
-                            <h6 className="text-base font-bold text-white uppercase tracking-wider">Nowe Przypomnienie</h6>
+                            <h6 className="text-base font-bold text-white uppercase tracking-wider">{t('userProfile.calendar.newReminder')}</h6>
                             <button onClick={() => setShowAddForm(false)} className="text-slate-400 hover:text-white"><XIcon /></button>
                         </div>
                         <form onSubmit={handleAddSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Dzień</label>
+                                <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">{t('userProfile.calendar.day')}</label>
                                 <input readOnly value={selectedDate} className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 outline-none opacity-50" />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Tytuł</label>
+                                <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">{t('userProfile.calendar.title')}</label>
                                 <input
                                     autoFocus
-                                    placeholder="Np. Telefon do sądu"
+                                    placeholder={t('userProfile.calendar.titlePlaceholder')}
                                     value={newTitle}
                                     onChange={e => setNewTitle(e.target.value)}
                                     className="w-full bg-slate-700/50 border border-slate-600/50 rounded-lg p-3 text-sm text-slate-200 focus:ring-2 focus:ring-cyan-500 outline-none"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Opis (opcjonalnie)</label>
+                                <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">{t('userProfile.calendar.description')}</label>
                                 <textarea
-                                    placeholder="Dodaj szczegóły..."
+                                    placeholder={t('userProfile.calendar.descriptionPlaceholder')}
                                     value={newDescription}
                                     onChange={e => setNewDescription(e.target.value)}
                                     className="w-full h-24 bg-slate-700/50 border border-slate-600/50 rounded-lg p-3 text-sm text-slate-200 focus:ring-2 focus:ring-cyan-500 outline-none resize-none"
@@ -241,7 +240,7 @@ const UserCalendar: React.FC<UserCalendarProps> = ({
                                 disabled={!newTitle.trim()}
                                 className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-lg shadow-lg shadow-cyan-600/20 disabled:opacity-50 transition-all font-bold"
                             >
-                                Dodaj do kalendarza
+                                {t('userProfile.calendar.addToCalendar')}
                             </button>
                         </form>
                     </div>

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { doc, updateDoc, setDoc, serverTimestamp, increment, collection, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { getLegalAdvice } from '../services/geminiService';
@@ -37,6 +38,7 @@ export const useChatLogic = ({
     const [legalArticles, setLegalArticles] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isDeepThinkingEnabled, setIsDeepThinkingEnabled] = useState<boolean>(false);
+    const { t, i18n } = useTranslation();
 
     const handleSelectCourtRole = useCallback((role: CourtRole) => {
         setCourtRole(role);
@@ -63,8 +65,8 @@ export const useChatLogic = ({
                 break;
         }
 
-        const systemContent = `ZMIANA TRYBU: Rozpoczynamy symulację w Trybie Sądowym.
-        Specjalizacja: ${selectedLawArea}. Temat: ${selectedTopic}.
+        const systemContent = `${t('chat.court_mode.simulation_start')}
+        ${t('dashboard.law_area')}: ${selectedLawArea}. ${t('dashboard.topic')}: ${selectedTopic}.
         ${roleInstructions}
         
         WAŻNE: Wykorzystaj całą dotychczasową wiedzę o sprawie zapisaną w historii czatu powyżej. Zachowaj pełną powagę i realizm symulacji.`;
@@ -83,13 +85,13 @@ export const useChatLogic = ({
 
         // Initial greeting based on role
         let greeting = "";
-        if (role === CourtRole.MyAttorney) greeting = "Dzień dobry. Jestem Twoim pełnomocnikiem. Przeanalizowałem dotychczasowe informacje. Musimy przygotować się do rozprawy. Czy możemy przejść do pytań, które mogą paść na sali?";
-        if (role === CourtRole.Judge) greeting = "Sąd otwiera posiedzenie. Na podstawie zebranego materiału dowodowego, przystępujemy do przesłuchania. Proszę podejść do barierki. Czy jest Pan/Pani gotowy/a do złożenia zeznań?";
-        if (role === CourtRole.OpposingAttorney) greeting = "Witam. Reprezentuję stronę przeciwną. Zapoznałem się z Pana/Pani wersją wydarzeń. Mam do Pana/Pani kilka pytań.";
-        if (role === CourtRole.Prosecutor) greeting = "Prokuratura Rejonowa. Analiza akt została zakończona. Przystępujemy do czynności. Czy podtrzymuje Pan/Pani swoje dotychczasowe wyjaśnienia?";
+        if (role === CourtRole.MyAttorney) greeting = t('chat.court_mode.my_attorney');
+        if (role === CourtRole.Judge) greeting = t('chat.court_mode.judge');
+        if (role === CourtRole.OpposingAttorney) greeting = t('chat.court_mode.opposing_attorney');
+        if (role === CourtRole.Prosecutor) greeting = t('chat.court_mode.prosecutor');
 
         if (greeting) {
-            newMessages.push({ role: 'user', content: `[SYSTEM: Rozpocznij symulację w roli: ${role}]` });
+            newMessages.push({ role: 'user', content: t('chat.court_mode.role_system_prefix', { role }) });
             newMessages.push({ role: 'model', content: greeting });
         }
 
@@ -170,7 +172,8 @@ export const useChatLogic = ({
                 effectiveTopic,
                 isDeepThinkingEnabled,
                 articlesToPass,
-                effectiveChatId // Użycie ujednoliconego ID
+                effectiveChatId, // Użycie ujednoliconego ID
+                i18n.language // Pass current language
             );
 
             // Sanitize response to prevent "undefined" values in Firestore
@@ -422,14 +425,14 @@ export const useChatLogic = ({
         if (!user) return;
         setIsLoading(true);
 
-        const welcomeMessage = `Dzień dobry! Rozpoczynamy nową sprawę w dziale: **${lawArea}**. Temat: **${topic}**.
+        const welcomeMessage = `${t('chat.welcome', { lawArea: t(`law.areas.${lawArea.toLowerCase()}`), topic })}
+        
+${t('chat.steps_intro')}
+${t('chat.step_1')}
+${t('chat.step_2')}
+${t('chat.step_3')}
 
-Abyśmy mogli skutecznie zacząć, proszę o wykonanie jednego z poniższych kroków:
-1. **Opisz krótko swoją sytuację** – napisz, co się wydarzyło i w czym potrzebujesz pomocy.
-2. **Prześlij dokumenty** – jeśli masz pisma, umowy lub wnioski związane ze sprawą, użyj ikony spinacza, aby dodać je do analizy.
-3. **Zadaj pytanie** – jeśli masz konkretne wątpliwości prawne, po prostu je napisz.
-
-Jestem gotowy do pomocy!`;
+${t('chat.ready')}`;
 
         const initialHistory: ChatMessage[] = [
             { role: 'system', content: `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${mode}` },

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { collection, query, orderBy, onSnapshot, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { LawArea, InteractionMode, CaseDocument, ChatMessage } from '../types';
@@ -83,6 +84,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
     });
     const [courtRole, setCourtRole] = useState<CourtRole | null>(null);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
+    const { t, i18n } = useTranslation();
 
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [currentInput, setCurrentInput] = useState('');
@@ -184,7 +186,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                     topic,
                     true,
                     undefined,
-                    chatId
+                    chatId,
+                    i18n.language
                 );
 
                 const cleanedText = cleanAiResponse(aiRes.text);
@@ -259,7 +262,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                 topic,
                 true,
                 undefined,
-                chatId
+                chatId,
+                i18n.language
             );
 
             const cleanedText = cleanAiResponse(aiRes.text);
@@ -307,7 +311,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                 topic,
                 true,
                 undefined,
-                chatId
+                chatId,
+                i18n.language
             );
 
             const cleanedText = cleanAiResponse(aiRes.text);
@@ -403,7 +408,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                 topic,
                 true,
                 undefined,
-                chatId
+                chatId,
+                i18n.language
             );
 
             const finalHistory = [...messages, { role: 'user', content: "Generuj raport końcowy." }, { role: 'model', content: aiRes.text }];
@@ -446,21 +452,21 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                     className="flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors self-start"
                 >
                     <ArrowLeftIcon className="w-5 h-5" />
-                    <span>Powrót do pulpitu sprawy</span>
+                    <span>{t('pro.dashboard.back_to_dashboard')}</span>
                 </button>
                 <div className="max-w-4xl mx-auto w-full pb-10">
                     <div className="flex items-center justify-between mb-2">
-                        <h1 className="text-3xl font-bold">Załaduj dokumenty</h1>
+                        <h1 className="text-3xl font-bold">{t('pro.dashboard.load_docs_title')}</h1>
                         <InfoIcon onClick={() => setIsHelpOpen(true)} />
                     </div>
-                    <p className="text-slate-400 mb-8">System przeanalizuje Twoje dokumenty, aby zrozumieć stan faktyczny.</p>
+                    <p className="text-slate-400 mb-8">{t('pro.dashboard.load_docs_desc')}</p>
 
                     {/* Wstępny wywiad (Preliminary Context) */}
                     {messages.filter(m => m.role !== 'system').length > 0 && (
                         <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="h-px flex-1 bg-slate-800"></div>
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Wstępny wywiad</span>
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">{t('pro.dashboard.preliminary_interview_label')}</span>
                                 <div className="h-px flex-1 bg-slate-800"></div>
                             </div>
                             <div className="flex justify-center">
@@ -473,7 +479,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                         <div className="w-5 h-5 border-2 border-violet-400/20 border-t-violet-400 rounded-full animate-spin"></div>
                                     ) : (
                                         <>
-                                            <span>KONTYNUUJ WYWIAD / WEJDŹ W ROZMOWĘ</span>
+                                            <span>{t('pro.dashboard.continue_interview')}</span>
                                             <ChevronRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                         </>
                                     )}
@@ -494,8 +500,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             }}
                         >
                             <UserIcon className="w-12 h-12 text-violet-400/50 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                            <h3 className="font-bold mb-1">Moje Dokumenty</h3>
-                            <p className="text-slate-500 text-xs mb-4">Pozwy, Twoje pisma, dowody własne</p>
+                            <h3 className="font-bold mb-1">{t('pro.dashboard.my_docs')}</h3>
+                            <p className="text-slate-500 text-xs mb-4">{t('pro.dashboard.my_docs_desc')}</p>
                             <input
                                 type="file"
                                 ref={mineInputRef}
@@ -506,7 +512,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                 onClick={() => mineInputRef.current?.click()}
                                 className="bg-violet-600/20 text-violet-400 border border-violet-500/30 px-4 py-2 rounded-xl text-xs font-bold hover:bg-violet-600/30 transition-all"
                             >
-                                WYBIERZ PLIKI
+                                {t('pro.dashboard.select_files')}
                             </button>
                         </div>
 
@@ -521,8 +527,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             }}
                         >
                             <UserGroupIcon className="w-12 h-12 text-slate-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                            <h3 className="font-bold mb-1">Dokumenty Przeciwnika</h3>
-                            <p className="text-slate-500 text-xs mb-4">Pisma od drugiej strony, ich dowody</p>
+                            <h3 className="font-bold mb-1">{t('pro.dashboard.opposing_docs')}</h3>
+                            <p className="text-slate-500 text-xs mb-4">{t('pro.dashboard.opposing_docs_desc')}</p>
                             <input
                                 type="file"
                                 ref={opposingInputRef}
@@ -533,14 +539,14 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                 onClick={() => opposingInputRef.current?.click()}
                                 className="bg-slate-700/50 text-slate-400 border border-slate-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-300 hover:text-slate-900 transition-all"
                             >
-                                WYBIERZ PLIKI
+                                {t('pro.dashboard.select_files')}
                             </button>
                         </div>
                     </div>
 
                     <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-bold text-slate-300">Lista załadowanych plików ({documents.length})</h3>
+                            <h3 className="font-bold text-slate-300">{t('pro.dashboard.loaded_files')} ({documents.length})</h3>
                         </div>
                         <div className="flex flex-col gap-2">
                             {documents.length > 0 ? (
@@ -553,18 +559,18 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                             <div className="flex flex-col min-w-0">
                                                 <span className="text-sm font-medium truncate">{doc.name}</span>
                                                 <span className={`text-[10px] font-bold uppercase ${doc.party === 'opposing' ? 'text-slate-500' : 'text-violet-400'}`}>
-                                                    {doc.party === 'opposing' ? 'Strona Przeciwna' : 'Moje'}
+                                                    {doc.party === 'opposing' ? t('pro.dashboard.opposing_party') : t('pro.dashboard.my_party')}
                                                 </span>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <a href={doc.url} target="_blank" className="p-2 text-slate-500 hover:text-white transition-colors" title="Podejrzyj">
+                                            <a href={doc.url} target="_blank" className="p-2 text-slate-500 hover:text-white transition-colors" title={t('pro.dashboard.preview')}>
                                                 <ExternalLinkIcon className="w-4 h-4" />
                                             </a>
                                             <button
                                                 onClick={() => handleDeleteDoc(doc)}
                                                 className="p-2 text-slate-500 hover:text-red-400 transition-colors"
-                                                title="Usuń"
+                                                title={t('pro.dashboard.delete')}
                                             >
                                                 <TrashIcon className="w-4 h-4" />
                                             </button>
@@ -574,7 +580,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             ) : (
                                 <div className="text-center py-8">
                                     <DocumentTextIcon className="w-12 h-12 text-slate-700 mx-auto mb-2" />
-                                    <p className="text-slate-500 text-sm italic">Brak dokumentów. Wrzuć pliki powyżej.</p>
+                                    <p className="text-slate-500 text-sm italic">{t('pro.dashboard.no_docs')}</p>
                                 </div>
                             )}
                         </div>
@@ -588,7 +594,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             onClick={handleAnalyzeDocs}
                         >
                             {isLoading ? <div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin"></div> : <MagicWandIcon className="w-6 h-6" />}
-                            <span>ANALIZUJ DOKUMENTY (AI)</span>
+                            <span>{t('pro.dashboard.analyze_button')}</span>
                         </button>
 
                         <button
@@ -596,7 +602,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             disabled={isLoading}
                             className="text-slate-500 text-sm hover:text-white hover:underline transition-colors mt-2"
                         >
-                            {isLoading ? 'Inicjowanie...' : 'Nie mam dokumentów - chcę opowiedzieć o sprawie'}
+                            {isLoading ? t('pro.dashboard.initiating') : t('pro.dashboard.no_docs_link')}
                         </button>
                     </div>
                 </div>
@@ -605,22 +611,22 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                 <HelpModal
                     isOpen={isHelpOpen}
                     onClose={() => setIsHelpOpen(false)}
-                    title="Etap 1: Dokumenty - Pomoc"
+                    title={t('pro.dashboard.help_title')}
                 >
                     <div className="space-y-4 text-sm">
                         <p>
-                            <strong>Dlaczego to ważne?</strong> AI musi poznać "twarde dane" zanim zacznie doradzać.
+                            {t('pro.dashboard.help_desc')}
                         </p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li>
-                                <strong>Moje Dokumenty:</strong> Wgraj wszystko, co przemawia na Twoją korzyść (umowy, dowody wpłat, pisma wysłane).
+                                {t('pro.dashboard.help_my_docs')}
                             </li>
                             <li>
-                                <strong>Dokumenty Przeciwnika:</strong> Wgraj pisma, które otrzymałeś od drugiej strony. To pozwoli AI ocenić zagrożenia.
+                                {t('pro.dashboard.help_opposing_docs')}
                             </li>
                         </ul>
                         <p className="italic text-slate-500 mt-2">
-                            Obsługujemy pliki PDF, obrazy i pliki tekstowe. Jeśli nie masz dokumentów w formie cyfrowej, możesz pominąć ten krok (opcja "Nie mam dokumentów") i opowiedzieć o sprawie w kolejnym etapie.
+                            {t('pro.dashboard.help_footer')}
                         </p>
                     </div>
                 </HelpModal>
@@ -640,10 +646,10 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors flex-shrink-0"
                         >
                             <ArrowLeftIcon className="w-5 h-5" />
-                            <span className="hidden md:inline">Pulpit sprawy</span>
+                            <span className="hidden md:inline">{t('pro.dashboard.dashboard_label')}</span>
                         </button>
                         <h2 className="font-bold text-violet-400 flex items-center gap-1.5 text-xs md:text-base max-w-[60%] md:max-w-full">
-                            <span className="truncate">Etap 2: Wywiad Strategiczny</span>
+                            <span className="truncate">{t('pro.dashboard.interview_stage')}</span>
                             <InfoIcon onClick={() => setIsHelpOpen(true)} className="flex-shrink-0" />
                         </h2>
                         <button
@@ -653,7 +659,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             }}
                             className="text-[10px] md:text-xs bg-green-600/20 text-green-400 border border-green-500/30 px-2 md:px-3 py-1 rounded-full font-bold hover:bg-green-600/30 transition-all flex-shrink-0"
                         >
-                            Zakończ wywiad
+                            {t('pro.dashboard.finish_interview')}
                         </button>
                     </div>
                 )}
@@ -678,7 +684,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                 topic={topic}
                             />
                         ))}
-                        {isLoading && <div className="text-slate-500 text-sm animate-pulse italic">Asystent analizuje fakty...</div>}
+
+                        {isLoading && <div className="text-slate-500 text-sm animate-pulse italic">{t('pro.dashboard.analyzing')}</div>}
                     </div>
                 </div>
 
@@ -688,8 +695,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             <div className="flex items-center justify-between gap-3 flex-wrap">
                                 <div className="flex items-center">
                                     <label htmlFor="pro-deep-thinking-toggle" className="text-[10px] sm:text-xs leading-tight font-medium text-slate-400 mr-2 cursor-pointer flex flex-col items-center">
-                                        <span>Głębokie</span>
-                                        <span>Myślenie</span>
+                                        <span>{t('pro.dashboard.deep_thinking').split(' ')[0]}</span>
+                                        <span>{t('pro.dashboard.deep_thinking').split(' ')[1]}</span>
                                     </label>
                                     <button
                                         id="pro-deep-thinking-toggle"
@@ -704,7 +711,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                     <button
                                         onClick={() => setIsFullScreen?.(!isFullScreen)}
                                         className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors border border-slate-700 bg-slate-800/50"
-                                        title={isFullScreen ? "Wyjdź z pełnego ekranu" : "Pełny ekran"}
+                                        title={isFullScreen ? t('pro.dashboard.exit_fullscreen') : t('pro.dashboard.fullscreen')}
                                     >
                                         {isFullScreen ? <ArrowsContractIcon className="h-5 w-5" /> : <ArrowsExpandIcon className="h-5 w-5" />}
                                     </button>
@@ -716,7 +723,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                         {!isFullScreen && (
                             <div className="flex items-center gap-2 px-1 py-1 text-[10px] opacity-70">
                                 <ScaleIcon className="w-3 h-3 text-cyan-400 flex-shrink-0" />
-                                <span className="text-slate-400 font-semibold uppercase tracking-wider">Tryb: Strategia PRO</span>
+                                <span className="text-slate-400 font-semibold uppercase tracking-wider">{t('pro.dashboard.context_mode')}</span>
                                 <span className="text-slate-600">|</span>
                                 <BriefcaseIcon className="w-3 h-3 text-amber-400 flex-shrink-0" />
                                 <span className="text-amber-400 font-semibold truncate uppercase tracking-wider">{topic}</span>
@@ -727,7 +734,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                 <button
                                     onClick={() => setIsFullScreen?.(false)}
                                     className="p-3 text-slate-400 hover:text-cyan-400 rounded-xl transition-colors border border-slate-700 bg-slate-900/50"
-                                    title="Wyjdź z pełnego ekranu"
+                                    title={t('pro.dashboard.exit_fullscreen')}
                                 >
                                     <ArrowsContractIcon className="w-5 h-5 transition-transform group-active:scale-90" />
                                 </button>
@@ -735,7 +742,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             <input
                                 type="text"
                                 className="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-violet-500 transition-all"
-                                placeholder="Wpisz odpowiedź na pytania AI..."
+                                placeholder={t('pro.dashboard.input_placeholder')}
                                 value={currentInput}
                                 onChange={(e) => setCurrentInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
@@ -755,21 +762,21 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                 <HelpModal
                     isOpen={isHelpOpen}
                     onClose={() => setIsHelpOpen(false)}
-                    title="Etap 2: Wywiad - Pomoc"
+                    title={t('pro.dashboard.interview_help_title')}
                 >
                     <div className="space-y-4 text-sm">
                         <p>
-                            Dokumenty rzadko mówią wszystko. W tym kroku Asystent wciela się w rolę doświadczonego adwokata i zadaje pytania uzupełniające.
+                            {t('pro.dashboard.interview_help_desc')}
                         </p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li>
-                                <strong>Odpowiadaj szczerze:</strong> Asystent jest tu, aby Ci pomóc, a nie oceniać. Im więcej szczegółów podasz, tym lepsza strategia.
+                                {t('pro.dashboard.interview_help_honest')}
                             </li>
                             <li>
-                                <strong>Nie wiem?</strong> Jeśli nie znasz odpowiedz na pytanie, napisz wprost "nie wiem" lub "nie pamiętam".
+                                {t('pro.dashboard.interview_help_dunno')}
                             </li>
                             <li>
-                                <strong>Zakończenie:</strong> Gdy uznasz, że powiedziałeś już wszystko, kliknij przycisk "Zakończ wywiad" w prawym górnym rogu.
+                                {t('pro.dashboard.interview_help_finish')}
                             </li>
                         </ul>
                     </div>
@@ -796,11 +803,11 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors flex-shrink-0"
                         >
                             <ArrowLeftIcon className="w-5 h-5" />
-                            <span className="hidden md:inline">Pulpit sprawy</span>
+                            <span className="hidden md:inline">{t('pro.dashboard.dashboard_label')}</span>
                         </button>
 
                         <h2 className="font-bold text-violet-400 flex items-center gap-1.5 text-xs md:text-base max-w-[60%] md:max-w-full">
-                            <span className="truncate">Etap 3: Raport Strategiczny</span>
+                            <span className="truncate">{t('pro.analysis.step_title')}</span>
                             <InfoIcon onClick={() => setIsHelpOpen(true)} className="flex-shrink-0" />
                         </h2>
                         <div className="w-8 md:w-24 flex-shrink-0"></div> {/* Spacer for balance */}
@@ -815,8 +822,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                 <div className="w-20 h-20 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
                                 <MagicWandIcon className="w-8 h-8 text-violet-400 absolute inset-0 m-auto animate-pulse" />
                             </div>
-                            <h2 className="text-xl font-bold mt-6 text-white tracking-tight">Tworzenie raportu strategicznego...</h2>
-                            <p className="text-slate-400 text-sm mt-2 animate-pulse">Asystent analizuje fakty i szanse wygranej</p>
+                            <h2 className="text-xl font-bold mt-6 text-white tracking-tight">{t('pro.analysis.creating_report')}</h2>
+                            <p className="text-slate-400 text-sm mt-2 animate-pulse">{t('pro.analysis.analyzing_desc')}</p>
                         </div>
                     )
                 }
@@ -825,14 +832,14 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                 <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 scroll-smooth">
                     <div className="max-w-4xl mx-auto w-full pb-10">
                         <div className="flex items-center justify-between mb-8">
-                            <h1 className="text-3xl font-bold">Analiza i Strategia</h1>
+                            <h1 className="text-3xl font-bold">{t('pro.analysis.main_title')}</h1>
                             <button
                                 onClick={handleGenerateAnalysis}
                                 disabled={isLoading}
                                 className="bg-violet-600 hover:bg-violet-500 px-6 py-2 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg disabled:opacity-50"
                             >
                                 <MagicWandIcon className="w-4 h-4" />
-                                <span>ODŚWIEŻ RAPORT</span>
+                                <span>{t('pro.analysis.refresh_btn')}</span>
                             </button>
                         </div>
 
@@ -915,8 +922,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                     <div className="flex items-center justify-between gap-3 flex-wrap">
                                         <div className="flex items-center">
                                             <label htmlFor="pro-analysis-deep-thinking-toggle" className="text-[10px] sm:text-xs leading-tight font-medium text-slate-400 mr-2 cursor-pointer flex flex-col items-center">
-                                                <span>Głębokie</span>
-                                                <span>Myślenie</span>
+                                                {t('chat.deepThinking')}
                                             </label>
                                             <button
                                                 id="pro-analysis-deep-thinking-toggle"
@@ -1173,7 +1179,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
 
                     <div className="flex items-center gap-6">
                         <div className="flex flex-col items-end">
-                            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Postęp strategiczny</span>
+                            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">{t('pro.dashboard.progress_title')}</span>
                             <div className="flex gap-1 mt-1">
                                 <div className={`h-1.5 w-10 rounded-full ${stepStatus[ProStep.Documents] === 'completed' ? 'bg-violet-500' : 'bg-slate-700'}`}></div>
                                 <div className={`h-1.5 w-10 rounded-full ${stepStatus[ProStep.Interview] === 'completed' ? 'bg-violet-500' : 'bg-slate-700'}`}></div>
@@ -1207,13 +1213,13 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                 <DocumentTextIcon className="w-8 h-8" />
                             </div>
 
-                            <h3 className="text-2xl font-bold mb-4">1. Załaduj dokumenty</h3>
+                            <h3 className="text-2xl font-bold mb-4">{t('pro.dashboard.tile_docs_title')}</h3>
                             <p className="text-slate-400 text-sm leading-relaxed mb-8">
-                                Prześlij pozwy, pisma i dowody. AI przeanalizuje ich treść i wykryje kluczowe fakty. Możesz też opowiedzieć o sprawie bez dokumentów.
+                                {t('pro.dashboard.tile_docs_desc')}
                             </p>
 
                             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-violet-400">
-                                <span>{stepStatus[ProStep.Documents] === 'completed' ? 'ZARZĄDZAJ' : 'ROZPOCZNIJ'}</span>
+                                <span>{stepStatus[ProStep.Documents] === 'completed' ? t('pro.dashboard.tile_docs_btn_manage') : t('pro.dashboard.tile_docs_btn')}</span>
                                 <ChevronRightIcon className="w-4 h-4" />
                             </div>
                         </div>
@@ -1236,13 +1242,13 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                 <UserGroupIcon className="w-8 h-8" />
                             </div>
 
-                            <h3 className="text-2xl font-bold mb-4">2. Wywiad strategiczny</h3>
+                            <h3 className="text-2xl font-bold mb-4">{t('pro.dashboard.tile_interview_title')}</h3>
                             <p className="text-slate-400 text-sm leading-relaxed mb-8">
-                                AI zada Ci precyzyjne pytania uzupełniające na podstawie Twoich dokumentów. To klucz do zrozumienia "drugiej strony".
+                                {t('pro.dashboard.tile_interview_desc')}
                             </p>
 
                             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-violet-400">
-                                <span>ROZPOCZNIJ WYWIAD</span>
+                                <span>{t('pro.dashboard.tile_interview_btn')}</span>
                                 <ChevronRightIcon className="w-4 h-4" />
                             </div>
                         </div>
@@ -1257,13 +1263,13 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                 <ScaleIcon className="w-8 h-8" />
                             </div>
 
-                            <h3 className="text-2xl font-bold mb-4">3. Analiza i Szanse</h3>
+                            <h3 className="text-2xl font-bold mb-4">{t('pro.dashboard.tile_analysis_title')}</h3>
                             <p className="text-slate-400 text-sm leading-relaxed mb-8">
-                                Poznaj swoje mocne i słabe strony. AI przedstawi szanse na wygraną oraz obszary wymagające szczególnej uwagi.
+                                {t('pro.dashboard.tile_analysis_desc')}
                             </p>
 
                             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-violet-400">
-                                <span>GENERUJ RAPORT</span>
+                                <span>{t('pro.dashboard.tile_analysis_btn')}</span>
                                 <ChevronRightIcon className="w-4 h-4" />
                             </div>
                         </div>
@@ -1279,13 +1285,13 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                 <GavelIcon className="w-8 h-8" />
                             </div>
 
-                            <h3 className="text-2xl font-bold mb-4">4. Tryb Sądowy</h3>
+                            <h3 className="text-2xl font-bold mb-4">{t('pro.dashboard.tile_court_title')}</h3>
                             <p className="text-slate-400 text-sm leading-relaxed mb-8">
-                                Przeprowadź symulację rozprawy. Wybierz rolę dla AI i sprawdź, jak poradzisz sobie w sali sądowej na podstawie zebranych dowodów.
+                                {t('pro.dashboard.tile_court_desc')}
                             </p>
 
                             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-cyan-400">
-                                <span>ROZPOCZNIJ SYMULACJĘ</span>
+                                <span>{t('pro.dashboard.tile_court_btn')}</span>
                                 <ChevronRightIcon className="w-4 h-4" />
                             </div>
                         </div>
@@ -1299,13 +1305,13 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                 <DocumentTextIcon className="w-8 h-8" />
                             </div>
 
-                            <h3 className="text-2xl font-bold mb-4">5. Moje Notatki</h3>
+                            <h3 className="text-2xl font-bold mb-4">{t('pro.dashboard.tile_notes_title')}</h3>
                             <p className="text-slate-400 text-sm leading-relaxed mb-8">
-                                Zapisuj własne przemyślenia, pytania do adwokata lub ważne fakty. Notatki są bezpieczne i widoczne tylko dla Ciebie.
+                                {t('pro.dashboard.tile_notes_desc')}
                             </p>
 
                             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-violet-400">
-                                <span>OTWÓRZ NOTATNIK</span>
+                                <span>{t('pro.dashboard.tile_notes_btn')}</span>
                                 <ChevronRightIcon className="w-4 h-4" />
                             </div>
                         </div>
@@ -1316,10 +1322,10 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                     <div className="mt-16 bg-slate-800/30 border border-slate-700/30 rounded-3xl p-8">
                         <div className="flex items-center gap-3 mb-6">
                             <ClockIcon className="w-6 h-6 text-violet-400" />
-                            <h4 className="font-bold text-lg">Inteligentna Strategia</h4>
+                            <h4 className="font-bold text-lg">{t('pro.dashboard.strategy_title')}</h4>
                         </div>
                         <p className="text-slate-400 text-sm italic">
-                            "System PRO łączy analizę Twoich dokumentów z pogłębionym wywiadem AI. Na końcu otrzymasz kompletną strategię procesową, która pomoże Ci wygrać sprawę."
+                            {t('pro.dashboard.strategy_desc')}
                         </p>
                     </div>
                 </div>
@@ -1328,25 +1334,25 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
             <HelpModal
                 isOpen={isHelpOpen}
                 onClose={() => setIsHelpOpen(false)}
-                title="Strefa PRO - Jak to działa?"
+                title={t('pro.dashboard.main_help_title')}
             >
                 <div className="space-y-4 text-sm">
                     <p>
-                        Strefa PRO to zaawansowany proces budowania Twojej strategii procesowej. Składa się z 3 kroków:
+                        {t('pro.dashboard.main_help_desc')}
                     </p>
                     <ol className="list-decimal pl-5 space-y-3">
                         <li>
-                            <strong className="text-violet-400">Załaduj Dokumenty:</strong> Wgraj wszystko co masz - pozwy, wnioski, dowody. Ważne, aby oddzielić dokumenty Twoje (Moje) od dokumentów drugiej strony (Przeciwnika). To pozwoli nam zrozumieć obie perspektywy.
+                            <strong className="text-violet-400">{t('pro.dashboard.tile_docs_title').split('.')[1]}:</strong> {t('pro.dashboard.main_help_point_1')}
                         </li>
                         <li>
-                            <strong className="text-violet-400">Wywiad Strategiczny:</strong> AI zada Ci serię pytań uzupełniających. Często dokumenty nie mówią wszystkiego - tutaj możesz wyjaśnić kontekst, swoje cele i obawy.
+                            <strong className="text-violet-400">{t('pro.dashboard.tile_interview_title').split('.')[1]}:</strong> {t('pro.dashboard.main_help_point_2')}
                         </li>
                         <li>
-                            <strong className="text-violet-400">Analiza i Raport:</strong> Finał procesu. Otrzymasz dokument z analizą SWOT (mocne/słabe strony), szacunkiem szans na wygraną i konkretnymi rekomendacjami "krok po kroku".
+                            <strong className="text-violet-400">{t('pro.dashboard.tile_analysis_title').split('.')[1]}:</strong> {t('pro.dashboard.main_help_point_3')}
                         </li>
                     </ol>
                     <p className="italic text-slate-500 mt-2">
-                        Pamiętaj: Możesz w każdej chwili wrócić do każdego z etapów, by dodać nowe dokumenty lub zaktualizować informacje.
+                        {t('pro.dashboard.main_help_footer')}
                     </p>
                 </div>
             </HelpModal>

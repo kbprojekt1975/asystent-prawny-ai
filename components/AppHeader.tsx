@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import HamburgerMenu from './HamburgerMenu';
 import { SparklesIcon, ClockIcon, HomeIcon, CreditCardIcon, ProfileIcon, BookOpenIcon, DownloadIcon, UploadIcon, ArrowLeftIcon, BrainIcon } from './Icons';
 import CostCounter from './CostCounter';
@@ -35,9 +36,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   title,
   onProfileClick,
   onBackClick,
-  backButtonText = 'Wróć',
+  backButtonText,
   onChangeClick,
-  changeButtonText = 'Zmień',
+  changeButtonText,
   onQuickActionsClick,
   onHistoryClick,
   onHomeClick,
@@ -54,7 +55,17 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   onInstallApp,
   onHelpClick
 }) => {
+  const { t, i18n } = useTranslation();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+  // Default values using translations if props are undefined
+  const finalBackButtonText = backButtonText || t('app.back');
+  const finalChangeButtonText = changeButtonText || t('app.change');
+
+  const changeLanguage = (lang: string) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem('i18nextLng', lang);
+  };
 
   return (
     <header className="bg-slate-900/70 backdrop-blur-md p-4 border-b border-slate-700 flex justify-between items-center z-40 flex-shrink-0 gap-4 w-full">
@@ -63,8 +74,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           <button
             onClick={onBackClick}
             className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors flex-shrink-0"
-            aria-label={backButtonText}
-            title={backButtonText}
+            aria-label={finalBackButtonText}
+            title={finalBackButtonText}
           >
             <ArrowLeftIcon className="h-6 w-6" />
           </button>
@@ -78,7 +89,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           <div className={`flex items-center gap-2 ${hasConsent ? 'bg-amber-500/20 border-amber-500/50' : 'bg-red-500/20 border-red-500/50'} px-3 py-2 rounded-xl animate-pulse whitespace-nowrap`}>
             <div className={`w-2 h-2 rounded-full ${hasConsent ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`}></div>
             <span className={`text-[10px] font-bold ${hasConsent ? 'text-amber-500' : 'text-red-500'} uppercase tracking-tight`}>
-              {hasConsent ? 'TRYB LOKALNY' : 'BRAK ZGODY RODO'}
+              {hasConsent ? t('app.localMode') : t('app.noGdprConsent')}
             </span>
           </div>
         )}
@@ -93,7 +104,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
               <div className="flex items-center gap-2 bg-red-500/20 border border-red-500/50 px-3 py-2 rounded-xl animate-pulse hidden xs:flex">
                 <CreditCardIcon className="h-4 w-4 text-red-500" />
                 <span className="text-xs font-bold text-red-500 uppercase tracking-tight">
-                  WYKUP NOWY PLAN
+                  {t('app.buyPlan')}
                 </span>
               </div>
             )}
@@ -101,7 +112,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
               <div className="flex items-center gap-2 bg-cyan-950/40 border border-cyan-500/30 px-3 py-2 rounded-xl hidden lg:flex">
                 <CreditCardIcon className="h-4 w-4 text-cyan-400" />
                 <span className="text-xs font-bold text-cyan-400 uppercase tracking-tight">
-                  AKTUALNY PLAN: {(subscription.creditLimit - subscription.spentAmount).toFixed(2)} PLN
+                  {t('app.currentPlan')}: {(subscription.creditLimit - subscription.spentAmount).toFixed(2)} PLN
                 </span>
               </div>
             )}
@@ -113,15 +124,15 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             onClick={onChangeClick}
             className="text-sm border border-slate-600 hover:bg-slate-700/50 text-slate-300 font-semibold py-2 px-4 rounded-lg transition-colors flex-shrink-0 hidden md:block"
           >
-            {changeButtonText}
+            {finalChangeButtonText}
           </button>
         )}
         {onHomeClick && (
           <button
             onClick={onHomeClick}
             className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden sm:block"
-            aria-label="Strona główna"
-            title="Strona główna"
+            aria-label={t('app.home')}
+            title={t('app.home')}
           >
             <HomeIcon className="h-6 w-6" />
           </button>
@@ -130,8 +141,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           <button
             onClick={onGenerateKnowledgeClick}
             className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden md:block"
-            aria-label="Generuj Bazę Wiedzy"
-            title="Generuj Bazę Wiedzy (Pobierz Akty i Wyroki)"
+            aria-label={t('app.generateKnowledge')}
+            title={t('app.generateKnowledge')}
           >
             <BrainIcon className="h-6 w-6 text-green-400" />
           </button>
@@ -140,8 +151,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           <button
             onClick={onKnowledgeClick}
             className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden sm:block"
-            aria-label="Baza Wiedzy"
-            title="Baza Wiedzy"
+            aria-label={t('app.knowledgeBase')}
+            title={t('app.knowledgeBase')}
           >
             <BookOpenIcon className="h-6 w-6" />
           </button>
@@ -150,8 +161,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           <button
             onClick={onExportChat}
             className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden sm:block"
-            aria-label="Eksportuj Rozmowę"
-            title="Pobierz rozmowę na urządzenie"
+            aria-label={t('app.exportChat')}
+            title={t('app.exportChat')}
           >
             <DownloadIcon className="h-6 w-6 text-blue-400" />
           </button>
@@ -159,7 +170,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         {onImportChat && (
           <label
             className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors cursor-pointer hidden sm:block"
-            title="Wgraj rozmowę z pliku JSON"
+            title={t('app.importChat')}
           >
             <input
               type="file"
@@ -181,8 +192,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           <button
             onClick={onHistoryClick}
             className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden sm:block"
-            aria-label="Historia Spraw"
-            title="Historia Spraw"
+            aria-label={t('app.history')}
+            title={t('app.history')}
           >
             <ClockIcon className="h-6 w-6" />
           </button>
@@ -191,8 +202,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           <button
             onClick={onQuickActionsClick}
             className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden sm:block"
-            aria-label="Szybkie Akcje"
-            title="Szybkie Akcje"
+            aria-label={t('app.quickActions')}
+            title={t('app.quickActions')}
           >
             <SparklesIcon className="h-6 w-6" />
           </button>
@@ -201,8 +212,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         <button
           onClick={onProfileClick}
           className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors relative hidden xs:block"
-          aria-label="Panel Użytkownika"
-          title="Panel Użytkownika"
+          aria-label={t('app.userProfile')}
+          title={t('app.userProfile')}
         >
           <ProfileIcon className="h-6 w-6" />
           {remindersCount > 0 && (
@@ -211,6 +222,23 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             </span>
           )}
         </button>
+
+        <div className="border-l border-slate-700 h-6 mx-1 hidden md:block"></div>
+
+        <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50">
+          <button
+            onClick={() => changeLanguage('pl')}
+            className={`px-2 py-1 text-xs font-bold rounded transition-all ${i18n.language.startsWith('pl') ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            PL
+          </button>
+          <button
+            onClick={() => changeLanguage('en')}
+            className={`px-2 py-1 text-xs font-bold rounded transition-all ${!i18n.language.startsWith('pl') ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            EN
+          </button>
+        </div>
 
         <div className="border-l border-slate-700 h-6 mx-1 hidden md:block"></div>
 
@@ -237,17 +265,17 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       <HelpModal
         isOpen={isHelpOpen}
         onClose={() => setIsHelpOpen(false)}
-        title="Przewodnik po aplikacji"
+        title={t('app_help.title')}
       >
         <div className="space-y-4">
-          <p><strong>Witaj w Asystencie Prawnym AI!</strong></p>
-          <p>Oto co oznaczają poszczególne ikony:</p>
+          <p><strong>{t('app_help.intro')}</strong></p>
+          <p>{t('app_help.icons_intro')}</p>
           <ul className="list-disc pl-5 space-y-2 text-sm">
-            <li><HomeIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Dom:</strong> Powrót do ekranu startowego.</li>
-            <li><BookOpenIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Baza Wiedzy:</strong> Twoje zapisane akty prawne i przepisy.</li>
-            <li><ClockIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Zegar/Historia:</strong> Dostęp do Twoich poprzednich rozmów.</li>
-            <li><SparklesIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Różdżka/Szybkie Akcje:</strong> Gotowe scenariusze (np. "Napisz pozew").</li>
-            <li><ProfileIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>Profil:</strong> Twoje dane, subskrypcja i ustawienia.</li>
+            <li><HomeIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>{t('app_help.home')}:</strong> {t('app_help.home_desc')}</li>
+            <li><BookOpenIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>{t('app_help.knowledge')}:</strong> {t('app_help.knowledge_desc')}</li>
+            <li><ClockIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>{t('app_help.history')}:</strong> {t('app_help.history_desc')}</li>
+            <li><SparklesIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>{t('app_help.magic')}:</strong> {t('app_help.magic_desc')}</li>
+            <li><ProfileIcon className="w-4 h-4 inline mr-1 text-slate-400" /> <strong>{t('app_help.profile')}:</strong> {t('app_help.profile_desc')}</li>
           </ul>
         </div>
       </HelpModal>

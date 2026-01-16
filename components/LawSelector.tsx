@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { LawArea } from '../types';
 import { GavelIcon, FamilyIcon, ScalesIcon, BuildingIcon, MagicWandIcon } from './Icons';
 import HelpModal from './HelpModal';
@@ -15,20 +16,23 @@ interface LawSelectorProps {
   onImport?: (file: File) => void;
 }
 
-const lawOptions = [
-  { area: LawArea.Criminal, icon: <GavelIcon />, description: "Sprawy karne, obrona, oskarżenie." },
-  { area: LawArea.Family, icon: <FamilyIcon />, description: "Rozwody, alimenty, opieka nad dziećmi." },
-  { area: LawArea.Civil, icon: <ScalesIcon />, description: "Umowy, odszkodowania, spadki." },
-  { area: LawArea.Commercial, icon: <BuildingIcon />, description: "Spółki, kontrakty, działalność gospodarcza." },
-];
+// Options will be mapped inside component to access t() function
 
 const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isLocalOnly, setIsLocalOnly, onImport, hasConsent = false }) => {
+  const { t } = useTranslation();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+  const lawOptions = [
+    { area: LawArea.Criminal, name: t('law.areas.prawo karne'), icon: <GavelIcon />, description: t('law.areas.prawo karne_desc') },
+    { area: LawArea.Family, name: t('law.areas.prawo rodzinne'), icon: <FamilyIcon />, description: t('law.areas.prawo rodzinne_desc') },
+    { area: LawArea.Civil, name: t('law.areas.prawo cywilne'), icon: <ScalesIcon />, description: t('law.areas.prawo cywilne_desc') },
+    { area: LawArea.Commercial, name: t('law.areas.prawo handlowe'), icon: <BuildingIcon />, description: t('law.areas.prawo handlowe_desc') },
+  ];
 
   return (
     <div className="flex flex-col items-center min-h-full p-4 w-full">
       <div className="text-center mb-10 flex items-center justify-center gap-2 my-auto md:mt-0 pt-8 md:pt-0">
-        <p className="text-lg text-slate-400">Wybierz dziedzinę prawa lub skorzystaj z inteligentnej analizy.</p>
+        <p className="text-lg text-slate-400">{t('law.header')}</p>
         <InfoIcon onClick={() => setIsHelpOpen(true)} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl mb-8">
@@ -41,7 +45,7 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isL
             <div className="w-12 h-12 bg-slate-700/50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-cyan-600/30 transition-colors">
               {option.icon}
             </div>
-            <h2 className="text-xl font-semibold text-white mb-1">{option.area}</h2>
+            <h2 className="text-xl font-semibold text-white mb-1">{option.name}</h2>
             <p className="text-slate-400">{option.description}</p>
           </button>
         ))}
@@ -57,10 +61,10 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isL
           </div>
           <div className="text-left flex-1">
             <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
-              Analizuj moją sprawę
+              {t('law.analyzeMyCase')}
               <span className="bg-violet-600 text-white text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">AI</span>
             </h2>
-            <p className="text-slate-300">Nie wiesz, którą kategorię wybrać? Opisz swoją sytuację, a asystent sam dopasuje odpowiednie prawo i tryb pracy.</p>
+            <p className="text-slate-300">{t('law.analyzeDesc')}</p>
           </div>
         </button>
       </div>
@@ -85,7 +89,7 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isL
             className="w-full group bg-slate-800/40 border border-slate-700 rounded-lg p-4 flex items-center justify-center gap-3 hover:bg-slate-700/60 hover:border-cyan-500 transition-all duration-300"
           >
             <MagicWandIcon className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
-            <span className="text-slate-200 font-medium">Importuj historię chatu (.json)</span>
+            <span className="text-slate-200 font-medium">{t('law.importJson')}</span>
           </button>
         </div>
       )}
@@ -93,23 +97,23 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isL
       <div className="w-full max-w-6xl p-6 bg-slate-800/40 rounded-xl border border-slate-700/50 backdrop-blur-sm">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-white mb-1">Tryb "Zapisuj tylko lokalnie"</h3>
+            <h3 className="text-lg font-semibold text-white mb-1">{t('law.localMode.title')}</h3>
             <p className="text-sm text-slate-400">
-              Twoje dane nie zostaną przesłane do chmury (Firestore). Otrzymasz poradę, ale historia i dokumenty znikną bezpowrotnie po zamknięciu strony lub odświeżeniu przeglądarki.
+              {t('law.localMode.desc')}
               <span className="block mt-1 text-xs text-slate-500 italic">
-                Wyłączenie tego trybu jest możliwe po wyrażeniu zgody na RODO w panelu użytkownika.
+                {t('law.localMode.note')}
               </span>
             </p>
           </div>
           <div className="flex items-center gap-3 bg-slate-700/50 px-4 py-2 rounded-lg">
             <span className={`text-sm font-medium ${isLocalOnly ? 'text-cyan-400' : 'text-slate-400'}`}>
-              {isLocalOnly ? 'WŁĄCZONE' : 'WYŁĄCZONE'}
+              {isLocalOnly ? t('law.localMode.on') : t('law.localMode.off')}
             </span>
             <button
               onClick={() => hasConsent && setIsLocalOnly(!isLocalOnly)}
               disabled={!hasConsent}
               className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${!hasConsent ? 'opacity-50 cursor-not-allowed bg-cyan-600' : (isLocalOnly ? 'bg-cyan-600' : 'bg-slate-600')}`}
-              title={!hasConsent ? "Wymagana zgoda RODO w panelu użytkownika" : ""}
+              title={!hasConsent ? t('law.localMode.tooltip') : ""}
             >
               <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isLocalOnly ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
@@ -120,20 +124,19 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isL
       <HelpModal
         isOpen={isHelpOpen}
         onClose={() => setIsHelpOpen(false)}
-        title="Wybór dziedziny prawa"
+        title={t('law.header')}
       >
         <div className="space-y-4">
           <p>
-            Na tym etapie decydujesz, o jakim obszarze prawa chcesz rozmawiać.
+            {t('law_help.intro')}
           </p>
           <ul className="list-disc pl-5 space-y-2">
             <li>
-              <strong>Wybór ręczny:</strong> Jeśli wiesz, że Twoja sprawa dotyczy np. spadku, wybierz
-              <em>Prawo Cywilne</em>. Jeśli dotyczy rozwodu - <em>Prawo Rodzinne</em>.
+              <strong>{t('law_help.manual_title')}</strong> {t('law_help.manual_desc')}
+              <em> {t('law_help.manual_civ')}</em>. {t('law_help.manual_fam_pre')} <em> {t('law_help.manual_fam')}</em>.
             </li>
             <li>
-              <strong>Analiza AI ("Analizuj moją sprawę"):</strong> Najlepszy wybór, jeśli nie masz pewności.
-              Opisz sytuację, a asystent sam zakwalifikuje sprawę i przeniesie Cię do odpowiedniego działu.
+              <strong>{t('law_help.ai_title')}</strong> {t('law_help.ai_desc')}
             </li>
           </ul>
         </div>

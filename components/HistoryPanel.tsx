@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { LawArea, InteractionMode, UserProfile } from '../types';
 import { XIcon, TrashIcon, CaseIcon, BookOpenIcon, DocumentTextIcon } from './Icons';
 import HelpModal from './HelpModal';
@@ -29,7 +30,21 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
   isLocalOnly,
   userProfile
 }) => {
+  const { t } = useTranslation();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+  const interactionModeMap: Record<string, string> = {
+    [InteractionMode.Advice]: 'advice',
+    [InteractionMode.Analysis]: 'analysis',
+    [InteractionMode.Document]: 'document',
+    [InteractionMode.LegalTraining]: 'legal_training',
+    [InteractionMode.SuggestRegulations]: 'suggest_regulations',
+    [InteractionMode.FindRulings]: 'find_rulings',
+    [InteractionMode.Court]: 'court',
+    [InteractionMode.Negotiation]: 'negotiation',
+    [InteractionMode.StrategicAnalysis]: 'strategic_analysis',
+    [InteractionMode.AppHelp]: 'app_help'
+  };
 
   const groupedHistories = histories.reduce((acc, item) => {
     if (!acc[item.lawArea]) {
@@ -54,14 +69,14 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
         <header className="p-6 flex justify-between items-center border-b border-slate-700 flex-shrink-0">
           <div className="flex items-center gap-2">
             <h3 className="text-xl leading-6 font-bold text-white" id="history-panel-title">
-              Historia Spraw
+              {t('history.title')}
             </h3>
             <InfoIcon onClick={() => setIsHelpOpen(true)} className="ml-2" />
           </div>
           <button
             onClick={onClose}
             className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
-            aria-label="Zamknij historię"
+            aria-label={t('history.close')}
           >
             <XIcon />
           </button>
@@ -78,12 +93,12 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                 </div>
                 <div>
                   <h4 className="text-sm font-semibold text-amber-500 mb-1">
-                    {userProfile?.manualLocalMode ? 'Aktywny Tryb Lokalny' : 'Brak zgody RODO'}
+                    {userProfile?.manualLocalMode ? t('history.local_mode_active') : t('history.no_consent')}
                   </h4>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {userProfile?.manualLocalMode
-                      ? 'Twoje dane są przechowywane tylko w Twojej przeglądarce. Historia z chmury jest ukryta.'
-                      : 'Twoja historia z chmury jest ukryta, ponieważ nie wyrażono zgody na przetwarzanie danych.'}
+                      ? t('history.local_desc')
+                      : t('history.no_consent_desc')}
                   </p>
                 </div>
               </div>
@@ -93,7 +108,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
             {Object.keys(groupedHistories).length > 0 ? (Object.entries(groupedHistories) as [string, typeof histories][]).map(([area, items]) => (
               <div key={area} className="mb-6">
                 <h4 className="w-fit text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 px-1 pb-1 border-b-2 border-cyan-500/30">
-                  {area}
+                  {t(`law.areas.${area.toLowerCase()}`)}
                 </h4>
                 <div className="space-y-2">
                   {(items as typeof histories).map(({ lawArea, topic, interactionMode, servicePath, docCount }, index) => (
@@ -107,8 +122,8 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                             )}
                           </div>
                           <p className="text-[11px] text-slate-500 truncate group-hover:text-slate-400 transition-colors">
-                            {interactionMode && <span className="">{interactionMode}</span>}
-                            {!interactionMode && <span className="opacity-50 italic">Brak aktywnego trybu</span>}
+                            {interactionMode && <span className="">{t(`interaction.modes.${interactionModeMap[interactionMode] || 'advice'}`)}</span>}
+                            {!interactionMode && <span className="opacity-50 italic">{t('history.no_active_mode')}</span>}
                           </p>
                         </div>
                       </button>
@@ -120,7 +135,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                               onViewDocuments(lawArea, topic);
                             }}
                             className="relative flex items-center justify-center p-2 text-slate-500 hover:text-cyan-400 transition-all"
-                            title="Dokumenty Sprawy"
+                            title={t('history.documents')}
                           >
                             <DocumentTextIcon className="w-6 h-6" />
                             <span className="absolute top-1 right-2 flex items-center justify-center text-[9px] font-black leading-none group-hover:text-cyan-300">
@@ -135,7 +150,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                               onViewKnowledge(lawArea, topic);
                             }}
                             className="p-2 text-slate-500 hover:text-cyan-400 transition-all"
-                            title="Baza Wiedzy Sprawy"
+                            title={t('history.knowledge_base')}
                           >
                             <BookOpenIcon className="w-4 h-4" />
                           </button>
@@ -146,7 +161,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                             onDeleteHistory(lawArea, topic);
                           }}
                           className="p-2 text-slate-700 hover:text-red-400 transition-all"
-                          aria-label={`Usuń historię ${topic}`}
+                          aria-label={`${t('history.delete_tooltip')} ${topic}`}
                         >
                           <TrashIcon className="w-4 h-4" />
                         </button>
@@ -158,7 +173,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
             )) : (
               <div className="flex flex-col items-center justify-center py-12 text-slate-500">
                 <CaseIcon className="w-12 h-12 mb-3 opacity-20" />
-                <p>Brak zapisanych spraw.</p>
+                <p>{t('history.empty')}</p>
               </div>
             )}
           </div>
@@ -170,7 +185,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
             onClick={onClose}
             className="w-full inline-flex justify-center rounded-md border border-slate-600 shadow-sm px-4 py-2 bg-slate-700 text-base font-medium text-slate-300 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 focus:ring-offset-slate-800 sm:w-auto sm:text-sm transition-colors"
           >
-            Zamknij
+            {t('history.close')}
           </button>
         </footer>
       </div>
@@ -178,21 +193,21 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
       <HelpModal
         isOpen={isHelpOpen}
         onClose={() => setIsHelpOpen(false)}
-        title="Panel Historii"
+        title={t('history.title')}
       >
         <div className="space-y-4">
           <p>
-            Tutaj znajdziesz listę wszystkich swoich wcześniejszych rozmów i analiz.
+            {t('history.help_intro')}
           </p>
           <ul className="list-disc pl-5 space-y-2">
             <li>
-              Kliknij na <strong>tytuł sprawy/temat</strong>, aby wrócić do rozmowy.
+              {t('history.help_click')} <strong>{t('history.help_click_bold')}</strong>{t('history.help_click_end')}
             </li>
             <li>
-              Użyj ikony <strong>kosza</strong>, aby trwale usunąć dany wątek.
+              {t('history.help_delete')} <strong>{t('history.help_delete_bold')}</strong>{t('history.help_delete_end')}
             </li>
             <li>
-              Pamiętaj, że usunięcie historii jest nieodwracalne.
+              {t('history.help_warning')}
             </li>
           </ul>
         </div>

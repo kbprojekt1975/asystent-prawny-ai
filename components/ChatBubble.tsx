@@ -34,6 +34,35 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   const [activeNoteId, setActiveNoteId] = React.useState<string | null>(null);
   const chatBubbleRef = React.useRef<HTMLDivElement>(null);
   const [draggingNoteId, setDraggingNoteId] = React.useState<string | null>(null);
+  const [isCopied, setIsCopied] = React.useState(false);
+
+  const handleCopy = async () => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(message.content);
+      } else {
+        // Fallback for mobile/non-secure contexts
+        const textArea = document.createElement("textarea");
+        textArea.value = message.content;
+        textArea.style.position = "fixed"; // Avoid scrolling to bottom
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+        } catch (err) {
+          console.error('Fallback copy failed', err);
+        }
+        document.body.removeChild(textArea);
+      }
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error("Copy failed", err);
+    }
+  };
 
   // If we have an active note, ensure content is synced for editing
   React.useEffect(() => {
@@ -275,17 +304,30 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
           : 'bg-slate-700/80 backdrop-blur-sm text-slate-200 rounded-t-2xl rounded-br-2xl'
           }`}
       >
-        {/* Download PDF Button */}
-        <button
-          onClick={handleDownloadPDF}
-          className={`absolute top-2 right-2 p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 z-10 ${isUser
-            ? 'text-white/70 hover:text-white hover:bg-white/20'
-            : 'text-slate-400 hover:text-white hover:bg-slate-600/50'
-            }`}
-          title="Pobierz PDF / Drukuj"
-        >
-          <DownloadIcon className="w-4 h-4" />
-        </button>
+        {/* Actions Container (Copy + Download) */}
+        <div className="absolute bottom-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <button
+            onClick={handleCopy}
+            className={`p-1.5 rounded-lg transition-all ${isUser
+              ? 'text-white/70 hover:text-white hover:bg-white/20'
+              : 'text-slate-400 hover:text-white hover:bg-slate-600/50'
+              }`}
+            title="Kopiuj tekst"
+          >
+            {isCopied ? <CheckIcon className="w-4 h-4" /> : <DocumentDuplicateIcon className="w-4 h-4" />}
+          </button>
+
+          <button
+            onClick={handleDownloadPDF}
+            className={`p-1.5 rounded-lg transition-all ${isUser
+              ? 'text-white/70 hover:text-white hover:bg-white/20'
+              : 'text-slate-400 hover:text-white hover:bg-slate-600/50'
+              }`}
+            title="Pobierz PDF / Drukuj"
+          >
+            <DownloadIcon className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Render Positioned Notes */}
         {positionedNotes?.map((note: any) => (

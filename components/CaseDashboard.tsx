@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDownIcon, ChevronUpIcon, BriefcaseIcon, SparklesIcon } from './Icons';
 import Timeline from './Timeline';
 import DocumentManager from './DocumentManager';
@@ -20,6 +21,7 @@ export interface CaseDashboardRef {
 }
 
 const CaseDashboard = React.forwardRef<CaseDashboardRef, CaseDashboardProps>(({ userId, caseId, initialExpanded = false, onChangeMode }, ref) => {
+    const { t } = useTranslation();
     const [isExpanded, setIsExpanded] = useState(initialExpanded);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
 
@@ -42,9 +44,9 @@ const CaseDashboard = React.forwardRef<CaseDashboardRef, CaseDashboardProps>(({ 
                             <BriefcaseIcon className="w-4 h-4 md:w-5 md:h-5 text-cyan-400" />
                         </div>
                         <div className="text-left">
-                            <h3 className="font-semibold text-slate-200 text-sm md:text-base">Panel Zarządzania Sprawą</h3>
+                            <h3 className="font-semibold text-slate-200 text-sm md:text-base">{t('dashboard.panel_title')}</h3>
                             <p className="text-[10px] md:text-xs text-slate-400">
-                                {isExpanded ? "Kliknij, aby zwinąć" : "Dokumenty, Oś czasu, Zadania"}
+                                {isExpanded ? t('dashboard.click_collapse') : t('dashboard.subtitle_collapsed')}
                             </p>
                         </div>
                     </div>
@@ -77,8 +79,8 @@ const CaseDashboard = React.forwardRef<CaseDashboardRef, CaseDashboardProps>(({ 
                                             <SparklesIcon className="h-5 w-5" />
                                         </div>
                                         <div className="text-left">
-                                            <span className="block text-sm font-semibold text-slate-200">Zmień tryb / Narzędzia AI</span>
-                                            <span className="block text-[10px] text-slate-400 uppercase tracking-wider">Tryb Analizy, Pisma, Negocjacji...</span>
+                                            <span className="block text-sm font-semibold text-slate-200">{t('dashboard.change_mode')}</span>
+                                            <span className="block text-[10px] text-slate-400 uppercase tracking-wider">{t('dashboard.mode_desc')}</span>
                                         </div>
                                     </div>
                                     <ChevronUpIcon className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors rotate-90" />
@@ -92,28 +94,24 @@ const CaseDashboard = React.forwardRef<CaseDashboardRef, CaseDashboardProps>(({ 
             <HelpModal
                 isOpen={isHelpOpen}
                 onClose={() => setIsHelpOpen(false)}
-                title="Panel Zarządzania Sprawą"
+                title={t('dashboard.panel_title')}
             >
                 <div className="space-y-4">
                     <p>
-                        To Twoje centrum dowodzenia sprawą. Znajdziesz tu trzy kluczowe sekcje:
+                        {t('dashboard.help_intro')}
                     </p>
                     <ul className="list-disc pl-5 space-y-2">
                         <li>
-                            <strong>Oś Czasu (Timeline):</strong> Wizualizacja przebiegu Twojej sprawy.
-                            Dzięki niej nie zgubisz się w gąszczu terminów i zdarzeń.
+                            <strong>{t('dashboard.help_timeline')}</strong> {t('dashboard.help_timeline_desc')}
                         </li>
                         <li>
-                            <strong>Dokumenty:</strong> Tutaj przechowasz pliki związane ze sprawą.
-                            Możesz je dodawać i przeglądać w jednym miejscu.
+                            <strong>{t('dashboard.help_docs')}</strong> {t('dashboard.help_docs_desc')}
                         </li>
                         <li>
-                            <strong>Lista zadań (Checklist):</strong> Prosta lista "to-do", która pomoże Ci
-                            zapanować nad kolejnymi krokami (np. "Wysłać pismo", "Opłacić wniosek").
+                            <strong>{t('dashboard.help_checklist')}</strong> {t('dashboard.help_checklist_desc')}
                         </li>
                         <li>
-                            <strong>Notatki:</strong> Twoje osobiste miejsce na własne przemyślenia,
-                            pytania do adwokata lub ważne fakty, które chcesz mieć zawsze pod ręką.
+                            <strong>{t('dashboard.help_notes')}</strong> {t('dashboard.help_notes_desc')}
                         </li>
                     </ul>
                 </div>

@@ -1,26 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SparklesIcon, ScaleIcon, ShieldCheckIcon, UserCircleIcon, ChevronRightIcon } from './Icons';
 
-const MESSAGES = [
-    // 1. Profesjonalny i rzeczowy
-    "Twój osobisty asystent w świecie prawa.",
-    "Przygotowujemy kompleksową analizę Twojej sprawy...",
-    "Inteligentne wsparcie prawne dostępne 24/7.",
-    "Od analizy dokumentów po strategię procesową.",
-    // 2. Budujący pewność siebie
-    "Wchodzisz na salę rozpraw z gotowym planem.",
-    "Prawo staje się prostsze. Inicjalizacja...",
-    "Wszystko, czego potrzebujesz do wygrania sprawy, w jednym miejscu.",
-    "Twoje wsparcie w trudnych rozmowach i negocjacjach.",
-    // 3. Technologiczny i innowacyjny
-    "Potęga AI w służbie sprawiedliwości.",
-    "Inteligentna analiza prawna na podstawie Twoich dokumentów.",
-    "Łączymy wiedzę prawniczą z najnowszą technologią.",
-    // 4. Skupiony na bezpieczeństwie
-    "Twoje dane są bezpieczne i szyfrowane.",
-    "Prywatność i prawo w Twoich rękach.",
-    "Bezpieczne połączenie z Twoim asystentem prawnym..."
-];
+// Messages removed, will be loaded from translations
 
 interface SplashScreenProps {
     onStart: () => void;
@@ -28,6 +10,7 @@ interface SplashScreenProps {
 }
 
 const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
+    const { t, i18n } = useTranslation();
     const [messageIndex, setMessageIndex] = useState(0);
     const [fade, setFade] = useState(true);
     const [minTimeElapsed, setMinTimeElapsed] = useState(false);
@@ -40,7 +23,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
         const interval = setInterval(() => {
             setFade(false);
             setTimeout(() => {
-                setMessageIndex((prev) => (prev + 1) % MESSAGES.length);
+                const messages = t('splash.messages', { returnObjects: true }) as string[];
+                setMessageIndex((prev) => (prev + 1) % messages.length);
                 setFade(true);
             }, 500);
         }, 3500);
@@ -49,7 +33,12 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
             clearTimeout(timer);
             clearInterval(interval);
         };
-    }, []);
+    }, [t]);
+
+    const changeLanguage = (lang: string) => {
+        i18n.changeLanguage(lang);
+        localStorage.setItem('i18nextLng', lang);
+    };
 
     const canStart = isReady && minTimeElapsed;
 
@@ -62,8 +51,24 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
             </div>
 
             <div className="relative flex flex-col items-center max-w-sm px-6 text-center">
+                {/* Language Switcher - Moved above icons */}
+                <div className="mb-12 z-50 flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50 backdrop-blur-sm">
+                    <button
+                        onClick={() => changeLanguage('pl')}
+                        className={`px-3 py-1.5 text-sm font-bold rounded-md transition-all ${i18n.language.startsWith('pl') ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-900/20' : 'text-slate-400 hover:text-white'}`}
+                    >
+                        PL
+                    </button>
+                    <button
+                        onClick={() => changeLanguage('en')}
+                        className={`px-3 py-1.5 text-sm font-bold rounded-md transition-all ${!i18n.language.startsWith('pl') ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-900/20' : 'text-slate-400 hover:text-white'}`}
+                    >
+                        EN
+                    </button>
+                </div>
+
                 {/* Logo / Icon Area */}
-                <div className="relative mb-12">
+                <div className="relative mb-8">
                     <div className="absolute inset-0 bg-cyan-500/20 blur-2xl rounded-full animate-pulse" />
                     <div className="relative flex items-center justify-center w-24 h-24 bg-slate-800 border border-slate-700/50 rounded-3xl shadow-2xl rotate-12 animate-float">
                         <SparklesIcon className="w-12 h-12 text-cyan-400" />
@@ -85,7 +90,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
                             className="group relative px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-700 text-white font-bold rounded-xl shadow-lg shadow-cyan-900/20 hover:shadow-cyan-500/30 hover:scale-105 active:scale-95 transition-all duration-300 animate-in fade-in zoom-in"
                         >
                             <div className="flex items-center gap-2">
-                                <span>ZACZYNAMY</span>
+                                <span>{t('splash.start')}</span>
                                 <ChevronRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </div>
                         </button>
@@ -96,7 +101,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
                                 <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
                                 <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                             </div>
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">Przygotowanie...</span>
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">{t('splash.preparing')}</span>
                         </div>
                     )}
                 </div>
@@ -104,16 +109,17 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
                 {/* Marketing Messages */}
                 <div className="h-24 flex items-center justify-center">
                     <p className={`text-lg md:text-xl font-medium text-white transition-all duration-500 ${fade ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                        {MESSAGES[messageIndex]}
+                        {(t('splash.messages', { returnObjects: true }) as string[])[messageIndex]}
                     </p>
                 </div>
 
                 {/* Footer Meta */}
-                <div className="absolute bottom-[-150px] left-0 right-0 flex flex-col items-center">
+                <div className="absolute bottom-[-150px] left-0 right-0 flex flex-col items-center px-4">
                     <div className="w-48 h-1 bg-slate-800 rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 animate-loading-bar" />
                     </div>
-                    <p className="mt-4 text-[10px] text-slate-500 font-mono tracking-widest uppercase italic">Secure Legal Environment v2.0</p>
+                    <p className="mt-4 text-[8px] sm:text-[10px] text-slate-500 font-mono tracking-wider sm:tracking-widest uppercase italic text-center max-w-full">{t('splash.credit')}</p>
+                    <p className="mt-1 text-[7px] sm:text-[9px] text-slate-600 font-mono tracking-wider sm:tracking-widest uppercase text-center">{t('splash.environment')}</p>
                 </div>
             </div>
 

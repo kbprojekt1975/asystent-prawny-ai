@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, googleProvider } from '../services/firebase';
 import { MagicWandIcon, SparklesIcon } from './Icons';
@@ -10,6 +11,7 @@ import AppGuide from './AppGuide';
 import PrivacyPolicyModal from './PrivacyPolicyModal';
 
 const Auth: React.FC = () => {
+  const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [isResetPassword, setIsResetPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -33,7 +35,7 @@ const Auth: React.FC = () => {
       await signInWithPopup(auth, googleProvider);
     } catch (err: any) {
       console.error(err);
-      setError("Wystąpił błąd podczas logowania przez Google.");
+      setError(t('auth.errors.googleLogin'));
     } finally {
       setIsLoading(false);
     }
@@ -42,7 +44,7 @@ const Auth: React.FC = () => {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
-      setError("Proszę podać adres email.");
+      setError(t('auth.errors.provideEmail'));
       return;
     }
 
@@ -52,13 +54,13 @@ const Auth: React.FC = () => {
 
     try {
       await sendPasswordResetEmail(auth, email);
-      setSuccessMessage("Link do resetowania hasła został wysłany na Twój email.");
+      setSuccessMessage(t('auth.success.resetSent'));
       // Optional: switch back to login mode after a delay or let user do it manually
     } catch (err: any) {
       console.error(err);
-      let msg = "Wystąpił błąd podczas resetowania hasła.";
-      if (err.code === 'auth/user-not-found') msg = "Nie znaleziono użytkownika o podanym adresie email.";
-      else if (err.code === 'auth/invalid-email') msg = "Nieprawidłowy format adresu email.";
+      let msg = t('auth.errors.resetError');
+      if (err.code === 'auth/user-not-found') msg = t('auth.errors.userNotFound');
+      else if (err.code === 'auth/invalid-email') msg = t('auth.errors.invalidEmail');
       setError(msg);
     } finally {
       setIsLoading(false);
@@ -89,13 +91,13 @@ const Auth: React.FC = () => {
       }
     } catch (err: any) {
       console.error(err);
-      let msg = "Wystąpił błąd.";
-      if (err.code === 'auth/invalid-credential') msg = "Nieprawidłowe dane logowania.";
-      else if (err.code === 'auth/user-not-found') msg = authMethod === 'nickname' ? "Nie znaleziono użytkownika o takim nicku." : "Nie znaleziono użytkownika.";
-      else if (err.code === 'auth/wrong-password') msg = "Nieprawidłowe hasło.";
-      else if (err.code === 'auth/email-already-in-use') msg = authMethod === 'nickname' ? "Ten nick jest już zajęty." : "Ten email jest już zarejestrowany.";
-      else if (err.code === 'auth/weak-password') msg = "Hasło musi mieć co najmniej 6 znaków.";
-      else if (err.code === 'auth/invalid-email') msg = authMethod === 'nickname' ? "Nieprawidłowy format nicku." : "Nieprawidłowy format adresu email.";
+      let msg = t('auth.errors.generic');
+      if (err.code === 'auth/invalid-credential') msg = t('auth.errors.invalidCredential');
+      else if (err.code === 'auth/user-not-found') msg = authMethod === 'nickname' ? t('auth.errors.userNotFoundNick') : t('auth.errors.userNotFound');
+      else if (err.code === 'auth/wrong-password') msg = t('auth.errors.wrongPassword');
+      else if (err.code === 'auth/email-already-in-use') msg = authMethod === 'nickname' ? t('auth.errors.nickTaken') : t('auth.errors.emailTaken');
+      else if (err.code === 'auth/weak-password') msg = t('auth.errors.weakPassword');
+      else if (err.code === 'auth/invalid-email') msg = authMethod === 'nickname' ? t('auth.errors.invalidNick') : t('auth.errors.invalidEmail');
       setError(msg);
     } finally {
       setIsLoading(false);
@@ -113,11 +115,11 @@ const Auth: React.FC = () => {
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-900/30 mb-6 ring-1 ring-cyan-500/50">
           <MagicWandIcon className="w-8 h-8 text-cyan-400" />
         </div>
-        <h1 className="text-2xl font-bold text-white mb-2">Asystent Prawny AI</h1>
+        <h1 className="text-2xl font-bold text-white mb-2">{t('auth.title')}</h1>
         <p className="text-slate-400 mb-6">
           {isResetPassword
-            ? 'Zresetuj swoje hasło'
-            : (isLogin ? 'Zaloguj się, aby kontynuować' : 'Utwórz konto, aby zacząć')}
+            ? t('auth.resetPasswordTitle')
+            : (isLogin ? t('auth.loginTitle') : t('auth.registerTitle'))}
         </p>
 
         {isResetPassword ? (
@@ -126,7 +128,7 @@ const Auth: React.FC = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Adres email"
+              placeholder={t('auth.emailPlaceholder')}
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
               required
             />
@@ -135,7 +137,7 @@ const Auth: React.FC = () => {
               disabled={isLoading}
               className="w-full bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-cyan-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Wysyłanie...' : 'Wyślij link resetujący'}
+              {isLoading ? t('auth.sending') : t('auth.sendResetLink')}
             </button>
             <button
               type="button"
@@ -146,7 +148,7 @@ const Auth: React.FC = () => {
               }}
               className="text-slate-400 hover:text-white text-sm"
             >
-              Wróć do logowania
+              {t('auth.backToLogin')}
             </button>
           </form>
         ) : (
@@ -157,14 +159,14 @@ const Auth: React.FC = () => {
                 onClick={() => setAuthMethod('email')}
                 className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${authMethod === 'email' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
               >
-                E-mail
+                {t('auth.email')}
               </button>
               <button
                 type="button"
                 onClick={() => setAuthMethod('nickname')}
                 className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${authMethod === 'nickname' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
               >
-                Nick
+                {t('auth.nickname')}
               </button>
             </div>
 
@@ -173,7 +175,7 @@ const Auth: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Adres email"
+                placeholder={t('auth.emailPlaceholder')}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 required
               />
@@ -182,11 +184,11 @@ const Auth: React.FC = () => {
                 type="text"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                placeholder="Twój Nick"
+                placeholder={t('auth.nicknamePlaceholder')}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 required
                 pattern="^[a-zA-Z0-9_\-]+$"
-                title="Nick może zawierać tylko litery, cyfry, podkreślniki i myślniki."
+                title={t('auth.errors.nickPattern')}
               />
             )}
 
@@ -199,8 +201,8 @@ const Auth: React.FC = () => {
                     </svg>
                   </div>
                   <p className="text-[10px] leading-relaxed text-amber-200/90">
-                    <strong className="text-amber-400 block mb-0.5 uppercase tracking-wide">Bezpieczeństwo konta</strong>
-                    Konto oparte na samym nicku uniemożliwia tradycyjne odzyskanie hasła. Pamiętaj o zachowaniu hasła w bezpiecznym miejscu, ponieważ w przypadku jego utraty nie będziemy mogli zresetować go przez e-mail.
+                    <strong className="text-amber-400 block mb-0.5 uppercase tracking-wide">{t('auth.security.title')}</strong>
+                    {t('auth.security.desc')}
                   </p>
                 </div>
               </div>
@@ -210,7 +212,7 @@ const Auth: React.FC = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Hasło"
+                placeholder={t('auth.passwordPlaceholder')}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 required
               />
@@ -224,7 +226,7 @@ const Auth: React.FC = () => {
                   }}
                   className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline mt-1"
                 >
-                  Nie pamiętasz hasła?
+                  {t('auth.forgotPassword')}
                 </button>
               )}
             </div>
@@ -246,11 +248,11 @@ const Auth: React.FC = () => {
                 </div>
                 <div className="text-xs leading-relaxed">
                   <span className="text-slate-300 group-hover:text-white transition-colors">
-                    Akceptuję <button type="button" onClick={() => setIsPrivacyPolicyOpen(true)} className="text-cyan-400 hover:underline">Politykę Prywatności</button> oraz wyrażam zgodę na zapisywanie moich danych w chmurze.
+                    {t('auth.privacy.accept')} <button type="button" onClick={() => setIsPrivacyPolicyOpen(true)} className="text-cyan-400 hover:underline">{t('auth.privacy.policy')}</button>{t('auth.privacy.consent')}
                   </span>
                   {!consentChecked && (
                     <span className="block mt-1 text-amber-500 font-semibold">
-                      (Brak zgody = dane tylko w pamięci przeglądarki)
+                      {t('auth.privacy.noConsent')}
                     </span>
                   )}
                 </div>
@@ -262,7 +264,7 @@ const Auth: React.FC = () => {
               disabled={isLoading}
               className="w-full bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-cyan-500 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Przetwarzanie...' : (isLogin ? 'Zaloguj się' : 'Zarejestruj się')}
+              {isLoading ? t('auth.processing') : (isLogin ? t('auth.loginButton') : t('auth.registerButton'))}
             </button>
           </form>
         )}
@@ -274,7 +276,7 @@ const Auth: React.FC = () => {
                 <div className="w-full border-t border-slate-700"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-slate-800 text-slate-500">lub kontynuuj przez</span>
+                <span className="px-2 bg-slate-800 text-slate-500">{t('auth.orContinueWith')}</span>
               </div>
             </div>
 
@@ -301,7 +303,7 @@ const Auth: React.FC = () => {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Google
+              {t('auth.googleLogin')}
             </button>
           </>
         )}
@@ -316,24 +318,24 @@ const Auth: React.FC = () => {
 
         {!isResetPassword && (
           <p className="mt-6 text-slate-400 text-sm">
-            {isLogin ? "Nie masz konta? " : "Masz już konto? "}
+            {isLogin ? t('auth.noAccount') : t('auth.hasAccount')}
             <button
               onClick={() => { setIsLogin(!isLogin); setError(null); setSuccessMessage(null); }}
               className="text-cyan-400 hover:text-cyan-300 font-medium hover:underline focus:outline-none"
             >
-              {isLogin ? "Zarejestruj się" : "Zaloguj się"}
+              {isLogin ? t('auth.registerButton') : t('auth.loginButton')}
             </button>
           </p>
         )}
 
         <div className="mt-8 pt-6 border-t border-slate-700/50">
-          <p className="text-slate-500 text-xs mb-3">Nowy w Asystencie?</p>
+          <p className="text-slate-500 text-xs mb-3">{t('auth.newInAssistant')}</p>
           <button
             onClick={() => setIsHelpOpen(true)}
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-dashed border-slate-700 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all text-sm group animate-guide-pulse"
           >
             <SparklesIcon className="w-4 h-4 text-cyan-500/50 group-hover:text-cyan-400" />
-            <span>Zobacz jak działa aplikacja</span>
+            <span>{t('auth.seeHowItWorks')}</span>
           </button>
         </div>
       </div>
@@ -341,7 +343,7 @@ const Auth: React.FC = () => {
       <HelpModal
         isOpen={isHelpOpen}
         onClose={() => setIsHelpOpen(false)}
-        title="O aplikacji"
+        title={t('menu.about')}
       >
         <AppGuide showStartButton={false} />
       </HelpModal>

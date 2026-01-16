@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SparklesIcon, XIcon, CreditCardIcon, TimeIcon } from './Icons';
 import { SubscriptionStatus, SubscriptionInfo } from '../types';
 import { InfoIcon } from './InfoIcon';
@@ -13,6 +14,7 @@ interface PlanSelectionModalProps {
 }
 
 const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelectPlan, subscription, isLoading }) => {
+    const { t } = useTranslation();
     const [isVisible, setIsVisible] = useState(false);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
 
@@ -36,26 +38,25 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                             <InfoIcon onClick={() => setIsHelpOpen(true)} />
                         </div>
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">Pakiet Startowy AI</h3>
+                    <h3 className="text-2xl font-bold text-white mb-2">{t('plan.starter.title')}</h3>
                     <p className="text-slate-400 mb-8 max-w-sm">
-                        Uzyskaj pełny dostęp do asystenta prawnego na tydzień.
-                        Wykorzystaj 10 PLN kredytu na zaawansowane analizy Gemini 1.5 Pro/Flash.
+                        {t('plan.starter.desc')}
                     </p>
 
                     <div className="grid grid-cols-2 gap-4 w-full mb-8">
                         <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700 text-left">
                             <div className="flex items-center gap-2 text-cyan-400 mb-1">
                                 <CreditCardIcon className="w-4 h-4" />
-                                <span className="text-xs font-bold uppercase tracking-wider">Kredyt</span>
+                                <span className="text-xs font-bold uppercase tracking-wider">{t('plan.starter.creditLabel')}</span>
                             </div>
                             <div className="text-xl font-bold text-white">10.00 PLN</div>
                         </div>
                         <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700 text-left">
                             <div className="flex items-center gap-2 text-violet-400 mb-1">
                                 <TimeIcon className="w-4 h-4" />
-                                <span className="text-xs font-bold uppercase tracking-wider">Ważność</span>
+                                <span className="text-xs font-bold uppercase tracking-wider">{t('plan.starter.validityLabel')}</span>
                             </div>
-                            <div className="text-xl font-bold text-white">7 Dni</div>
+                            <div className="text-xl font-bold text-white">{t('plan.starter.validityValue')}</div>
                         </div>
                     </div>
 
@@ -64,10 +65,10 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                         disabled={isLoading}
                         className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-cyan-900/20 disabled:opacity-50"
                     >
-                        {isLoading ? "Przetwarzanie..." : "Wybieram ten plan - 10 PLN"}
+                        {isLoading ? t('auth.processing') : t('plan.starter.selectButton')}
                     </button>
                     <p className="mt-4 text-[10px] text-slate-500 uppercase tracking-widest">
-                        Wymagana ręczna aktywacja przez administratora
+                        {t('plan.starter.manualActivation')}
                     </p>
                 </div>
             );
@@ -79,14 +80,12 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                     <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mb-6 border border-amber-500/50">
                         <TimeIcon className="w-8 h-8 text-amber-400" />
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">Oczekiwanie na aktywację</h3>
+                    <h3 className="text-xl font-bold text-white mb-2">{t('plan.pending.title')}</h3>
                     <p className="text-slate-400 mb-6">
-                        Twoje zgłoszenie zostało wysłane. <br />
-                        Prosimy o dokonanie wpłaty (10 PLN). <br />
-                        Administrator aktywuje Twoje konto wkrótce.
+                        {t('plan.pending.desc')}
                     </p>
                     <div className="text-xs text-amber-400/70 bg-amber-400/10 px-4 py-2 rounded-full border border-amber-400/20 mb-6">
-                        Status: OCZEKIWANIE_NA_WPŁATĘ
+                        {t('plan.pending.statusLabel')}
                     </div>
                 </div>
             );
@@ -98,17 +97,16 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                     <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mb-6 border border-red-500/50">
                         <XIcon className="w-8 h-8 text-red-400" />
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">Plan Wygasł</h3>
+                    <h3 className="text-xl font-bold text-white mb-2">{t('plan.expired.title')}</h3>
                     <p className="text-slate-400 mb-8">
-                        Twój kredyt się wyczerpał lub termin ważności minął.
-                        Wybierz plan ponownie, aby kontynuować.
+                        {t('plan.expired.desc')}
                     </p>
                     <button
                         onClick={onSelectPlan}
                         disabled={isLoading}
                         className="w-full py-4 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-all border border-slate-600"
                     >
-                        Odnów dostęp - 10 PLN
+                        {t('plan.expired.renewButton')}
                     </button>
                 </div>
             );
@@ -131,21 +129,21 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
             <HelpModal
                 isOpen={isHelpOpen}
                 onClose={() => setIsHelpOpen(false)}
-                title="Pakiet Startowy - Szczegóły"
+                title={t('plan.help.title')}
             >
                 <div className="space-y-4 text-sm">
                     <p>
-                        Korzystanie z Asystenta Prawnego AI wymaga aktywnego pakietu.
+                        {t('plan.help.intro')}
                     </p>
                     <ul className="list-disc pl-5 space-y-2">
                         <li>
-                            <strong>Kredyt 10 PLN:</strong> Środki te są zużywane na zapytania do modelu AI (Gemini 1.5 Pro/Flash). Każde pytanie, analiza dokumentu czy generowanie pisma pobiera ułamek grosza lub kilka groszy, w zależności od długości.
+                            <strong>{t('plan.help.creditTitle')}</strong> {t('plan.help.creditDesc')}
                         </li>
                         <li>
-                            <strong>Ważność 7 Dni:</strong> Kredyt i dostęp są ważne przez tydzień od aktywacji. Niewykorzystane środki przepadają po tym czasie.
+                            <strong>{t('plan.help.validityTitle')}</strong> {t('plan.help.validityDesc')}
                         </li>
                         <li>
-                            <strong>Aktywacja:</strong> Obecnie system działa w trybie "Early Access". Po wyborze planu, skontaktuj się z administratorem, aby ręcznie aktywował Twoje konto (potwierdzenie przelewu).
+                            <strong>{t('plan.help.activationTitle')}</strong> {t('plan.help.activationDesc')}
                         </li>
                     </ul>
                 </div>

@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { EvidenceSuggestion } from '../types';
 import { CheckIcon, PlusIcon, UploadIcon, FileTextIcon } from './Icons';
 
@@ -9,6 +10,7 @@ interface EvidenceChecklistProps {
 }
 
 const EvidenceChecklist: React.FC<EvidenceChecklistProps> = ({ evidence, onUpload, onStatusChange }) => {
+    const { t } = useTranslation();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const activeLabelRef = useRef<string | null>(null);
 
@@ -29,7 +31,7 @@ const EvidenceChecklist: React.FC<EvidenceChecklistProps> = ({ evidence, onUploa
         <div className="bg-slate-900/50 rounded-2xl p-6 border border-slate-700/50 backdrop-blur-sm">
             <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                 <FileTextIcon className="w-6 h-6 text-amber-400" />
-                Twoje Dowody
+                {t('evidence.title')}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -62,20 +64,20 @@ const EvidenceChecklist: React.FC<EvidenceChecklistProps> = ({ evidence, onUploa
                                         className="flex-1 flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold py-2 rounded-lg transition-colors"
                                     >
                                         <UploadIcon className="w-4 h-4" />
-                                        Mam to
+                                        {t('evidence.upload')}
                                     </button>
                                     <button
                                         onClick={() => onStatusChange(item.label, 'missing')}
                                         className="flex-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold py-2 rounded-lg transition-colors"
                                     >
                                         <PlusIcon className="w-4 h-4" />
-                                        Muszę zdobyć
+                                        {t('evidence.missing')}
                                     </button>
                                 </>
                             ) : (
                                 <div className="w-full flex items-center gap-2 text-green-400 text-xs font-bold py-2 italic">
                                     <CheckIcon className="w-4 h-4" />
-                                    Zgromadzone
+                                    {t('evidence.collected')}
                                 </div>
                             )}
                         </div>

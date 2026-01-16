@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LawArea } from '../types';
 import { CaseIcon, PlusCircleIcon, TrashIcon, UserGroupIcon, SparklesIcon, ChevronUpIcon } from './Icons';
 import HelpModal from './HelpModal';
@@ -15,6 +16,7 @@ interface TopicSelectorProps {
 }
 
 const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelectTopic, onAddTopic, onAddNegotiationTopic, onDeleteTopic, onChangeMode }) => {
+  const { t } = useTranslation();
   const [newTopic, setNewTopic] = useState('');
   const [newNegotiationTopic, setNewNegotiationTopic] = useState('');
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -41,7 +43,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
   return (
     <div className="flex flex-col items-center min-h-full p-4 w-full">
       <div className="text-center mb-10 flex items-center justify-center gap-2 mt-4 md:mt-0">
-        <p className="text-lg text-slate-400">Wybierz lub utwórz temat sprawy.</p>
+        <p className="text-lg text-slate-400">{t('topic.header')}</p>
         <InfoIcon onClick={() => setIsHelpOpen(true)} />
       </div>
       <div className="w-full max-w-2xl space-y-8 my-auto pb-8">
@@ -57,8 +59,8 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
                   <SparklesIcon className="h-5 w-5" />
                 </div>
                 <div className="text-left">
-                  <span className="block text-sm font-semibold text-slate-200">Zmień tryb / Narzędzia AI</span>
-                  <span className="block text-[10px] text-slate-400 uppercase tracking-wider">Tryb Analizy, Pisma, Negocjacji...</span>
+                  <span className="block text-sm font-semibold text-slate-200">{t('topic.changeMode')}</span>
+                  <span className="block text-[10px] text-slate-400 uppercase tracking-wider">{t('topic.modeDesc')}</span>
                 </div>
               </div>
               <ChevronUpIcon className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors rotate-90" />
@@ -70,13 +72,13 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
         <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 shadow-xl backdrop-blur-sm">
           <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
             <CaseIcon className="w-6 h-6 text-cyan-400" />
-            Twoje Sprawy
+            {t('topic.yourCases')}
           </h2>
 
           {/* Sekcja: Sprawy standardowe */}
           <div className="space-y-6">
             <div>
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 px-1">Analiza i Porady</h3>
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 px-1">{t('topic.analysisAndAdvice')}</h3>
               <div className="grid grid-cols-1 gap-3">
                 {topics.filter(t => {
                   const low = t.toLowerCase();
@@ -109,14 +111,14 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
                       </div>
                     ))
                 ) : (
-                  <p className="text-slate-500 text-sm italic px-1">Brak aktywnych spraw w tym dziale.</p>
+                  <p className="text-slate-500 text-sm italic px-1">{t('topic.noActiveCases')}</p>
                 )}
               </div>
             </div>
 
             {/* Sekcja: Negocjacje i Mediacje */}
             <div className="pt-4 border-t border-slate-700/50">
-              <h3 className="text-xs font-bold text-purple-400/80 uppercase tracking-widest mb-3 px-1">Negocjacje i Mediacje</h3>
+              <h3 className="text-xs font-bold text-purple-400/80 uppercase tracking-widest mb-3 px-1">{t('topic.negotiationsAndMediation')}</h3>
               <div className="grid grid-cols-1 gap-3">
                 {topics.filter(t => {
                   const low = t.toLowerCase();
@@ -149,7 +151,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
                       </div>
                     ))
                 ) : (
-                  <p className="text-slate-500 text-sm italic px-1">Nie rozpoczęto jeszcze żadnych negocjacji.</p>
+                  <p className="text-slate-500 text-sm italic px-1">{t('topic.noNegotiations')}</p>
                 )}
               </div>
             </div>
@@ -161,7 +163,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
           <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 shadow-lg">
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <PlusCircleIcon className="text-cyan-400 w-5 h-5" />
-              Nowa Sprawa
+              {t('topic.newCase')}
             </h2>
             <div className="flex flex-col md:flex-row gap-3">
               <input
@@ -169,7 +171,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
                 value={newTopic}
                 onChange={(e) => setNewTopic(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddClick()}
-                placeholder="Np. Sprawa o alimenty, Umowa najmu"
+                placeholder={t('topic.newCasePlaceholder')}
                 className="flex-grow bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
               />
               <button
@@ -177,7 +179,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
                 disabled={!newTopic.trim()}
                 className="bg-cyan-600 text-white px-6 py-3 md:py-0 rounded-lg hover:bg-cyan-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 font-medium shrink-0"
               >
-                Analizuj
+                {t('topic.analyze')}
               </button>
             </div>
           </div>
@@ -186,16 +188,16 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/5 blur-3xl rounded-full -mr-16 -mt-16"></div>
             <h2 className="text-lg font-semibold text-white mb-1 flex items-center gap-2">
               <UserGroupIcon className="text-purple-400 w-5 h-5" />
-              Nowa Konwersacja
+              {t('topic.newConversation')}
             </h2>
-            <p className="text-xs text-slate-400 mb-4 uppercase tracking-tighter">Mediacje i Negocjacje</p>
+            <p className="text-xs text-slate-400 mb-4 uppercase tracking-tighter">{t('topic.negotiationDesc')}</p>
             <div className="flex flex-col md:flex-row gap-3">
               <input
                 type="text"
                 value={newNegotiationTopic}
                 onChange={(e) => setNewNegotiationTopic(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddNegotiationClick()}
-                placeholder="Np. Kontakt z dziećmi, Spłata zadłużenia"
+                placeholder={t('topic.negotiationPlaceholder')}
                 className="flex-grow bg-slate-700/50 border border-purple-900/30 rounded-lg p-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
               />
               <button
@@ -203,7 +205,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
                 disabled={!newNegotiationTopic.trim()}
                 className="bg-purple-600 text-white px-6 py-3 md:py-0 rounded-lg hover:bg-purple-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 font-medium shrink-0"
               >
-                Rozpocznij
+                {t('topic.start')}
               </button>
             </div>
           </div>
@@ -213,7 +215,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
       <HelpModal
         isOpen={isHelpOpen}
         onClose={() => setIsHelpOpen(false)}
-        title="Zarządzanie tematami"
+        title={t('topic.header')}
       >
         <div className="space-y-4">
           <p>

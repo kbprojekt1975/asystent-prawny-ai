@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SparklesIcon, DocumentTextIcon, BookOpenIcon, ChevronDownIcon, BriefcaseIcon } from './Icons';
 
 interface AppGuideProps {
@@ -7,16 +8,17 @@ interface AppGuideProps {
 }
 
 const AppGuide: React.FC<AppGuideProps> = ({ onClose, showStartButton = true }) => {
+    const { t } = useTranslation();
     const [expandedSection, setExpandedSection] = useState<string | null>('analysis');
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="text-center space-y-2 mb-8">
                 <h4 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                    Twój Osobisty Asystent Prawny
+                    {t('guide.title')}
                 </h4>
                 <p className="text-sm text-slate-400 px-8 leading-relaxed">
-                    Odkryj pełen potencjał aplikacji w 3 prostych krokach. Kliknij karty poniżej, aby zobaczyć szczegóły.
+                    {t('guide.subtitle')}
                 </p>
             </div>
 
@@ -31,15 +33,15 @@ const AppGuide: React.FC<AppGuideProps> = ({ onClose, showStartButton = true }) 
                             <SparklesIcon className="w-6 h-6" />
                         </div>
                         <div className="flex-1">
-                            <h5 className="font-bold text-slate-100 italic">1. Inteligentna Analiza Spraw</h5>
-                            <p className="text-xs text-slate-400">Zrozumienie Twojego problemu i wskazanie ścieżki prawnej</p>
+                            <h5 className="font-bold text-slate-100 italic">{t('guide.analysis.title')}</h5>
+                            <p className="text-xs text-slate-400">{t('guide.analysis.subtitle')}</p>
                         </div>
                         <ChevronDownIcon className={`w-5 h-5 text-slate-500 transition-transform duration-300 ${expandedSection === 'analysis' ? 'rotate-180 text-cyan-400' : ''}`} />
                     </button>
                     <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'analysis' ? 'max-h-48' : 'max-h-0'}`}>
                         <div className="p-4 pt-0 border-t border-slate-700/30 mt-2">
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Nasz AI przeanalizuje Twoją sprawę na podstawie opisów i dokumentów. Otrzymasz konkretne paragrafy, ocenę szans i plan działania.
+                                {t('guide.analysis.desc')}
                             </p>
                         </div>
                     </div>
@@ -55,15 +57,15 @@ const AppGuide: React.FC<AppGuideProps> = ({ onClose, showStartButton = true }) 
                             <DocumentTextIcon className="w-6 h-6" />
                         </div>
                         <div className="flex-1">
-                            <h5 className="font-bold text-slate-100 italic">2. Generator Dokumentów</h5>
-                            <p className="text-xs text-slate-400">Tworzenie pism procesowych, wezwań i wniosków</p>
+                            <h5 className="font-bold text-slate-100 italic">{t('guide.generator.title')}</h5>
+                            <p className="text-xs text-slate-400">{t('guide.generator.subtitle')}</p>
                         </div>
                         <ChevronDownIcon className={`w-5 h-5 text-slate-500 transition-transform duration-300 ${expandedSection === 'generator' ? 'rotate-180 text-purple-400' : ''}`} />
                     </button>
                     <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'generator' ? 'max-h-48' : 'max-h-0'}`}>
                         <div className="p-4 pt-0 border-t border-slate-700/30 mt-2">
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Na podstawie czatu możesz wygenerować gotowe pismo procesowe. System sam uzupełni Twoje dane i podstawę prawną.
+                                {t('guide.generator.desc')}
                             </p>
                         </div>
                     </div>
@@ -79,15 +81,15 @@ const AppGuide: React.FC<AppGuideProps> = ({ onClose, showStartButton = true }) 
                             <BookOpenIcon className="w-6 h-6" />
                         </div>
                         <div className="flex-1">
-                            <h5 className="font-bold text-slate-100 italic">3. Baza Wiedzy i Pamięć</h5>
-                            <p className="text-xs text-slate-400">Bezpieczne archiwum Twoich spraw i dokumentów</p>
+                            <h5 className="font-bold text-slate-100 italic">{t('guide.knowledge.title')}</h5>
+                            <p className="text-xs text-slate-400">{t('guide.knowledge.subtitle')}</p>
                         </div>
                         <ChevronDownIcon className={`w-5 h-5 text-slate-500 transition-transform duration-300 ${expandedSection === 'knowledge' ? 'rotate-180 text-emerald-400' : ''}`} />
                     </button>
                     <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'knowledge' ? 'max-h-48' : 'max-h-0'}`}>
                         <div className="p-4 pt-0 border-t border-slate-700/30 mt-2">
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Wszystkie analizy są zapisywane. Możesz do nich wrócić w dowolnym momencie w sekcji "Baza Wiedzy".
+                                {t('guide.knowledge.desc')}
                             </p>
                         </div>
                     </div>
@@ -103,15 +105,15 @@ const AppGuide: React.FC<AppGuideProps> = ({ onClose, showStartButton = true }) 
                             <BriefcaseIcon className="w-6 h-6" />
                         </div>
                         <div className="flex-1">
-                            <h5 className="font-bold text-slate-100 italic">4. Strefa PRO <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded ml-1 not-italic">NOWOŚĆ</span></h5>
-                            <p className="text-xs text-slate-400">Strategia procesowa i zarządzanie kompletną teczką sprawy</p>
+                            <h5 className="font-bold text-slate-100 italic">{t('guide.pro.title')} <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded ml-1 not-italic">{t('guide.pro.new')}</span></h5>
+                            <p className="text-xs text-slate-400">{t('guide.pro.subtitle')}</p>
                         </div>
                         <ChevronDownIcon className={`w-5 h-5 text-slate-500 transition-transform duration-300 ${expandedSection === 'pro' ? 'rotate-180 text-amber-400' : ''}`} />
                     </button>
                     <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'pro' ? 'max-h-48' : 'max-h-0'}`}>
                         <div className="p-4 pt-0 border-t border-slate-700/30 mt-2">
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Profesjonalne narzędzie do prowadzenia skomplikowanych spraw. Twórz teczki, dodawaj dokumenty strony przeciwnej, symuluj rozprawy sądowe i buduj zwycięską strategię.
+                                {t('guide.pro.desc')}
                             </p>
                         </div>
                     </div>
@@ -120,15 +122,15 @@ const AppGuide: React.FC<AppGuideProps> = ({ onClose, showStartButton = true }) 
 
             {showStartButton && (
                 <div className="mt-8 p-6 bg-slate-900/60 rounded-3xl border border-slate-700/50 text-center space-y-4">
-                    <h5 className="text-lg font-bold text-white">Gotowy?</h5>
+                    <h5 className="text-lg font-bold text-white">{t('guide.ready.title')}</h5>
                     <p className="text-sm text-slate-400 px-4">
-                        Wybierz metodę działania, która pasuje Tobie najlepiej. Pamiętaj, że w każdej chwili możesz wrócić do tego przewodnika.
+                        {t('guide.ready.text')}
                     </p>
                     <button
                         onClick={onClose}
                         className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-2xl shadow-xl shadow-cyan-900/20 transition-all active:scale-95 transform translate-y-0"
                     >
-                        Przejdź do Aplikacji
+                        {t('guide.ready.button')}
                     </button>
                 </div>
             )}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { QuickAction } from '../types';
 import { XIcon, CaseIcon } from './Icons';
 
@@ -10,6 +11,8 @@ interface QuickActionsModalProps {
 }
 
 const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ isOpen, onClose, onSelect, quickActions }) => {
+  const { t } = useTranslation();
+
   if (!isOpen) return null;
 
   return (
@@ -20,18 +23,18 @@ const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ isOpen, onClose, 
       aria-modal="true"
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6 w-full max-w-md mx-4 transform transition-all"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg leading-6 font-medium text-white" id="modal-title">
-            Szybkie Akcje
+            {t('quickActionsModal.title')}
           </h3>
           <button
             onClick={onClose}
             className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
-            aria-label="Zamknij"
+            aria-label={t('userProfile.footer.close')}
           >
             <XIcon />
           </button>
@@ -45,17 +48,17 @@ const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ isOpen, onClose, 
                 className="w-full flex items-center gap-4 p-3 text-left bg-slate-700/50 rounded-lg hover:bg-slate-700/70 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500"
               >
                 <div className="w-8 h-8 bg-slate-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <CaseIcon />
+                  <CaseIcon />
                 </div>
                 <div>
-                    <p className="text-white font-semibold">{action.lawArea}</p>
-                    {action.topic && <p className="text-sm text-slate-400">{action.topic}</p>}
+                  <p className="text-white font-semibold">{t(`law.areas.${action.lawArea.toLowerCase()}`)}</p>
+                  {action.topic && <p className="text-sm text-slate-400">{action.topic}</p>}
                 </div>
               </button>
             ))
           ) : (
             <p className="text-slate-400 text-center py-8">
-              Brak zdefiniowanych szybkich akcji. Możesz je dodać w Panelu Użytkownika.
+              {t('quickActionsModal.noActions')}
             </p>
           )}
         </div>
@@ -65,7 +68,7 @@ const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ isOpen, onClose, 
             onClick={onClose}
             className="w-full inline-flex justify-center rounded-md border border-slate-600 shadow-sm px-4 py-2 bg-slate-700 text-base font-medium text-slate-300 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 focus:ring-offset-slate-800 sm:text-sm transition-colors"
           >
-            Zamknij
+            {t('userProfile.footer.close')}
           </button>
         </div>
       </div>

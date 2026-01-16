@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MenuIcon, ProfileIcon, BookOpenIcon, HomeIcon, ClockIcon, SparklesIcon, DownloadIcon, UploadIcon, QuestionMarkCircleIcon } from './Icons';
 import { SubscriptionInfo } from '../types';
 
@@ -29,6 +30,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     subscription,
     totalCost
 }) => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -65,13 +67,13 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                         {subscription && (
                             <div className="px-4 py-3 border-b border-slate-700 sm:hidden">
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Mój Plan</span>
+                                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{t('menu.myPlan')}</span>
                                     <span className="text-[10px] text-emerald-400 font-mono font-bold">
                                         {Math.max(0, ((subscription.creditLimit - subscription.spentAmount) / subscription.creditLimit) * 100).toFixed(1)}%
                                     </span>
                                 </div>
                                 <div className="text-xs text-white font-semibold truncate">
-                                    Saldo: {(subscription.creditLimit - subscription.spentAmount).toFixed(2)} PLN
+                                    {t('menu.balance')}: {(subscription.creditLimit - subscription.spentAmount).toFixed(2)} PLN
                                 </div>
                             </div>
                         )}
@@ -83,7 +85,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                 role="menuitem"
                             >
                                 <HomeIcon className="h-5 w-5 text-cyan-500" />
-                                <span>Strona Główna</span>
+                                <span>{t('menu.home')}</span>
                             </button>
                         )}
 
@@ -93,7 +95,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                             role="menuitem"
                         >
                             <ProfileIcon className="h-5 w-5 text-slate-400" />
-                            <span>Panel Użytkownika</span>
+                            <span>{t('menu.myProfile')}</span>
                         </button>
 
                         <button
@@ -102,7 +104,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                             role="menuitem"
                         >
                             <BookOpenIcon className="h-5 w-5 text-yellow-500" />
-                            <span>Baza Wiedzy</span>
+                            <span>{t('menu.knowledgeBase')}</span>
                         </button>
 
                         <button
@@ -112,8 +114,8 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                         >
                             <QuestionMarkCircleIcon className="h-5 w-5 text-indigo-400" />
                             <span className="font-bold inline-flex items-center gap-2">
-                                Pomoc AI
-                                <span className="text-[8px] bg-indigo-500 text-white px-1 py-0.5 rounded uppercase tracking-tighter">NOWOŚĆ</span>
+                                {t('menu.helpAi')}
+                                <span className="text-[8px] bg-indigo-500 text-white px-1 py-0.5 rounded uppercase tracking-tighter">{t('menu.new')}</span>
                             </span>
                         </button>
 
@@ -124,7 +126,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                 role="menuitem"
                             >
                                 <ClockIcon className="h-5 w-5 text-blue-400" />
-                                <span>Historia Spraw</span>
+                                <span>{t('menu.history')}</span>
                             </button>
                         )}
 
@@ -135,7 +137,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                 role="menuitem"
                             >
                                 <SparklesIcon className="h-5 w-5 text-purple-400" />
-                                <span>Szybkie Akcje</span>
+                                <span>{t('menu.quickActions')}</span>
                             </button>
                         )}
 
@@ -148,7 +150,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                 role="menuitem"
                             >
                                 <DownloadIcon className="h-5 w-5 text-blue-400" />
-                                <span>Eksportuj Rozmowę</span>
+                                <span>{t('menu.export')}</span>
                             </button>
                         )}
 
@@ -171,7 +173,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                     }}
                                 />
                                 <UploadIcon className="h-5 w-5 text-purple-400" />
-                                <span>Importuj Rozmowę</span>
+                                <span>{t('menu.import')}</span>
                             </label>
                         )}
 
@@ -182,7 +184,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                 role="menuitem"
                             >
                                 <SparklesIcon className="h-5 w-5 text-cyan-400" />
-                                <span className="font-bold">Zainstaluj Aplikację</span>
+                                <span className="font-bold">{t('menu.install')}</span>
                             </button>
                         )}
                     </div>
