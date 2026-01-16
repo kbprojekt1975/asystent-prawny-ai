@@ -959,7 +959,7 @@ const App: React.FC = () => {
             onHomeClick={handleGoHome}
             totalCost={totalCost}
             subscription={userProfile?.subscription}
-            onKnowledgeClick={interactionMode ? () => setIsKnowledgeModalOpen(true) : undefined}
+            onKnowledgeClick={() => handleViewKnowledge(null)}
             onGenerateKnowledgeClick={selectedTopic ? handleGenerateKnowledge : undefined}
             onInstallApp={deferredPrompt ? handleInstallApp : undefined}
             remindersCount={activeRemindersCount}
