@@ -25,9 +25,16 @@ Data: 2026-01-16
 - **Komenda**: `npx firebase deploy --only functions`
 - **Status**: Sukces. Wszystkie funkcje są aktywne i wspierają wielojęzyczność.
 
-### 6. Poprawka literówki na Splash Screen (LOV2XLR8)
+### 6. Poprawka literówki/napisów na Splash Screen
 - **Pliki**: `public/locales/pl/translation.json`, `public/locales/en/translation.json`
-- **Opis**: Poprawiono błąd w nazwie twórcy (`LOV2XLR6` -> `LOV2XLR8`).
+- **Opis**: Ustawiono dokładną treść napisów: `Powered by LOV2XLR8 & AI` oraz `Bezpieczne środowisko prawne`.
 
 ### 7. Naprawa błędów kodowania i składni JSON
 - **Opis**: Rozwiązano problem "white screen" poprzez naprawę struktury plików JSON i przywrócenie poprawnego kodowania znaków (UTF-8). Wszystkie funkcje aplikacji działają poprawnie.
+
+### 8. Poprawka dostępności Bazy Wiedzy
+- **Plik**: `App.tsx`
+- **Opis**: Usunięto warunkowe blokowanie przycisku "Baza Wiedzy" w menu bocznym. Teraz jest on dostępny zawsze, umożliwiając podgląd globalnej bazy z dowolnego miejsca w aplikacji.
+
+### 9. Deployment Produkcyjny (Hosting & Functions)
+- **Status**: Zakończono pełne wdrożenie frontendu (`Hosting`) oraz backendu (`Functions`). Wszystkie nowe funkcjonalności i poprawki są aktywne pod adresem: https://low-assit.web.app
