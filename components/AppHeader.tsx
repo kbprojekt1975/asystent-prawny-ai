@@ -234,9 +234,15 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           </button>
           <button
             onClick={() => changeLanguage('en')}
-            className={`px-2 py-1 text-xs font-bold rounded transition-all ${!i18n.language.startsWith('pl') ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`px-2 py-1 text-xs font-bold rounded transition-all ${i18n.language.startsWith('en') ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
           >
             EN
+          </button>
+          <button
+            onClick={() => changeLanguage('es')}
+            className={`px-2 py-1 text-xs font-bold rounded transition-all ${i18n.language.startsWith('es') ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            ES
           </button>
         </div>
 

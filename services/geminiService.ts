@@ -57,12 +57,13 @@ export const getLegalAdvice = async (
     }
 };
 
-export const analyzeLegalCase = async (description: string): Promise<{ result: { lawArea: LawArea, topic: string, interactionMode: InteractionMode } | null, usage?: TokenUsage, chatId: string | null }> => {
+export const analyzeLegalCase = async (description: string, language: string = 'pl'): Promise<{ result: { lawArea: LawArea, topic: string, interactionMode: InteractionMode } | null, usage?: TokenUsage, chatId: string | null }> => {
     try {
         const analyzeLegalCaseFunction = httpsCallable(functions, 'analyzeLegalCase');
 
         const result = await analyzeLegalCaseFunction({
-            description
+            description,
+            language
         });
 
         const data = result.data as AnalysisResponse;

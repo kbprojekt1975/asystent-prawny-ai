@@ -313,6 +313,13 @@
         "profile": "Profil",
         "profile_desc": "Twoje dane, subskrypcja i ustawienia."
     },
+    "help_sidebar": {
+        "title": "Pomoc AI",
+        "welcome": "Witaj! Jestem Twoim asystentem aplikacji. W czym mogę Ci dzisiaj pomóc? Mogę wyjaśnić jak działają poszczególne funkcje, jak zarządzać sprawami lub jak korzystać z narzędzi AI.",
+        "error": "Przepraszam, wystąpił błąd podczas ładowania odpowiedzi. Spróbuj ponownie później.",
+        "mode": "Tryb: Pomoc w obsłudze aplikacji",
+        "placeholder": "Zadaj pytanie..."
+    },
     "evidence": {
         "title": "Twoje Dowody",
         "upload": "Mam to",

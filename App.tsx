@@ -591,7 +591,7 @@ const App: React.FC = () => {
   const handleCaseAnalysis = async (description: string) => {
     if (!user) return;
     setIsLoading(true);
-    const analysisResponse = await analyzeLegalCase(description);
+    const analysisResponse = await analyzeLegalCase(description, i18n.language);
     const { result, usage } = analysisResponse;
 
     if (usage && usage.cost > 0) {

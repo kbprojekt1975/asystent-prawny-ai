@@ -313,6 +313,13 @@
         "profile": "Profile",
         "profile_desc": "Your data, subscription and settings."
     },
+    "help_sidebar": {
+        "title": "AI Help",
+        "welcome": "Welcome! I am your application assistant. How can I help you today? I can explain how individual functions work, how to manage cases, or how to use AI tools.",
+        "error": "Sorry, an error occurred while loading the response. Please try again later.",
+        "mode": "Mode: App Support Help",
+        "placeholder": "Ask a question..."
+    },
     "evidence": {
         "title": "Your Evidence",
         "upload": "I have it",

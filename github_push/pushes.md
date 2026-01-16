@@ -38,6 +38,27 @@
 
 ---
 
-### [ZADANIE BIEŻĄCE]
-- **Cel**: Dodanie nazw commitów do `pushes.md` dla każdego wypchnięcia zmian.
-- **Wdrożenie**: Hosting & Functions są aktualne (https://low-assit.web.app).
+### [SESSION: Spanish Support & Auto-Detection]
+**Zadania:**
+- **Wsparcie języka hiszpańskiego (ES)**: Dodano plik `es/translation.json`, zaktualizowano `i18n.ts` oraz przyciski w `AppHeader` i `SplashScreen`.
+- **Automatyczna detekcja języka**: Wdrożono logikę wykrywania kraju na podstawie IP (`ipapi.co`) oraz ustawień przeglądarki, z zapisem wyboru w `localStorage` (`i18nextLng`).
+- **Backend**: Dostosowano `getLegalFAQ` i `getLegalAdvice` do generowania odpowiedzi w języku hiszpańskim.
+- **Weryfikacja**: Potwierdzono poprawne działanie detekcji i zapamiętywania wyboru w przeglądarce.
+
+---
+
+### [adaf021] feat: implement Help Sidebar translations (EN/ES) and full Spanish language support with auto-detection
+**Zadania:**
+- **Lokalizacja bocznego menu pomocniczego** (`AppHelpSidebar.tsx`): Przeniesiono wszystkie hardkodowane teksty do plików tłumaczeń.
+- **Aktualizacja plików i18n**: Dodano sekcję `help_sidebar` do `pl/translation.json`, `en/translation.json` oraz `es/translation.json`.
+- **Wsparcie języka hiszpańskiego (ES)**: Dodano plik `es/translation.json`, zaktualizowano `i18n.ts` oraz przyciski w `AppHeader` i `SplashScreen`.
+- **Automatyczna detekcja języka**: Wdrożono logikę wykrywania kraju na podstawie IP oraz ustawień przeglądarki.
+- **Weryfikacja**: Potwierdzono poprawne wyświetlanie pomocy w języku polskim, angielskim i hiszpańskim oraz poprawność struktury plików JSON.
+
+
+---
+
+### [ZADANIA ARCHIWALNE]
+- **Cel**: Pełna lokalizacja na język hiszpański oraz automatyzacja wyboru języka.
+- **Wdrożenie**: Hosting & Functions są gotowe do wypchnięcia. Eksperymentalna detekcja IP działa.
+

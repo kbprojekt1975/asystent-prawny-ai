@@ -61,9 +61,15 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
                     </button>
                     <button
                         onClick={() => changeLanguage('en')}
-                        className={`px-3 py-1.5 text-sm font-bold rounded-md transition-all ${!i18n.language.startsWith('pl') ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-900/20' : 'text-slate-400 hover:text-white'}`}
+                        className={`px-3 py-1.5 text-sm font-bold rounded-md transition-all ${i18n.language.startsWith('en') ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-900/20' : 'text-slate-400 hover:text-white'}`}
                     >
                         EN
+                    </button>
+                    <button
+                        onClick={() => changeLanguage('es')}
+                        className={`px-3 py-1.5 text-sm font-bold rounded-md transition-all ${i18n.language.startsWith('es') ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-900/20' : 'text-slate-400 hover:text-white'}`}
+                    >
+                        ES
                     </button>
                 </div>
 

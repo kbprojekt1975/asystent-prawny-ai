@@ -12,7 +12,7 @@ interface AppHelpSidebarProps {
 }
 
 const AppHelpSidebar: React.FC<AppHelpSidebarProps> = ({ isOpen, onClose, userId }) => {
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -23,11 +23,11 @@ const AppHelpSidebar: React.FC<AppHelpSidebarProps> = ({ isOpen, onClose, userId
             setMessages([
                 {
                     role: 'model',
-                    content: 'Witaj! Jestem Twoim asystentem aplikacji. W czym mogę Ci dzisiaj pomóc? Mogę wyjaśnić jak działają poszczególne funkcje, jak zarządzać sprawami lub jak korzystać z narzędzi AI.'
+                    content: t('help_sidebar.welcome')
                 }
             ]);
         }
-    }, [isOpen, messages.length]);
+    }, [isOpen, messages.length, t]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -59,7 +59,7 @@ const AppHelpSidebar: React.FC<AppHelpSidebarProps> = ({ isOpen, onClose, userId
             }
         } catch (error) {
             console.error('Help Sidebar Error:', error);
-            setMessages([...newMessages, { role: 'model', content: 'Przepraszam, wystąpił błąd podczas ładowania odpowiedzi. Spróbuj ponownie później.' }]);
+            setMessages([...newMessages, { role: 'model', content: t('help_sidebar.error') }]);
         } finally {
             setIsLoading(false);
         }
@@ -76,7 +76,7 @@ const AppHelpSidebar: React.FC<AppHelpSidebarProps> = ({ isOpen, onClose, userId
                 <div className="p-4 border-b border-slate-700 flex items-center justify-between bg-slate-800/50">
                     <div className="flex items-center gap-2">
                         <SparklesIcon className="w-5 h-5 text-cyan-400" />
-                        <h2 className="text-white font-semibold">Pomoc AI</h2>
+                        <h2 className="text-white font-semibold">{t('help_sidebar.title')}</h2>
                     </div>
                     <button
                         onClick={onClose}
@@ -117,7 +117,7 @@ const AppHelpSidebar: React.FC<AppHelpSidebarProps> = ({ isOpen, onClose, userId
                 <div className="px-4 py-2 bg-slate-800/30 border-t border-slate-700/50">
                     <div className="flex items-center gap-2 text-[10px] text-slate-500">
                         <ScaleIcon className="w-3 h-3" />
-                        <span>Tryb: Pomoc w obsłudze aplikacji</span>
+                        <span>{t('help_sidebar.mode')}</span>
                     </div>
                 </div>
 
@@ -129,7 +129,7 @@ const AppHelpSidebar: React.FC<AppHelpSidebarProps> = ({ isOpen, onClose, userId
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder="Zadaj pytanie..."
+                            placeholder={t('help_sidebar.placeholder')}
                             className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
                             disabled={isLoading}
                         />
