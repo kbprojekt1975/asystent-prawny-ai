@@ -58,7 +58,7 @@ const LegalFAQ: React.FC<LegalFAQProps> = ({ lawArea, onSelectQuestion }) => {
         <div className="mt-10">
             <div className="flex items-center gap-2 mb-4 text-cyan-400">
                 <LightbulbIcon className="w-5 h-5 text-cyan-500" />
-                <h4 className="font-semibold text-sm uppercase tracking-wider">{t('faq.title')}: {lawArea}</h4>
+                <h4 className="font-semibold text-sm uppercase tracking-wider">{t('faq.title')}: {t(`law.areas.${lawArea.toLowerCase()}`)}</h4>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {questions.map((q, index) => (

@@ -1233,15 +1233,19 @@ export const getLegalFAQ = onCall({
         throw new HttpsError('unauthenticated', 'Użytkownik musi być zalogowany.');
     }
 
-    const { lawArea } = request.data;
+    const { lawArea, language = 'pl' } = request.data;
     if (!lawArea) {
         throw new HttpsError('invalid-argument', 'Brak dziedziny prawa.');
     }
 
     try {
-        const prompt = `Jesteś ekspertem prawnym. Wygeneruj 4 najczęstsze, konkretne i praktyczne pytania (FAQ), które obywatele zadają w dziedzinie: ${lawArea}. 
-        Odpowiedź musi być prostym JSONem w formacie: ["Pytanie 1?", "Pytanie 2?", "Pytanie 3?", "Pytanie 4?"]. 
-        Pytania powinny być krótkie, intrygujące i zachęcające do zadania ich AI.`;
+        const prompt = language === 'en'
+            ? `You are a legal expert. Generate 4 most common, specific and practical questions (FAQ) that citizens ask in the field: ${lawArea}. 
+               The answer must be a simple JSON in the format: ["Question 1?", "Question 2?", "Question 3?", "Question 4?"]. 
+               Questions should be short, intriguing and encouraging to ask the AI. Answer in English.`
+            : `Jesteś ekspertem prawnym. Wygeneruj 4 najczęstsze, konkretne i praktyczne pytania (FAQ), które obywatele zadają w dziedzinie: ${lawArea}. 
+               Odpowiedź musi być prostym JSONem w formacie: ["Pytanie 1?", "Pytanie 2?", "Pytanie 3?", "Pytanie 4?"]. 
+               Pytania powinny być krótkie, intrygujące i zachęcające do zadania ich AI. Odpowiedz po polsku.`;
 
         const model = genAI.getGenerativeModel({
             model: 'gemini-2.0-flash-exp',
