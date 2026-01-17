@@ -23,6 +23,10 @@ Dokumenty reprezentujące poszczególne wątki rozmów.
 - `/checklist`: Lista zadań do wykonania w danej sprawie.
 - `/documents`: Metadane przesłanych dokumentów (id, name, type, url, uploadedAt, path, party).
     - `party`: Kategoria strony (`mine` | `opposing`).
+- `/legal_knowledge`: Baza wiedzy powiązana bezpośrednio z tematem sprawy.
+    - Zawiera akty prawne (ISAP) i wyroki (SAOS) zatwierdzone przez użytkownika.
+    - Pola dla wyroków: `source`, `judgmentId`, `caseNumber`, `content` (pełna treść), `savedAt`, `title`.
+    - Pola dla aktów: `source`, `publisher`, `year`, `pos`, `title`, `content`, `savedAt`.
 
 ### Kolekcja globalna: `/knowledge`
 Repozytorium wiedzy prawnej (pliki PDF/TXT przetworzone przez system), do których asystent ma dostęp w celu podawania precyzyjnych źródeł.

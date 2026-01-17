@@ -18,6 +18,16 @@ Jest to funkcja typu `onCall`, która:
     - `Negotiation`: Styl mediatora, pomoc w redagowaniu korespondencji ugodowej.
     - `StrategicAnalysis` (PRO): Zaawansowany tryb analityczny, budujący Akt Sprawy na podstawie dokumentów i pogłębionego wywiadu.
 
+### Integracje Zewnętrzne
+
+#### SAOS API (`saosService.ts`)
+System integruje się z publicznym API **SAOS (System Analizy Orzeczeń Sądowych)**.
+- **Wyszukiwanie**: Narzędzie `search_court_rulings` pozwala na wyszukiwanie orzeczeń po słowach kluczowych i typie sądu.
+- **Synchronizacja**: Narzędzie `add_ruling_to_topic_knowledge` pozwala na trwałe zapisanie wyroku w bazie wiedzy sprawy. Implementacja wspiera optymalizację "pre-provided content", co pozwala uniknąć nadmiarowych zapytań do API, jeśli AI już posiada treść dokumentu z wyników wyszukiwania.
+
+#### ISAP API (`isapService.ts`)
+Integracja z **Internetowym Systemem Aktów Prawnych** dla pobierania aktualnych treści ustaw i rozporządzeń (format XML/PDF).
+
 ## Zarządzanie Sekretami
 
 Dla zapewnienia najwyższego poziomu bezpieczeństwa, klucz API Gemini nie jest przechowywany w zmiennych środowiskowych (`.env`), lecz w **Cloud Secret Manager**.

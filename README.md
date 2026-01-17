@@ -12,9 +12,19 @@ View your app in AI Studio: https://ai.studio/apps/drive/1OLiLGuYhxbPQRHDKCLRKhf
 
 **Prerequisites:**  Node.js
 
-
 1. Install dependencies:
    `npm install`
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Maintenance Scripts
+
+Utility scripts for database management and testing are located in the `scripts/` directory:
+- `find_active_chat.js`: Locates current user and chat IDs in the emulator.
+- `add_warranty_to_kb.js`: Populates knowledge base with B2B warranty articles.
+- `test_saos.js` / `test_saos_queries.js`: Tools for testing SAOS API integration.
+- `verify_improved_sync.js`: Verification script for ruling synchronization logic.
+
+## Documentation
+Additional technical documentation is available in the [`docs/`](docs/) directory.
