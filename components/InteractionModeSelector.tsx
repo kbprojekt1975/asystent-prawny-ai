@@ -40,18 +40,18 @@ const InteractionModeSelector: React.FC<InteractionModeSelectorProps> = ({
         <p className="text-lg text-slate-400">{t('interaction.header')}</p>
         <InfoIcon onClick={() => setIsHelpOpen(true)} />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-6 w-full max-w-2xl">
         {interactionOptions.map((option) => (
           <button
             key={option.mode}
             onClick={() => onSelect(option.mode)}
-            className="group bg-slate-800/40 border border-slate-700/50 rounded-xl p-6 text-left hover:bg-slate-800/70 hover:border-cyan-500/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            className="group bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 md:p-6 text-left hover:bg-slate-800/70 hover:border-cyan-500/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
           >
-            <div className={`w-12 h-12 ${option.bgColor} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+            <div className={`w-8 h-8 md:w-12 md:h-12 ${option.bgColor} rounded-xl flex items-center justify-center mb-3 md:mb-6 group-hover:scale-110 transition-transform duration-300`}>
               {option.icon}
             </div>
-            <h2 className="text-xl font-bold text-white mb-2 leading-tight">{option.label}</h2>
-            <p className="text-sm text-slate-400 leading-relaxed font-medium">{option.description}</p>
+            <h2 className="text-sm md:text-xl font-bold text-white mb-1 md:mb-2 leading-tight">{option.label}</h2>
+            <p className="text-xs md:text-sm text-slate-400 leading-relaxed font-medium line-clamp-2">{option.description}</p>
           </button>
         ))}
       </div>

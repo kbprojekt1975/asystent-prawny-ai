@@ -43,7 +43,7 @@ const LegalFAQ: React.FC<LegalFAQProps> = ({ lawArea, onSelectQuestion }) => {
         return (
             <div className="mt-8 animate-pulse">
                 <div className="h-4 w-32 bg-slate-700 rounded mb-4"></div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
                     {[1, 2, 3, 4].map(i => (
                         <div key={i} className="h-12 bg-slate-800 rounded-lg border border-slate-700/50"></div>
                     ))}
@@ -60,12 +60,12 @@ const LegalFAQ: React.FC<LegalFAQProps> = ({ lawArea, onSelectQuestion }) => {
                 <LightbulbIcon className="w-5 h-5 text-cyan-500" />
                 <h4 className="font-semibold text-sm uppercase tracking-wider">{t('faq.title')}: {t(`law.areas.${lawArea.toLowerCase()}`)}</h4>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
                 {questions.map((q, index) => (
                     <button
                         key={index}
                         onClick={() => onSelectQuestion(q)}
-                        className="flex items-start text-left p-4 bg-slate-800/40 hover:bg-slate-700/60 border border-slate-700/50 hover:border-cyan-600/50 rounded-xl transition-all group"
+                        className="flex items-start text-left p-3 md:p-4 bg-slate-800/40 hover:bg-slate-700/60 border border-slate-700/50 hover:border-cyan-600/50 rounded-xl transition-all group"
                     >
                         <span className="text-sm text-slate-300 group-hover:text-white leading-relaxed">
                             {q}

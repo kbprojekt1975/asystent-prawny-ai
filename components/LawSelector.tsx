@@ -39,18 +39,18 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isL
         <p className="text-lg text-slate-400">{t('law.header')}</p>
         <InfoIcon onClick={() => setIsHelpOpen(true)} />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 w-full max-w-6xl mb-8">
         {lawOptions.map((option) => (
           <button
             key={option.area}
             onClick={() => onSelect(option.area)}
-            className="group bg-slate-800/50 border border-slate-700 rounded-lg p-6 text-left hover:bg-slate-700/70 hover:border-cyan-500 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="group bg-slate-800/50 border border-slate-700 rounded-lg p-3 md:p-6 text-left hover:bg-slate-700/70 hover:border-cyan-500 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
           >
-            <div className="w-12 h-12 bg-slate-700/50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-cyan-600/30 transition-colors">
+            <div className="w-8 h-8 md:w-12 md:h-12 bg-slate-700/50 rounded-lg flex items-center justify-center mb-2 md:mb-4 group-hover:bg-cyan-600/30 transition-colors">
               {option.icon}
             </div>
-            <h2 className="text-xl font-semibold text-white mb-1">{option.name}</h2>
-            <p className="text-slate-400">{option.description}</p>
+            <h2 className="text-sm md:text-xl font-semibold text-white mb-0.5 md:mb-1 leading-tight">{option.name}</h2>
+            <p className="text-xs md:text-base text-slate-400 line-clamp-2">{option.description}</p>
           </button>
         ))}
       </div>

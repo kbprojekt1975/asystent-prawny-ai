@@ -42,12 +42,12 @@ const CourtRoleSelector: React.FC<CourtRoleSelectorProps> = ({ onSelect }) => {
                 <p className="text-slate-400">W kogo mam się wcielić podczas tego przesłuchania?</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-4 w-full max-w-3xl">
                 {roles.map((item) => (
                     <button
                         key={item.role}
                         onClick={() => onSelect(item.role)}
-                        className="flex items-start gap-4 p-6 bg-slate-800/40 border border-slate-700/50 rounded-xl hover:bg-slate-700 hover:border-cyan-500/50 transition-all group text-left"
+                        className="flex items-start gap-2 md:gap-4 p-3 md:p-6 bg-slate-800/40 border border-slate-700/50 rounded-xl hover:bg-slate-700 hover:border-cyan-500/50 transition-all group text-left"
                     >
                         <div className="p-3 bg-slate-900 rounded-lg group-hover:scale-110 transition-transform">
                             {item.icon}
