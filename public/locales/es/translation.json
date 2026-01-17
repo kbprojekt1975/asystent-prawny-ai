@@ -17,6 +17,23 @@
         "buyPlan": "COMPRAR NUEVO PLAN",
         "currentPlan": "PLAN ACTUAL"
     },
+    "cookieConsent": {
+        "message": "Este sitio utiliza cookies. Introduces todos los datos bajo tu propia responsabilidad y puedes eliminarlos en cualquier momento. Tus datos se almacenan en la base de conocimientos con los más altos estándares de seguridad. Al usar el sitio, consientes el uso de cookies.",
+        "showDetails": "Más información sobre los datos almacenados",
+        "hideDetails": "Ocultar detalles",
+        "accept": "Acepto",
+        "close": "Cerrar",
+        "detailsTitle": "¿Qué almacenamos exactamente y por qué?",
+        "detailsAccount": "Acceso a la cuenta:",
+        "detailsAccountDesc": "Tu correo electrónico, para que tengas acceso seguro a tus casos y nadie más pueda verlos.",
+        "detailsData": "Datos para documentos:",
+        "detailsDataDesc": "Nombre, apellidos, dirección. Los usamos solo y exclusivamente cuando nos pides escribir un documento oficial (ej. una demanda) que debe contener estos datos.",
+        "detailsMemory": "Memoria del Asistente:",
+        "detailsMemoryDesc": "Historial de conversación. Gracias a esto, el Asistente recuerda de qué hablaron hace 5 minutos y no tienes que repetir todo.",
+        "detailsComfort": "Comodidad:",
+        "detailsComfortDesc": "Recordamos tus elecciones, por ejemplo, que ya cerraste esta ventana.",
+        "detailsFooter": "Recuerda: Estos son tus datos. En el panel de usuario puedes eliminar el historial de chat o toda la cuenta en cualquier momento."
+    },
     "auth": {
         "title": "Asistente Legal IA",
         "resetPasswordTitle": "Restablecer tu contraseña",

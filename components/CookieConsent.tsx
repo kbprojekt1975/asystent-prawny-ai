@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { XIcon } from './Icons';
 
 const CookieConsent: React.FC = () => {
+    const { t } = useTranslation();
     const [isVisible, setIsVisible] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
 
@@ -24,27 +26,25 @@ const CookieConsent: React.FC = () => {
             <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex-1">
                     <p className="text-slate-300">
-                        Ta strona korzysta z ciasteczek (cookies). Wszelkie dane wprowadzasz na własną odpowiedzialność i w każdej chwili możesz je usunąć.
-                        Twoje dane są przechowywane w bazie wiedzy z zachowaniem najwyższych standardów bezpieczeństwa.
-                        Korzystając ze strony, wyrażasz zgodę na używanie cookies.
+                        {t('cookieConsent.message')}
                     </p>
                     <button
                         onClick={() => setShowDetails(!showDetails)}
                         className="text-cyan-400 text-sm mt-2 hover:underline focus:outline-none"
                     >
-                        {showDetails ? "Ukryj szczegóły" : "Więcej informacji o przechowywanych danych"}
+                        {showDetails ? t('cookieConsent.hideDetails') : t('cookieConsent.showDetails')}
                     </button>
 
                     {showDetails && (
                         <div className="mt-4 p-4 bg-slate-800/50 rounded-lg text-sm text-slate-400 space-y-2 border border-slate-700">
-                            <h4 className="font-semibold text-slate-200">Co dokładnie i po co przechowujemy?</h4>
+                            <h4 className="font-semibold text-slate-200">{t('cookieConsent.detailsTitle')}</h4>
                             <ul className="list-disc pl-4 space-y-2 mt-2">
-                                <li><strong className="text-slate-300">Dostęp do konta:</strong> Twój e-mail, żebyś miał bezpieczny dostęp do swoich spraw i nikt inny ich nie widział.</li>
-                                <li><strong className="text-slate-300">Dane do pism:</strong> Imię, nazwisko, adres. Używamy ich <strong>tylko i wyłącznie</strong> wtedy, gdy poprosisz o napisanie oficjalnego dokumentu (np. pozwu), który musi te dane zawierać.</li>
-                                <li><strong className="text-slate-300">Pamięć Asystenta:</strong> Historia rozmowy. Dzięki niej Asystent pamięta o czym rozmawialiście 5 minut temu i nie musisz mu wszystkiego powtarzać.</li>
-                                <li><strong className="text-slate-300">Wygoda:</strong> Zapamiętujemy Twoje wybory, np. to, że już zamknąłeś to okienko.</li>
+                                <li><strong className="text-slate-300">{t('cookieConsent.detailsAccount')}</strong> {t('cookieConsent.detailsAccountDesc')}</li>
+                                <li><strong className="text-slate-300">{t('cookieConsent.detailsData')}</strong> {t('cookieConsent.detailsDataDesc')}</li>
+                                <li><strong className="text-slate-300">{t('cookieConsent.detailsMemory')}</strong> {t('cookieConsent.detailsMemoryDesc')}</li>
+                                <li><strong className="text-slate-300">{t('cookieConsent.detailsComfort')}</strong> {t('cookieConsent.detailsComfortDesc')}</li>
                             </ul>
-                            <p className="text-xs mt-3 text-slate-500 italic">Pamiętaj: To Twoje dane. W panelu użytkownika możesz w każdej chwili usunąć historię czatu lub całe konto.</p>
+                            <p className="text-xs mt-3 text-slate-500 italic">{t('cookieConsent.detailsFooter')}</p>
                         </div>
                     )}
                 </div>
@@ -53,12 +53,12 @@ const CookieConsent: React.FC = () => {
                         onClick={handleAccept}
                         className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg transition-colors whitespace-nowrap shadow-lg shadow-cyan-900/20"
                     >
-                        Akceptuję
+                        {t('cookieConsent.accept')}
                     </button>
                     <button
                         onClick={() => setIsVisible(false)}
                         className="p-2 text-slate-400 hover:text-white transition-colors"
-                        aria-label="Zamknij"
+                        aria-label={t('cookieConsent.close')}
                     >
                         <XIcon className="w-5 h-5" />
                     </button>
