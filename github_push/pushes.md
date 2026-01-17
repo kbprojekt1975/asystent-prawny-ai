@@ -1,6 +1,25 @@
 # Historia zmian i wdrożeń (GitHub Pushes Log)
 
-**Ostatnia aktualizacja:** 2026-01-17 19:33
+**Ostatnia aktualizacja:** 2026-01-17 19:38
+
+---
+
+### [c4e718a] 2026-01-17 19:38 | feat: optimize mobile UI - 2 columns layout for all tile grids
+**Zadania:**
+- **Optymalizacja widoku mobilnego**: Zmieniono układ kafelków z 1 kolumny na 2 kolumny na urządzeniach mobilnych dla lepszego wykorzystania przestrzeni.
+- **Komponenty zoptymalizowane**:
+    - `LawSelector.tsx`: Wybór obszaru prawa (8 kafelków)
+    - `InteractionModeSelector.tsx`: Wybór trybu interakcji (8 trybów)
+    - `LegalFAQ.tsx`: Pytania FAQ (4 pytania)
+    - `CourtRoleSelector.tsx`: Wybór roli w symulacji sądowej (4 role)
+- **Zmiany responsywne**:
+    - Grid: `grid-cols-2` na mobile, `md:grid-cols-2` na tablet, `lg:grid-cols-4` na desktop (LawSelector)
+    - Padding: `p-3` na mobile, `md:p-6` na desktop
+    - Ikony: `w-8 h-8` na mobile, `md:w-12 md:h-12` na desktop
+    - Czcionki: `text-sm` na mobile, `md:text-xl` na desktop
+    - Gap: `gap-3` na mobile, `md:gap-6` na desktop
+- **Dodatkowe usprawnienia**: Dodano `line-clamp-2` do opisów, aby zapobiec przepełnieniu tekstu.
+- **Cel**: Zmniejszenie przewijania pionowego na urządzeniach mobilnych i lepsze wykorzystanie dostępnej przestrzeni ekranu.
 
 ---
 
