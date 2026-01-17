@@ -14,7 +14,13 @@ Witaj w pełnej dokumentacji technicznej projektu **Asystent Prawny AI**. Ten do
     *   Schema Firestore, struktura dokumentów, zasady bezpieczeństwa.
 5.  [**Podręcznik Wdrożenia i Rozwoju**](05-dev-ops.md)
     *   Lokalne środowisko, emulatory, proces CI/CD, secrety.
+6.  [**Konfiguracja Ngrok**](06-ngrok-setup.md)
+    *   Tunelowanie dla testów mobilnych, konfiguracja HTTPS.
+7.  [**Wielojęzyczność i Lokalizacja (i18n)**](07-i18n.md)
+    *   System tłumaczeń, wsparcie PL/EN/ES, wielojęzyczne prompty AI.
+8.  [**Responsywność i Mobile-First Design**](08-responsive-design.md)
+    *   Breakpointy, optymalizacje mobile, grid layouts, najlepsze praktyki.
 
 ---
 *Autor: Senior Full Stack Developer*
-*Status: Aktualna (Grudzień 2025)*
+*Status: Aktualna (Styczeń 2026)*
