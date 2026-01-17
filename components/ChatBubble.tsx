@@ -373,7 +373,28 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
 
               {/* INLINE EDITOR FOR POSITIONED NOTE */}
               {activeNoteId === note.id && (
-                <div className="absolute top-full left-0 mt-2 w-64 bg-slate-800 border border-slate-700 rounded-xl p-3 shadow-2xl z-50 animate-in zoom-in-95 duration-200 backdrop-blur-md">
+                <div
+                  className="absolute top-full mt-2 w-64 bg-slate-800 border border-slate-700 rounded-xl p-3 shadow-2xl z-50 animate-in zoom-in-95 duration-200 backdrop-blur-md"
+                  style={{
+                    left: 0,
+                    right: 'auto',
+                    transform: (() => {
+                      // Check if panel would overflow right edge
+                      const noteRect = chatBubbleRef.current?.getBoundingClientRect();
+                      if (noteRect && note.position) {
+                        const panelWidth = 256; // w-64 = 16rem = 256px
+                        const noteLeft = noteRect.left + note.position.x;
+                        const viewportWidth = window.innerWidth;
+
+                        // If panel would overflow right edge, shift it left
+                        if (noteLeft + panelWidth > viewportWidth - 16) {
+                          return `translateX(calc(-100% + 32px))`; // Align to right of note icon
+                        }
+                      }
+                      return 'none';
+                    })()
+                  }}
+                >
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-[10px] font-bold text-slate-500 uppercase">Edycja notatki</span>
                     <button onClick={() => setActiveNoteId(null)} className="text-slate-500 hover:text-white"><CheckIcon className="w-4 h-4" /></button>
