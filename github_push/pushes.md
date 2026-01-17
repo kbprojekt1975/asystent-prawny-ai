@@ -1,6 +1,15 @@
 # Historia zmian i wdrożeń (GitHub Pushes Log)
 
-**Ostatnia aktualizacja:** 2026-01-17 12:27
+**Ostatnia aktualizacja:** 2026-01-17 12:53
+
+---
+
+### [f32e38e] 2026-01-17 12:53 | fix: translate 'I understand' button in HelpModal to all languages (PL/EN/ES)
+**Zadania:**
+- **Tłumaczenie przycisku "Rozumiem"**: Dodano klucz `app.understand` do plików tłumaczeń PL/EN/ES.
+- **Aktualizacja HelpModal.tsx**: Zaimportowano `useTranslation` i zastąpiono hardkodowany tekst "Rozumiem" dynamicznym tłumaczeniem `t('app.understand')`.
+- **Dodano nowe pliki**: `functions/src/saosService.ts` (serwis SAOS API) i `services/vectorService.ts` (serwis bazy wiedzy).
+- **Cookie consent translations**: Dodano tłumaczenia dla zgody na cookies w PL/EN.
 
 ---
 
