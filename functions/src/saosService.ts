@@ -28,9 +28,8 @@ export async function searchJudgments(params: JudgmentSearchParams): Promise<Jud
     if (params.courtType) url.searchParams.append('courtType', params.courtType);
     if (params.pageSize) url.searchParams.append('pageSize', params.pageSize.toString());
 
-    // Default filters to ensure high quality for RAG
-    if (!params.judgmentType) url.searchParams.append('judgmentType', 'SENTENCE');
-    if (!params.courtType) url.searchParams.append('courtType', 'COMMON');
+    // Relaxed defaults to allow wider search (e.g. Supreme Court)
+    // AI should specify these if it needs more precision
 
     try {
         const response = await fetch(url.toString(), {
@@ -41,6 +40,8 @@ export async function searchJudgments(params: JudgmentSearchParams): Promise<Jud
         });
 
         if (!response.ok) {
+            const errorBody = await response.text();
+            logger.error(`SAOS API Search Error: ${response.status} ${response.statusText}`, { url: url.toString(), body: errorBody });
             throw new Error(`SAOS API Error: ${response.status} ${response.statusText}`);
         }
 
@@ -77,6 +78,8 @@ export async function getJudgmentText(id: number): Promise<string> {
         });
 
         if (!response.ok) {
+            const errorBody = await response.text();
+            logger.error(`SAOS Details API Error: ${response.status} ${response.statusText}`, { id, url, body: errorBody });
             throw new Error(`SAOS Details API Error: ${response.status} ${response.statusText}`);
         }
 

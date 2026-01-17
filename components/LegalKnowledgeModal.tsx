@@ -68,10 +68,13 @@ const LegalKnowledgeModal: React.FC<LegalKnowledgeModalProps> = ({ isOpen, onClo
         }
     };
 
-    const filteredActs = acts.filter(act =>
-        act.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        `${act.publisher} ${act.year} ${act.pos}`.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredActs = acts.filter(act => {
+        const searchLower = searchTerm.toLowerCase();
+        const titleMatch = act.title?.toLowerCase().includes(searchLower);
+        const refMatch = `${act.publisher} ${act.year} ${act.pos}`.toLowerCase().includes(searchLower);
+        const caseNumberMatch = act.caseNumber?.toLowerCase().includes(searchLower);
+        return titleMatch || refMatch || caseNumberMatch;
+    });
 
     if (!isOpen) return null;
 
@@ -143,8 +146,12 @@ const LegalKnowledgeModal: React.FC<LegalKnowledgeModalProps> = ({ isOpen, onClo
                                     >
                                         <div className="flex justify-between items-start gap-2">
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider">{act.publisher} {act.year} poz. {act.pos}</span>
-                                                <p className="text-sm font-medium text-slate-200 line-clamp-2 mt-1">{act.title || 'Akt Prawny'}</p>
+                                                {act.source === 'SAOS' ? (
+                                                    <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">WYROK: {act.caseNumber}</span>
+                                                ) : (
+                                                    <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider">{act.publisher} {act.year} poz. {act.pos}</span>
+                                                )}
+                                                <p className="text-sm font-medium text-slate-200 line-clamp-2 mt-1">{act.title || (act.source === 'SAOS' ? `Wyrok ${act.caseNumber}` : 'Akt Prawny')}</p>
                                             </div>
                                             <button
                                                 onClick={(e) => handleDelete(e, act.id)}
@@ -165,21 +172,42 @@ const LegalKnowledgeModal: React.FC<LegalKnowledgeModalProps> = ({ isOpen, onClo
                             <>
                                 <div className="p-6 border-b border-slate-800 bg-slate-800/20">
                                     <div className="flex justify-between items-start mb-4">
-                                        <h3 className="text-lg font-bold text-white max-w-2xl">{selectedAct.title || 'Akt Prawny'}</h3>
-                                        <a
-                                            href={`https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=W${selectedAct.publisher}${selectedAct.year}${selectedAct.pos.toString().padStart(4, '0')}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-2 text-xs bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded-lg transition-all font-semibold"
-                                        >
-                                            <ExternalLinkIcon className="h-4 w-4" />
-                                            Otwórz w ISAP
-                                        </a>
+                                        <h3 className="text-lg font-bold text-white max-w-2xl">{selectedAct.title || (selectedAct.source === 'SAOS' ? `Wyrok ${selectedAct.caseNumber}` : 'Akt Prawny')}</h3>
+                                        {selectedAct.source !== 'SAOS' ? (
+                                            <a
+                                                href={`https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=W${selectedAct.publisher}${selectedAct.year}${selectedAct.pos.toString().padStart(4, '0')}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 text-xs bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded-lg transition-all font-semibold"
+                                            >
+                                                <ExternalLinkIcon className="h-4 w-4" />
+                                                Otwórz w ISAP
+                                            </a>
+                                        ) : (
+                                            <a
+                                                href={`https://www.saos.org.pl/judgments/${selectedAct.judgmentId}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 text-xs bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg transition-all font-semibold"
+                                            >
+                                                <ExternalLinkIcon className="h-4 w-4" />
+                                                Otwórz w SAOS
+                                            </a>
+                                        )}
                                     </div>
                                     <div className="flex gap-4 text-xs text-slate-400">
-                                        <span className="bg-slate-700/50 px-2 py-1 rounded">Publikator: {selectedAct.publisher}</span>
-                                        <span className="bg-slate-700/50 px-2 py-1 rounded">Rok: {selectedAct.year}</span>
-                                        <span className="bg-slate-700/50 px-2 py-1 rounded">Pozycja: {selectedAct.pos}</span>
+                                        {selectedAct.source === 'SAOS' ? (
+                                            <>
+                                                <span className="bg-slate-700/50 px-2 py-1 rounded">Sygnatura: {selectedAct.caseNumber}</span>
+                                                <span className="bg-slate-700/50 px-2 py-1 rounded">Źródło: SAOS</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="bg-slate-700/50 px-2 py-1 rounded">Publikator: {selectedAct.publisher}</span>
+                                                <span className="bg-slate-700/50 px-2 py-1 rounded">Rok: {selectedAct.year}</span>
+                                                <span className="bg-slate-700/50 px-2 py-1 rounded">Pozycja: {selectedAct.pos}</span>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex-1 p-6 overflow-y-auto custom-scrollbar bg-slate-950/50">

@@ -1158,7 +1158,10 @@ const App: React.FC = () => {
         </main>
 
         <RemindersWidget user={user} />
-        <CookieConsent />
+        <CookieConsent
+          userProfile={userProfile}
+          onUpdateProfile={handleUpdateProfile}
+        />
         <AppHelpSidebar
           isOpen={isAppHelpSidebarOpen}
           onClose={() => setIsAppHelpSidebarOpen(false)}

@@ -1,6 +1,20 @@
 # Historia zmian i wdrożeń (GitHub Pushes Log)
 
-**Ostatnia aktualizacja:** 2026-01-17 12:53
+**Ostatnia aktualizacja:** 2026-01-17 15:35
+
+---
+
+### [temp-hash] 2026-01-17 15:35 | feat: expand B2B warranty knowledge base and improve SAOS synchronization reliability
+**Zadania:**
+- **Rozszerzenie bazy wiedzy B2B**: Dodano artykuły 556, 558, 560 oraz 563 Kodeksu Cywilnego (tekst jednolity 2025) do bazy wiedzy sprawy.
+- **Poprawa niezawodności SAOS**: 
+    - Zaktualizowano `saosService.ts`: dodano szczegółowe logowanie błędów API (statusy, body).
+    - Zaktualizowano `add_ruling_to_topic_knowledge`: narzędzie obsługuje teraz opcjonalny parametr `content`, pozwalając AI zapisać wyrok bez ponownego pobierania, jeśli treść jest już znana.
+    - Zmodyfikowano instrukcje systemowe (PL/EN/ES) w celu optymalizacji zapisu orzeczeń.
+- **Udoskonalenie widoku Bazy Wiedzy**: 
+    - `LegalKnowledgeModal.tsx`: dodano obsługę sygnatur (`caseNumber`), etykiety "WYROK" oraz linkowanie do serwisu SAOS.
+    - `types.ts`: rozszerzono interfejs `LegalAct` o pola specyficzne dla orzeczeń.
+- **Prompting & Grounding**: Poprawiono formatowanie kontekstu bazy wiedzy w `getLegalAdvice`, aby AI lepiej rozróżniało akty prawne od wyroków.
 
 ---
 

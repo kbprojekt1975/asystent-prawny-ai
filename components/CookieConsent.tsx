@@ -1,28 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { XIcon } from './Icons';
+import { UserProfile } from '../types';
 
-const CookieConsent: React.FC = () => {
+interface CookieConsentProps {
+    userProfile?: UserProfile;
+    onUpdateProfile?: (profile: UserProfile, isSessionOnly: boolean) => void;
+}
+
+const CookieConsent: React.FC<CookieConsentProps> = ({ userProfile, onUpdateProfile }) => {
     const { t } = useTranslation();
     const [isVisible, setIsVisible] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
 
     useEffect(() => {
-        const consent = localStorage.getItem('cookieConsent');
-        if (!consent) {
-            setIsVisible(true);
+        const localConsent = localStorage.getItem('cookieConsent');
+        const profileConsent = userProfile?.cookieConsent;
+
+        console.log('[DEBUG] CookieConsent status:', { localConsent, profileConsent });
+
+        // Auto-sync if it was accepted locally but not in profile yet
+        if (localConsent === 'true' && !profileConsent && onUpdateProfile && userProfile) {
+            console.log('[DEBUG] Auto-syncing local consent to profile');
+            onUpdateProfile({
+                ...userProfile,
+                cookieConsent: true,
+                cookieConsentDate: new Date().toISOString()
+            }, false);
+            return;
         }
-    }, []);
+
+        if (!localConsent && !profileConsent) {
+            setIsVisible(true);
+            console.log('[DEBUG] Setting CookieConsent to Visible');
+        } else {
+            setIsVisible(false);
+        }
+    }, [userProfile?.cookieConsent, onUpdateProfile]);
 
     const handleAccept = () => {
+        console.log('[DEBUG] CookieConsent Accepted');
         localStorage.setItem('cookieConsent', 'true');
+
+        if (onUpdateProfile && userProfile) {
+            onUpdateProfile({
+                ...userProfile,
+                cookieConsent: true,
+                cookieConsentDate: new Date().toISOString()
+            }, false);
+        }
+
         setIsVisible(false);
     };
 
-    if (!isVisible) return null;
+    if (!isVisible) {
+        // console.log('[DEBUG] CookieConsent is NOT visible');
+        return null;
+    }
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 bg-slate-900/95 backdrop-blur-md border-t border-slate-700 shadow-2xl animate-in slide-in-from-bottom duration-500">
+        <div className="fixed bottom-0 left-0 right-0 z-[9999] p-4 bg-slate-900/95 backdrop-blur-md border-t border-slate-700 shadow-2xl animate-in fade-in slide-in-from-bottom duration-700">
             <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex-1">
                     <p className="text-slate-300">

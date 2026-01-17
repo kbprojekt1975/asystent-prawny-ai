@@ -229,19 +229,33 @@ export const useChatLogic = ({
         setChatHistory(prev => [...prev, userMessage]);
 
         const specializedPrompt = `
-            SYSTEM: Użytkownik prosi o wygenerowanie kompletnej Bazy Wiedzy (Case File) dla tej konkretnej sprawy.
-            
-            TWOJE ZADANIE:
-            1. Przeanalizuj dotychczasową rozmowę i zidentyfikuj 2-3 kluczowe akty prawne (ustawy/kodeksy).
-            2. Użyj narzędzia 'search_legal_acts' aby znaleźć te akty.
-            3. Wybierz najbardziej trafne i UŻYJ narzędzia 'add_act_to_topic_knowledge', aby zapisać je TRWALE do bazy tej sprawy.
-            
-            WAŻNE: 
-            - Zgoda na TRWAŁE zapisanie (add_act_to_topic_knowledge) została JUŻ UDZIELONA przez użytkownika. Wykonaj zapis natychmiast dla wybranych aktów.
-            - Wylistuj również najważniejsze, precedensowe orzecznictwo (wyroki SN, SA) pasujące do sprawy.
+      # ZADANIE: BUDOWA BAZY WIEDZY DLA SPRAWY (INTERAKTYWNA)
+      Użytkownik prosi o przygotowanie merytoryczne do sprawy: "${selectedTopic}".
 
-            Na koniec wyświetl podsumowanie: "Zaktualizowano Bazę Wiedzy sprawy. Dodano kluczowe akty prawne: [Lista]".
-            `;
+      # INSTRUKCJA ODPOWIEDZI (BARDZO WAŻNE):
+      1. NIE wypisuj punktów tej instrukcji w odpowiedzi dla użytkownika.
+      2. Rozpocznij odpowiedź od profesjonalnego potwierdzenia: "Zrozumiałem zadanie. Przystępuję do analizy i budowy bazy wiedzy dla Twojej sprawy."
+      3. Następnie przejdź do realizacji poniższych kroków.
+
+      # TWOJE KROKI:
+      1. **Analiza i Wywiad (PRIORYTET)**:
+         - Sprawdź dotychczasowy przebieg rozmowy (HISTORIA).
+         - Jeśli informacje są zbyt ogólne, ZADAJ 1-2 konkretne pytania wywiadu (np. o kluczowe daty, okoliczności). 
+         - NIE przechodź do punktu 2, dopóki nie będziesz mieć wystarczającego kontekstu do precyzyjnego szukania wyroków.
+
+      2. **Pobieranie Wiedzy (Gdy kontekst jest jasny)**:
+         - Znajdź 1-3 kluczowe akty prawne (użyj 'search_legal_acts') i zapisz ich ('add_act_to_topic_knowledge').
+         - Znajdź podobne i niedawne wyroki sądowe (użyj 'search_court_rulings').
+         - WYBIERZ MAKSYMALNIE 5 najtrafniejszych wyroków i zapisz je ('add_ruling_to_topic_knowledge').
+
+      # REGUŁY:
+      - Zgoda na TRWAŁE zapisanie została udzielona.
+      - UNIKAJ DUPLIKATÓW: Nie zapisuj aktów/wyroków, które widzisz w "EXISTING TOPIC KNOWLEDGE".
+      - Jeśli już masz wystarczająco dużo danych w bazie (pobrano wyroki i ustawy), wyświetl podsumowanie.
+      - PAMIĘTAJ O LIMITACH: Maksymalnie 5 wyroków na jedną turę.
+
+      Na koniec wyświetl status: "Zaktualizowano Bazę Wiedzy sprawy. Dodano [lista aktów] oraz [liczba] wyroków." lub poproś o więcej danych.
+    `;
 
         const historyForAI = [...chatHistory, userMessage, { role: 'user', content: specializedPrompt } as ChatMessage];
         await handleSendMessage(undefined, historyForAI, undefined);

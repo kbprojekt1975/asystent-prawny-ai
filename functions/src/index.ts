@@ -17,6 +17,7 @@ import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { defineSecret } from "firebase-functions/params";
 import 'dotenv/config'; // Load .env file
 import { searchLegalActs, getActContent, getFullActContent } from "./isapService";
+import { searchJudgments, getJudgmentText } from "./saosService";
 
 // --- GLOBAL OPTIONS ---
 setGlobalOptions({
@@ -128,7 +129,8 @@ Jesteś rygorystycznym Asystentem Prawnym AI. Twoim nadrzędnym celem jest dosta
    - **WYMAGANE ZATWIERDZENIE:** Na koniec odpowiedzi zapytaj użytkownika o potwierdzenie: "Znalazłem nowe przepisy w [Akt]. Czy chcesz, abyśmy włączyli je do bazy wiedzy tej sprawy?".
    - DOPÓKI użytkownik nie potwierdzi (w następnej wiadomości), traktuj tę wiedzę jako "propozycję", a nie stały element "ISTNIEJĄCEJ WIEDZY TEMATYCZNEJ".
 3. GLOBALNA BAZA WIEDZY (RAG): Masz dostęp do narzędzia \`search_vector_library\`. Korzystaj z niego, aby szukać przepisów semantycznie (po znaczeniu), jeśli nie znasz konkretnego numeru aktu. Wiedza z tej bazy jest ogólnodostępna i NIE wymaga tagowania [NOWA WIEDZA].
-4. TRWAŁE ZAPISYWANIE: Kiedy użytkownik POTWIERDZI (np. "Tak", "Dodaj to"), użyj narzędzia **add_act_to_topic_knowledge**, aby trwale dołączyć dany akt do bazy wiedzy tematu. Nigdy nie używaj tego narzędzia BEZ wyraźnej zgody użytkownika.
+4. ORZECZNICTWO (SAOS): Masz dostęp do narzędzia \`search_court_rulings\`. Korzystaj z niego, aby szukać wyroków polskich sądów. 
+5. TRWAŁE ZAPISYWANIE: Kiedy użytkownik POTWIERDZI (np. "Tak", "Dodaj to"), użyj narzędzia **add_act_to_topic_knowledge** (dla ustaw) lub **add_ruling_to_topic_knowledge** (dla wyroków), aby trwale dołączyć dokument do bazy wiedzy tematu. Przy zapisywaniu wyroków zawsze przekazuj też treść (\`content\`) i tytuł (\`title\`), jeśli są już znane z wyników wyszukiwania, aby uniknąć ponownego pobierania. Nigdy nie używaj tych narzędzi BEZ wyraźnej zgody użytkownika.
 
 # PROTOKÓŁ WERYFIKACJI (ANTY-HALUCYNACJA)
 1. ZAKAZ DOMNIEMANIA: Jeśli nie znajdziesz konkretnego przepisu w narzędziu lub w istniejącej wiedzy, nie możesz założyć, że on istnieje.
@@ -140,8 +142,9 @@ Jesteś rygorystycznym Asystentem Prawnym AI. Twoim nadrzędnym celem jest dosta
 # PROCEDURA OPERACYJNA (CHAIN-OF-THOUGHT)
 Zanim udzielisz odpowiedzi:
 1. "Co już wiemy?" -> Przejrzyj sekcję "ISTNIEJĄCA WIEDZA TEMATYCZNA".
-2. "Czego brakuje?" -> Zdefiniuj słowa kluczowe. Jeśli szukasz głównego Kodeksu/Ustawy, szukaj "Tekst jednolity [Nazwa]" lub wybieraj wyniki typu "Obwieszczenie... w sprawie ogłoszenia jednolitego tekstu".
-3. "Czy to nowość?" -> Jeśli używasz narzędzi, sprawdź czy wynik jest nową wiedzą dla tego tematu.
+2. "Czego brakuje?" -> Zdefiniuj słowa kluczowe. SZUKANIE WYROKÓW: Używaj krótkich, prawniczych fraz (np. "rękojmia wada fizyczna" zamiast "rękojmia i wady fizyczne"). Unikaj spójników "i", "lub". Jeśli szukasz głównego Kodeksu/Ustawy, szukaj "Tekst jednolity [Nazwa]" lub wybieraj wyniki typu "Obwieszczenie... w sprawie ogłoszenia jednolitego tekstu".
+3. TRÓJKROK SAOS: Jeśli szukasz wyroków i nie masz wyników dla courtType: COMMON, spróbuj SUPREME (Sąd Najwyższy). Zmieniaj słowa kluczowe na bardziej ogólne, jeśli brak wyników.
+4. "Czy to nowość?" -> Jeśli używasz narzędzi, sprawdź czy wynik jest nową wiedzą dla tego tematu.
 
 # KRYTYCZNE OGRANICZENIA
 - Nigdy nie zmyślaj sygnatur akt.
@@ -187,7 +190,8 @@ Eres un riguroso Asistente Legal IA. Tu objetivo principal es proporcionar infor
    - **APROBACIÓN REQUERIDA:** Al final de la respuesta, pide confirmación al usuario: "He encontrado nuevas regulaciones en [Acto]. ¿Quieres incluirlas en la base de conocimientos de este caso?".
    - HASTA que el usuario confirme (en el siguiente mensaje), trata este conocimiento como una "propuesta", no como un elemento permanente del "CONOCIMIENTO EXISTENTE DEL TEMA".
 3. BASE DE CONOCIMIENTOS GLOBAL (RAG): Tienes acceso a la herramienta \`search_vector_library\`. Úsala para buscar regulaciones semánticamente (por significado) si no conoces el número de acto específico. El conocimiento de esta base está disponible públicamente y NO requiere la etiqueta [NUEVO CONOCIMIENTO].
-4. GUARDADO PERMANENTE: Cuando el usuario CONFIRME (ej. "Sí", "Añádelo"), usa la herramienta **add_act_to_topic_knowledge** para adjuntar permanentemente el acto a la base de conocimientos del tema. Nunca uses esta herramienta SIN el consentimiento explícito del usuario.
+4. JURISPRUDENCIA (SAOS): Tienes acceso a la herramienta \`search_court_rulings\`. Úsala para buscar sentencias de los tribunales polacos.
+5. GUARDADO PERMANENTE: Cuando el usuario CONFIRME (ej. "Sí", "Añádelo"), usa la herramienta **add_act_to_topic_knowledge** (para leyes) o **add_ruling_to_topic_knowledge** (para sentencias) para adjuntar permanentemente el documento a la base de conocimientos del tema. Al guardar sentencias, proporcione también el contenido (\`content\`) y el título (\`title\`) si ya se conocen por los resultados de la búsqueda para evitar volver a descargarlos. Nunca uses estas herramientas SIN el consentimiento explícito del usuario.
 
 # PROTOCOLO DE VERIFICACIÓN (ANTI-ALUCINACIÓN)
 1. SIN PRESUNCIÓN: Si no encuentras una regulación específica en la herramienta o en el conocimiento existente, no puedes asumir que existe.
@@ -199,8 +203,9 @@ Eres un riguroso Asistente Legal IA. Tu objetivo principal es proporcionar infor
 # PROCEDIMIENTO OPERATIVO (CADENA DE PENSAMIENTO)
 Antes de dar una respuesta:
 1. "¿Qué sabemos ya?" -> Revisa la sección "CONOCIMIENTO EXISTENTE DEL TEMA".
-2. "¿Qué falta?" -> Define palabras clave. Si buscas el Código/Ley principal, busca "Texto refundido [Nombre]" o elige resultados como "Anuncio... relativo a la publicación del texto refundido".
-3. "¿Es esto nuevo?" -> Si usas herramientas, comprueba si el resultado es conocimiento nuevo para este tema.
+2. "¿Qué falta?" -> Define palabras clave. BÚSQUEDA DE SENTENCIAS: Usa frases legales cortas (ej. "garantía defecto físico" en lugar de "garantía y defectos físicos"). Evita conjunciones como "y", "o". Si buscas el Código/Ley principal, busca "Texto refundido [Nombre]" o elige resultados como "Anuncio... relativo a la publicación del texto refundido".
+3. TRIPLE PASO SAOS: Si buscas sentencias y no hay resultados para courtType: COMMON, prueba con SUPREME (Tribunal Supremo). Cambia las palabras clave a unas más generales si no hay resultados.
+4. "¿Es esto nuevo?" -> Si usas herramientas, comprueba si el resultado es conocimiento nuevo para este tema.
 
 # LIMITACIONES CRÍTICAS
 - Nunca inventes firmas de expedientes.
@@ -246,7 +251,8 @@ You are a rigorous Legal AI Assistant. Your primary objective is to provide prec
    - **APPROVAL REQUIRED:** At the end of the response, ask the user for confirmation: "I found new regulations in [Act]. Do you want to include them in this case's knowledge base?".
    - UNTIL the user confirms (in the next message), treat this knowledge as a "proposal", not a permanent element of "EXISTING TOPIC KNOWLEDGE".
 3. GLOBAL KNOWLEDGE BASE (RAG): You have access to the \`search_vector_library\` tool. Use it to search for regulations semantically (by meaning) if you don't know the specific act number. Knowledge from this base is publicly available and does NOT require the [NEW KNOWLEDGE] tag.
-4. PERMANENT SAVING: When the user CONFIRMS (e.g., "Yes", "Add it"), use the **add_act_to_topic_knowledge** tool to permanently attach the act to the topic's knowledge base. Never use this tool WITHOUT explicit user consent.
+4. CASE LAW (SAOS): You have access to the \`search_court_rulings\` tool. Use it to search for Polish court judgments.
+5. PERMANENT SAVING: When the user CONFIRMS (e.g., "Yes", "Add it"), use the **add_act_to_topic_knowledge** (for acts) or **add_ruling_to_topic_knowledge** (for rulings) tool to permanently attach the document to the topic's knowledge base. When saving rulings, also provide the content (\`content\`) and title (\`title\`) if they are already known from the search results to avoid re-fetching. Never use these tools WITHOUT explicit user consent.
 
 # VERIFICATION PROTOCOL (ANTI-HALLUCINATION)
 1. NO PRESUMPTION: If you don't find a specific regulation in the tool or in existing knowledge, you cannot assume it exists.
@@ -258,8 +264,9 @@ You are a rigorous Legal AI Assistant. Your primary objective is to provide prec
 # OPERATIONAL PROCEDURE (CHAIN-OF-THOUGHT)
 Before giving an answer:
 1. "What do we already know?" -> Review the "EXISTING TOPIC KNOWLEDGE" section.
-2. "What's missing?" -> Define keywords. If searching for the main Code/Law, look for "Consolidated text [Name]" or choose results like "Announcement... regarding the publication of the consolidated text".
-3. "Is this new?" -> If using tools, check if the result is new knowledge for this topic.
+2. "What's missing?" -> Define keywords. RULING SEARCH: Use short, legal phrases (e.g., "warranty physical defect" instead of "warranty and physical defects"). Avoid conjunctions like "and", "or". If searching for the main Code/Law, look for "Consolidated text [Name]" or choose results like "Announcement... regarding the publication of the consolidated text".
+3. SAOS THREE-STEP: If searching for rulings and you have no results for courtType: COMMON, try SUPREME (Supreme Court). Change keywords to more general ones if there are no results.
+4. "Is this new?" -> If using tools, check if the result is new knowledge for this topic.
 
 # CRITICAL LIMITATIONS
 - Never invent case file signatures.
@@ -491,9 +498,12 @@ export const getLegalAdvice = onCall({
         if (!knowledgeSnap.empty) {
             existingKnowledgeContext = knowledgeSnap.docs.map(doc => {
                 const data = doc.data();
-                return `AKT: ${data.publisher} ${data.year} poz. ${data.pos}\nTYTUŁ: ${data.title || 'Brak tytułu'}\nTREŚĆ: ${data.content?.substring(0, 1000)}...`;
+                if (data.source === 'SAOS') {
+                    return `WYROK SĄDOWY: ${data.caseNumber}\nID: ${data.judgmentId}\nTREŚĆ: ${data.content?.substring(0, 1500)}...`;
+                }
+                return `AKT PRAWNY (ISAP): ${data.publisher} ${data.year} poz. ${data.pos}\nTYTUŁ: ${data.title || 'Brak tytułu'}\nTREŚĆ: ${data.content?.substring(0, 1000)}...`;
             }).join('\n---\n');
-            logger.info(`✓ Fetched ${knowledgeSnap.size} acts for topic knowledge context`);
+            logger.info(`✓ Fetched ${knowledgeSnap.size} items for topic knowledge context`);
         }
     } catch (err) {
         logger.error("Error fetching topic knowledge:", err);
@@ -504,7 +514,17 @@ export const getLegalAdvice = onCall({
         const configSnap = await db.collection('config').doc('system').get();
         const customConfig = configSnap.data() || {};
 
-        const customCommonRules = customConfig.commonRules || (language === 'en' ? commonRulesEn : commonRules);
+        let customCommonRules = (customConfig.commonRules || (language === 'en' ? commonRulesEn : language === 'es' ? commonRulesEs : commonRules)) as string;
+
+        // Zapewnienie widoczności narzędzi SAOS nawet jeśli Firestore ma stare reguły
+        if (!customCommonRules.includes('search_court_rulings')) {
+            const addendum = language === 'en' ?
+                "\n\n# ADDITIONAL TOOLS\nYou have access to 'search_court_rulings' (SAOS) and 'add_ruling_to_topic_knowledge'." :
+                language === 'es' ?
+                    "\n\n# HERRAMIENTAS ADICIONALES\nTienes acceso a 'search_court_rulings' (SAOS) y 'add_ruling_to_topic_knowledge'." :
+                    "\n\n# DODATKOWE NARZĘDZIA\nMasz dostęp do 'search_court_rulings' (SAOS) i 'add_ruling_to_topic_knowledge'.";
+            customCommonRules += addendum;
+        }
 
         // Robust lookup with logging
         const lawAreaClean = (lawArea || "").trim();
@@ -1024,6 +1044,32 @@ export const getLegalAdvice = onCall({
                         }
                     },
                     {
+                        name: "search_court_rulings",
+                        description: "Wyszukuje polskie wyroki sądowe (SAOS). Domyślnie przeszukuje wszystkie sądy. Używaj krótkich fraz bez spójników (np. 'rękojmia lokal'). Jeśli brak wyników, spróbuj zmienić courtType na SUPREME lub uprościć zapytanie.",
+                        parameters: {
+                            type: SchemaType.OBJECT,
+                            properties: {
+                                query: { type: SchemaType.STRING, description: "Słowa kluczowe (np. 'zachowek po wydziedziczeniu')" },
+                                courtType: { type: SchemaType.STRING, description: "Typ sądu (opcjonalnie: COMMON, SUPREME, CONSTITUTIONAL)" }
+                            },
+                            required: ["query"]
+                        }
+                    },
+                    {
+                        name: "add_ruling_to_topic_knowledge",
+                        description: "Zapisuje wybrany wyrok do bazy wiedzy sprawy. Używaj tylko po akceptacji użytkownika lub w trybie budowania bazy.",
+                        parameters: {
+                            type: SchemaType.OBJECT,
+                            properties: {
+                                judgmentId: { type: SchemaType.NUMBER, description: "ID wyroku z wyników wyszukiwania" },
+                                caseNumber: { type: SchemaType.STRING, description: "Sygnatura akt (np. 'I ACa 123/22')" },
+                                content: { type: SchemaType.STRING, description: "Pełna treść wyroku (opcjonalnie, jeśli już ją znasz)" },
+                                title: { type: SchemaType.STRING, description: "Tytuł wyroku (opcjonalnie)" }
+                            },
+                            required: ["judgmentId", "caseNumber"]
+                        }
+                    },
+                    {
                         name: "search_vector_library",
                         description: "Wyszukuje przepisy w globalnej bazie wektorowej na podstawie znaczenia (semantycznie). Używaj, gdy chcesz znaleźć przepisy dotyczące konkretnego problemu.",
                         parameters: {
@@ -1105,29 +1151,40 @@ export const getLegalAdvice = onCall({
                     });
                 } else if (name === "add_act_to_topic_knowledge") {
                     const { publisher, year, pos, title, cited_articles } = args as any;
-                    // We need the content. Since Gemini just read it via get_act_content, 
-                    // we can re-fetch from cache or global API (cached anyway).
-                    const actText = await getActContent(publisher, year, pos);
 
                     try {
+                        // DEDUPLIKACJA
                         const caseKnowledgeRef = db.collection('users').doc(uid).collection('chats').doc(chatId).collection('legal_knowledge').doc(`${publisher}_${year}_${pos}`);
-                        await caseKnowledgeRef.set({
-                            publisher,
-                            year,
-                            pos,
-                            content: actText,
-                            savedAt: Timestamp.now(),
-                            title: title,
-                            cited_articles: cited_articles || []
-                        }, { merge: true });
-                        logger.info(`✓ Successfully saved to TOPIC knowledge base (approved): ${publisher}_${year}_${pos}`);
+                        const existingDoc = await caseKnowledgeRef.get();
 
-                        toolResponses.push({
-                            functionResponse: {
-                                name,
-                                response: { status: "success", message: "Act added to topic knowledge base." }
-                            }
-                        });
+                        if (existingDoc.exists) {
+                            toolResponses.push({
+                                functionResponse: {
+                                    name,
+                                    response: { status: "already_exists", message: `Akt ${title} jest już obecny w bazie tej sprawy.` }
+                                }
+                            });
+                        } else {
+                            const actText = await getActContent(publisher, year, pos);
+                            await caseKnowledgeRef.set({
+                                source: 'ISAP',
+                                publisher,
+                                year,
+                                pos,
+                                content: actText,
+                                savedAt: Timestamp.now(),
+                                title: title,
+                                cited_articles: cited_articles || []
+                            }, { merge: true });
+
+                            logger.info(`✓ Successfully saved act to TOPIC knowledge base: ${publisher}_${year}_${pos}`);
+                            toolResponses.push({
+                                functionResponse: {
+                                    name,
+                                    response: { status: "success", message: `Akt ${title} został dodany do bazy wiedzy.` }
+                                }
+                            });
+                        }
                     } catch (caseSaveErr) {
                         logger.error("Error saving approved act to TOPIC knowledge base", caseSaveErr);
                         toolResponses.push({
@@ -1203,6 +1260,68 @@ export const getLegalAdvice = onCall({
                             functionResponse: {
                                 name,
                                 response: { result: "Wystąpił błąd krytyczny podczas przetwarzania zapytania wektorowego." }
+                            }
+                        });
+                    }
+                } else if (name === "search_court_rulings") {
+                    const { query: rulingQuery, courtType } = args as any;
+                    const searchResults = await searchJudgments({ all: rulingQuery, courtType });
+                    toolResponses.push({
+                        functionResponse: {
+                            name,
+                            response: { result: searchResults }
+                        }
+                    });
+                } else if (name === "add_ruling_to_topic_knowledge") {
+                    const { judgmentId, caseNumber } = args as any;
+
+                    try {
+                        // DEDUPLIKACJA
+                        const caseKnowledgeRef = db.collection('users').doc(uid).collection('chats').doc(chatId).collection('legal_knowledge').doc(`SAOS_${judgmentId}`);
+                        const existingDoc = await caseKnowledgeRef.get();
+
+                        if (existingDoc.exists) {
+                            toolResponses.push({
+                                functionResponse: {
+                                    name,
+                                    response: { status: "already_exists", message: `Wyrok o sygnaturze ${caseNumber} jest już w bazie wiedzy tej sprawy.` }
+                                }
+                            });
+                        } else {
+                            // Jeśl AI podało treść, używamy jej. Jeśli nie, pobieramy z API.
+                            let rulingText = (args as any).content;
+                            if (!rulingText) {
+                                logger.info(`Re-fetching ruling text for ID: ${judgmentId}`);
+                                rulingText = await getJudgmentText(judgmentId);
+                            } else {
+                                logger.info(`Using provided ruling text for ID: ${judgmentId}`);
+                            }
+
+                            const finalTitle = (args as any).title || `Wyrok SAOS: ${caseNumber}`;
+
+                            await caseKnowledgeRef.set({
+                                source: 'SAOS',
+                                judgmentId,
+                                caseNumber,
+                                content: rulingText,
+                                savedAt: Timestamp.now(),
+                                title: finalTitle
+                            });
+
+                            logger.info(`✓ Successfully saved ruling to TOPIC knowledge base: SAOS_${judgmentId}`);
+                            toolResponses.push({
+                                functionResponse: {
+                                    name,
+                                    response: { status: "success", message: `Wyrok ${caseNumber} został dodany do bazy wiedzy.` }
+                                }
+                            });
+                        }
+                    } catch (rulingErr: any) {
+                        logger.error("Error saving ruling to TOPIC knowledge base", rulingErr);
+                        toolResponses.push({
+                            functionResponse: {
+                                name,
+                                response: { status: "error", message: `Błąd podczas zapisu wyroku: ${rulingErr.message}` }
                             }
                         });
                     }

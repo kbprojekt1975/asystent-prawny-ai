@@ -109,13 +109,18 @@ export interface UserProfile {
   consentDate?: any;
   manualLocalMode?: boolean;
   hasSeenWelcomeAssistant?: boolean;
+  cookieConsent?: boolean;
+  cookieConsentDate?: any;
 }
 
 export interface LegalAct {
   id: string;
-  publisher: string;
-  year: number;
-  pos: number;
+  source?: 'ISAP' | 'SAOS';
+  publisher?: string;
+  year?: number;
+  pos?: number;
+  judgmentId?: number;
+  caseNumber?: string;
   title?: string;
   content: string;
   savedAt: any;
