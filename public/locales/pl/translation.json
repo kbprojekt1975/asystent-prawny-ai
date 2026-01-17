@@ -1,4 +1,8 @@
 {
+    "mobile": {
+        "showAlways": "Zawsze pokazuj pasek",
+        "hide": "Ukryj"
+    },
     "app": {
         "title": "Asystent Prawny AI",
         "back": "Wróć",
