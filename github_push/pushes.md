@@ -1,8 +1,20 @@
 # Historia zmian i wdrożeń (GitHub Pushes Log)
 
-**Ostatnia aktualizacja:** 2026-01-16 21:32
+**Ostatnia aktualizacja:** 2026-01-17 12:27
 
 ---
+
+### [a511bcb] 2026-01-17 12:27 | Optimize mobile UI: minimalist toolbar, hidden elements when collapsed, reduced padding
+**Zadania:**
+- **Minimalistyczny przycisk "3 kropki"**: Usunięto tło i ramkę, zmniejszono rozmiar ikony (w-5 h-5).
+- **Ukrywanie elementów na mobile**: Quick Actions i Context Badge są teraz ukryte gdy toolbar jest zwinięty.
+- **Redukcja paddingu**: Footer ma `py-0.5 px-2` gdy zwinięty na mobile, chat input ma `p-1.5` zamiast `p-2`.
+- **Usunięcie ramki górnej**: Usunięto `border-t` z footera dla płynniejszego wyglądu.
+- **Zamiana pozycji przycisków**: Przycisk "Ukryj" jest teraz po lewej, toggle "Zawsze pokazuj" po prawej.
+- **Tłumaczenia**: Dodano klucze `mobile.showAlways` i `mobile.hide` do PL/EN.
+
+---
+
 
 ### [6ba41aa] 2026-01-16 21:31 | docs: sync log hash with git history
 **Zadania:**

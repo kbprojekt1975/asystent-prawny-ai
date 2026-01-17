@@ -1,11 +1,29 @@
 {
     "mobile": {
-        "showAlways": "Zawsze pokazuj pasek",
+        "showAlways": "Zawsze pokazuj",
         "hide": "Ukryj"
+    },
+    "cookieConsent": {
+        "message": "Ta strona korzysta z ciasteczek (cookies). Wszelkie dane wprowadzasz na własną odpowiedzialność i w każdej chwili możesz je usunąć. Twoje dane są przechowywane w bazie wiedzy z zachowaniem najwyższych standardów bezpieczeństwa. Korzystając ze strony, wyrażasz zgodę na używanie cookies.",
+        "showDetails": "Więcej informacji o przechowywanych danych",
+        "hideDetails": "Ukryj szczegóły",
+        "accept": "Akceptuję",
+        "close": "Zamknij",
+        "detailsTitle": "Co dokładnie i po co przechowujemy?",
+        "detailsAccount": "Dostęp do konta:",
+        "detailsAccountDesc": "Twój e-mail, żebyś miał bezpieczny dostęp do swoich spraw i nikt inny ich nie widział.",
+        "detailsData": "Dane do pism:",
+        "detailsDataDesc": "Imię, nazwisko, adres. Używamy ich tylko i wyłącznie wtedy, gdy poprosisz o napisanie oficjalnego dokumentu (np. pozwu), który musi te dane zawierać.",
+        "detailsMemory": "Pamięć Asystenta:",
+        "detailsMemoryDesc": "Historia rozmowy. Dzięki niej Asystent pamięta o czym rozmawialiście 5 minut temu i nie musisz mu wszystkiego powtarzać.",
+        "detailsComfort": "Wygoda:",
+        "detailsComfortDesc": "Zapamiętujemy Twoje wybory, np. to, że już zamknąłeś to okienko.",
+        "detailsFooter": "Pamiętaj: To Twoje dane. W panelu użytkownika możesz w każdej chwili usunąć historię czatu lub całe konto."
     },
     "app": {
         "title": "Asystent Prawny AI",
         "back": "Wróć",
+        "understand": "Rozumiem",
         "change": "Zmień",
         "home": "Strona główna",
         "knowledgeBase": "Baza Wiedzy",

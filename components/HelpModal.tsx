@@ -1,5 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 
 interface HelpModalProps {
     isOpen: boolean;
@@ -9,6 +10,8 @@ interface HelpModalProps {
 }
 
 const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, title, children }) => {
+    const { t } = useTranslation();
+
     if (!isOpen) return null;
 
     const modalContent = (
@@ -46,7 +49,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, title, children 
                         onClick={onClose}
                         className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                     >
-                        Rozumiem
+                        {t('app.understand')}
                     </button>
                 </div>
             </div>

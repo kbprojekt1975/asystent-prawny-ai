@@ -2,6 +2,7 @@
     "app": {
         "title": "Asistente Legal IA",
         "back": "Atrás",
+        "understand": "Entiendo",
         "change": "Cambiar",
         "home": "Inicio",
         "knowledgeBase": "Base de Conocimientos",

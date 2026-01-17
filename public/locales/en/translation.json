@@ -3,9 +3,27 @@
         "showAlways": "Always show toolbar",
         "hide": "Hide"
     },
+    "cookieConsent": {
+        "message": "This site uses cookies. You enter all data at your own responsibility and can delete it at any time. Your data is stored in the knowledge base with the highest security standards. By using the site, you consent to the use of cookies.",
+        "showDetails": "More information about stored data",
+        "hideDetails": "Hide details",
+        "accept": "I Accept",
+        "close": "Close",
+        "detailsTitle": "What exactly and why do we store?",
+        "detailsAccount": "Account Access:",
+        "detailsAccountDesc": "Your email, so you have secure access to your cases and no one else can see them.",
+        "detailsData": "Data for Documents:",
+        "detailsDataDesc": "Name, surname, address. We use them only and exclusively when you ask us to write an official document (e.g., a lawsuit) that must contain this data.",
+        "detailsMemory": "Assistant's Memory:",
+        "detailsMemoryDesc": "Conversation history. Thanks to it, the Assistant remembers what you talked about 5 minutes ago and you don't have to repeat everything.",
+        "detailsComfort": "Convenience:",
+        "detailsComfortDesc": "We remember your choices, e.g., that you already closed this window.",
+        "detailsFooter": "Remember: This is your data. In the user panel, you can delete chat history or your entire account at any time."
+    },
     "app": {
         "title": "AI Legal Assistant",
         "back": "Back",
+        "understand": "I Understand",
         "change": "Change",
         "home": "Home",
         "knowledgeBase": "Knowledge Base",
