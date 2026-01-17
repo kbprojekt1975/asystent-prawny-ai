@@ -1,6 +1,19 @@
 # Historia zmian i wdrożeń (GitHub Pushes Log)
 
-**Ostatnia aktualizacja:** 2026-01-17 15:35
+**Ostatnia aktualizacja:** 2026-01-17 19:33
+
+---
+
+### [d472979] 2026-01-17 19:33 | fix: enhanced validation logging in getLegalAdvice for debugging 400 errors
+**Zadania:**
+- **Ulepszone logowanie błędów walidacji**: Dodano szczegółowe komunikaty błędów w `functions/src/index.ts`, które pokazują:
+    - Dostępne dziedziny prawa w `systemInstructions`
+    - Dostępne tryby interakcji dla wybranej dziedziny
+    - Aktualny język interfejsu
+    - Znaleziony klucz `areaKey`
+- **Poprawa diagnostyki**: Komunikaty błędów zawierają teraz pełną listę dostępnych trybów, co ułatwia identyfikację problemów z walidacją.
+- **Migracja plików tłumaczeń**: Przeniesiono pliki `translation.json` z `public/locales/` do `src/locales/` dla wszystkich języków (PL/EN/ES).
+- **Cel**: Rozwiązanie problemu z błędami `400 Bad Request` dla nowo dodanych obszarów prawa (Prawo Pracy, Prawo Nieruchomości, Prawo Podatkowe, Prawo Administracyjne).
 
 ---
 
