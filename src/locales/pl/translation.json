@@ -164,7 +164,15 @@
             "prawo cywilne": "Prawo Cywilne",
             "prawo cywilne_desc": "Umowy, odszkodowania, spadki.",
             "prawo handlowe": "Prawo Handlowe",
-            "prawo handlowe_desc": "Spółki, kontrakty, działalność gospodarcza."
+            "prawo handlowe_desc": "Spółki, kontrakty, działalność gospodarcza.",
+            "prawo pracy": "Prawo Pracy",
+            "prawo pracy_desc": "Umowy, zwolnienia, mobbing, PIP.",
+            "prawo nieruchomości": "Nieruchomości",
+            "prawo nieruchomości_desc": "Budowlane, najem, księgi wieczyste, deweloperzy.",
+            "prawo podatkowe": "Podatki",
+            "prawo podatkowe_desc": "PIT, CIT, VAT, kontrole skarbowe.",
+            "prawo administracyjne": "Administracja",
+            "prawo administracyjne_desc": "Urzędy, decyzje, pozwolenia, odwołania."
         },
         "localMode": {
             "title": "Tryb \"Zapisuj tylko lokalnie\"",

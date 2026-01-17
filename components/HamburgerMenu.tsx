@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MenuIcon, ProfileIcon, BookOpenIcon, HomeIcon, ClockIcon, SparklesIcon, DownloadIcon, UploadIcon, QuestionMarkCircleIcon } from './Icons';
+import { MenuIcon, ProfileIcon, BookOpenIcon, HomeIcon, ClockIcon, SparklesIcon, DownloadIcon, UploadIcon, QuestionMarkCircleIcon, BrainIcon } from './Icons';
 import { SubscriptionInfo } from '../types';
 
 interface HamburgerMenuProps {
     onProfileClick: () => void;
     onKnowledgeClick: () => void;
+    onGenerateKnowledgeClick?: () => void;
     onHomeClick?: () => void;
     onHistoryClick?: () => void;
     onQuickActionsClick?: () => void;
@@ -20,6 +21,7 @@ interface HamburgerMenuProps {
 const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     onProfileClick,
     onKnowledgeClick,
+    onGenerateKnowledgeClick,
     onHomeClick,
     onHistoryClick,
     onQuickActionsClick,
@@ -106,6 +108,17 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                             <BookOpenIcon className="h-5 w-5 text-yellow-500" />
                             <span>{t('menu.knowledgeBase')}</span>
                         </button>
+
+                        {onGenerateKnowledgeClick && (
+                            <button
+                                onClick={() => { onGenerateKnowledgeClick(); setIsOpen(false); }}
+                                className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors"
+                                role="menuitem"
+                            >
+                                <BrainIcon className="h-5 w-5 text-green-400" />
+                                <span>{t('app.generateKnowledge')}</span>
+                            </button>
+                        )}
 
                         <button
                             onClick={() => { onHelpClick?.(); setIsOpen(false); }}

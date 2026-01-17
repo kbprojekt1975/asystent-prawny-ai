@@ -123,9 +123,10 @@ export const useChatLogic = ({
         if (!historyOverride) {
             const userMessage: ChatMessage = { role: 'user', content: messageToSend };
             newHistory.push(userMessage);
-            setChatHistory(newHistory);
+            setChatHistory(newHistory.filter(m => m.role !== 'system'));
         } else {
-            setChatHistory(historyOverride);
+            // When using historyOverride (e.g. specialized prompts), only show non-system messages in UI
+            setChatHistory(historyOverride.filter(m => m.role !== 'system'));
         }
 
         if (!messageOverride) {
@@ -149,11 +150,12 @@ export const useChatLogic = ({
 
 
         try {
-            // Save user message (and ensure doc exists) BEFORE calling AI
+            // Save messages (FILTERING out system instructions from permanent record)
             if (!isLocalOnly) {
                 const chatId = effectiveChatId;
+                const historyToSave = newHistory.filter(m => m.role !== 'system');
                 await setDoc(doc(db, 'users', user.uid, 'chats', chatId), {
-                    messages: newHistory,
+                    messages: historyToSave,
                     lastUpdated: serverTimestamp(),
                     lawArea: effectiveLawArea,
                     topic: effectiveTopic,
@@ -182,7 +184,8 @@ export const useChatLogic = ({
                 aiMessage.sources = aiResponse.sources;
             }
 
-            const finalHistory = [...newHistory, aiMessage];
+            // Final history for UI and storage should NOT include the technical system instructions
+            const finalHistory = [...newHistory.filter(m => m.role !== 'system'), aiMessage];
             setChatHistory(finalHistory);
 
             // Update cost
@@ -257,7 +260,7 @@ export const useChatLogic = ({
       Na koniec wyświetl status: "Zaktualizowano Bazę Wiedzy sprawy. Dodano [lista aktów] oraz [liczba] wyroków." lub poproś o więcej danych.
     `;
 
-        const historyForAI = [...chatHistory, userMessage, { role: 'user', content: specializedPrompt } as ChatMessage];
+        const historyForAI = [...chatHistory, userMessage, { role: 'system', content: specializedPrompt } as ChatMessage];
         await handleSendMessage(undefined, historyForAI, undefined);
     }, [user, selectedLawArea, selectedTopic, chatHistory, handleSendMessage]);
 
@@ -281,7 +284,7 @@ export const useChatLogic = ({
           Proszę o analizę tego dokumentu w kontekście sprawy. Potwierdź otrzymanie i streść kluczowe informacje.
         `;
 
-                const historyForAI = [...chatHistory, userMessage, { role: 'user', content: specializedPrompt } as ChatMessage];
+                const historyForAI = [...chatHistory, userMessage, { role: 'system', content: specializedPrompt } as ChatMessage];
                 await handleSendMessage(undefined, historyForAI, undefined);
             };
             reader.readAsText(file);

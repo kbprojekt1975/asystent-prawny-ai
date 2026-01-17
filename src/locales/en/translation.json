@@ -164,7 +164,15 @@
             "prawo cywilne": "Civil Law",
             "prawo cywilne_desc": "Contracts, damages, inheritance.",
             "prawo handlowe": "Commercial Law",
-            "prawo handlowe_desc": "Companies, contracts, business activity."
+            "prawo handlowe_desc": "Companies, contracts, business activity.",
+            "prawo pracy": "Labor Law",
+            "prawo pracy_desc": "Contracts, dismissals, harassment.",
+            "prawo nieruchomości": "Real Estate",
+            "prawo nieruchomości_desc": "Construction, rentals, land registry.",
+            "prawo podatkowe": "Tax Law",
+            "prawo podatkowe_desc": "Income tax, VAT, audits.",
+            "prawo administracyjne": "Admin Law",
+            "prawo administracyjne_desc": "Public offices, permits, appeals."
         },
         "localMode": {
             "title": "\"Local Save Only\" Mode",

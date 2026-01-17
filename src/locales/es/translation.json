@@ -160,7 +160,15 @@
             "prawo cywilne": "Derecho Civil",
             "prawo cywilne_desc": "Contratos, daños, herencias.",
             "prawo handlowe": "Derecho Comercial",
-            "prawo handlowe_desc": "Empresas, contratos, actividad comercial."
+            "prawo handlowe_desc": "Empresas, contratos, actividad comercial.",
+            "prawo pracy": "Derecho Laboral",
+            "prawo pracy_desc": "Contratos, despidos, acoso.",
+            "prawo nieruchomości": "Inmobiliario",
+            "prawo nieruchomości_desc": "Construcción, alquileres, registro.",
+            "prawo podatkowe": "Derecho Fiscal",
+            "prawo podatkowe_desc": "Impuestos, IVA, auditorías.",
+            "prawo administracyjne": "Derecho Admin.",
+            "prawo administracyjne_desc": "Oficinas públicas, permisos, apelaciones."
         },
         "localMode": {
             "title": "Modo \"Solo Guardado Local\"",

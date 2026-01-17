@@ -2,7 +2,11 @@ export enum LawArea {
   Criminal = 'Prawo Karne',
   Family = 'Prawo Rodzinne',
   Civil = 'Prawo Cywilne',
-  Commercial = 'Prawo Gospodarcze'
+  Commercial = 'Prawo Gospodarcze',
+  Labor = 'Prawo Pracy',
+  RealEstate = 'Prawo Nieruchomości',
+  Tax = 'Prawo Podatkowe',
+  Administrative = 'Prawo Administracyjne'
 }
 
 export enum InteractionMode {

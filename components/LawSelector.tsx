@@ -2,7 +2,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LawArea } from '../types';
-import { GavelIcon, FamilyIcon, ScalesIcon, BuildingIcon, MagicWandIcon } from './Icons';
+import { GavelIcon, FamilyIcon, ScalesIcon, BuildingIcon, MagicWandIcon, BriefcaseIcon, HomeIcon, CoinsIcon, FlagIcon } from './Icons';
 import HelpModal from './HelpModal';
 import { InfoIcon } from './InfoIcon';
 import { useState } from 'react';
@@ -27,6 +27,10 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isL
     { area: LawArea.Family, name: t('law.areas.prawo rodzinne'), icon: <FamilyIcon />, description: t('law.areas.prawo rodzinne_desc') },
     { area: LawArea.Civil, name: t('law.areas.prawo cywilne'), icon: <ScalesIcon />, description: t('law.areas.prawo cywilne_desc') },
     { area: LawArea.Commercial, name: t('law.areas.prawo handlowe'), icon: <BuildingIcon />, description: t('law.areas.prawo handlowe_desc') },
+    { area: LawArea.Labor, name: t('law.areas.prawo pracy'), icon: <BriefcaseIcon />, description: t('law.areas.prawo pracy_desc') },
+    { area: LawArea.RealEstate, name: t('law.areas.prawo nieruchomości'), icon: <HomeIcon />, description: t('law.areas.prawo nieruchomości_desc') },
+    { area: LawArea.Tax, name: t('law.areas.prawo podatkowe'), icon: <CoinsIcon />, description: t('law.areas.prawo podatkowe_desc') },
+    { area: LawArea.Administrative, name: t('law.areas.prawo administracyjne'), icon: <FlagIcon />, description: t('law.areas.prawo administracyjne_desc') },
   ];
 
   return (

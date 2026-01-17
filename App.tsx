@@ -29,7 +29,8 @@ import {
   ArrowsContractIcon,
 
   AdjustmentsHorizontalIcon,
-  EllipsisHorizontalIcon
+  EllipsisHorizontalIcon,
+  BrainIcon
 } from './components/Icons';
 import AppHeader from './components/AppHeader';
 import CourtRoleSelector from './components/CourtRoleSelector';
@@ -977,7 +978,7 @@ const App: React.FC = () => {
             onHomeClick={handleGoHome}
             totalCost={totalCost}
             subscription={userProfile?.subscription}
-            onKnowledgeClick={() => handleViewKnowledge(null)}
+            onKnowledgeClick={() => handleViewKnowledge()}
             onGenerateKnowledgeClick={selectedTopic ? handleGenerateKnowledge : undefined}
             onInstallApp={deferredPrompt ? handleInstallApp : undefined}
             remindersCount={activeRemindersCount}
@@ -1205,6 +1206,17 @@ const App: React.FC = () => {
                           >
                             <span className={`inline-block w-3.5 h-3.5 transform bg-white rounded-full transition-transform ${isDeepThinkingEnabled ? 'translate-x-5.5' : 'translate-x-1'}`} />
                           </button>
+
+                          {selectedTopic && (
+                            <button
+                              onClick={handleGenerateKnowledge}
+                              className="ml-4 p-1.5 text-slate-300 hover:text-green-400 hover:bg-slate-700/50 rounded-lg transition-all border border-slate-700 bg-slate-800/50 group flex items-center gap-2"
+                              title={t('app.generateKnowledge')}
+                            >
+                              <BrainIcon className="h-5 w-5 text-green-400 group-hover:scale-110 transition-transform" />
+                              <span className="text-[10px] font-bold uppercase tracking-tight hidden sm:inline">{t('app.generateKnowledge')}</span>
+                            </button>
+                          )}
 
                           {/* Eksport/Import mobilny obok przełącznika */}
                           <div className="flex items-center gap-1.5 ml-3 md:hidden border-l border-slate-700 pl-3">

@@ -137,16 +137,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             <HomeIcon className="h-6 w-6" />
           </button>
         )}
-        {onGenerateKnowledgeClick && (
-          <button
-            onClick={onGenerateKnowledgeClick}
-            className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden md:block"
-            aria-label={t('app.generateKnowledge')}
-            title={t('app.generateKnowledge')}
-          >
-            <BrainIcon className="h-6 w-6 text-green-400" />
-          </button>
-        )}
         {onKnowledgeClick && (
           <button
             onClick={onKnowledgeClick}
@@ -256,6 +246,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         <HamburgerMenu
           onProfileClick={onProfileClick}
           onKnowledgeClick={onKnowledgeClick || (() => { })}
+          onGenerateKnowledgeClick={onGenerateKnowledgeClick}
           onHomeClick={onHomeClick}
           onHistoryClick={onHistoryClick}
           onQuickActionsClick={onQuickActionsClick}
