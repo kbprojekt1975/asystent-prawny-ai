@@ -51,6 +51,7 @@ export interface ChatMessage {
   content: string;
   sources?: any[];
   documentIds?: string[];
+  followUpOptions?: InteractionMode[];
 }
 
 export interface CaseDocument {

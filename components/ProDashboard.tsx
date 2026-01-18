@@ -45,6 +45,7 @@ interface ProDashboardProps {
     onAddNote?: (content: string, linkedMsg?: string, noteId?: string, linkedRole?: 'user' | 'model' | 'system') => void;
     onDeleteNote?: (noteId: string) => void;
     onUpdateNotePosition?: (noteId: string, position: { x: number, y: number } | null) => void;
+    onSelectInteractionMode?: (mode: InteractionMode) => void;
     existingNotes?: any[];
 }
 
@@ -69,6 +70,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
     onAddNote,
     onDeleteNote,
     onUpdateNotePosition,
+    onSelectInteractionMode,
     existingNotes
 }) => {
     const [activeStep, setActiveStep] = useState<ProStep | null>(null);
@@ -674,6 +676,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                 key={i}
                                 message={m}
                                 onAddNote={onAddNote ? (content, linkedMsg, noteId) => onAddNote(content, linkedMsg, noteId, m.role === 'model' ? 'model' : 'user') : undefined}
+                                onSelectMode={onSelectInteractionMode}
                                 existingNotes={existingNotes?.filter(n =>
                                     n.linkedMessage === m.content.substring(0, 50) &&
                                     (!n.linkedRole || n.linkedRole === (m.role === 'model' ? 'model' : 'user'))

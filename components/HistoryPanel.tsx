@@ -48,11 +48,14 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
 
   const groupedHistories = histories.reduce((acc, item) => {
     if (!acc[item.lawArea]) {
-      acc[item.lawArea] = [];
+      acc[item.lawArea] = {};
     }
-    acc[item.lawArea].push(item);
+    if (!acc[item.lawArea][item.topic]) {
+      acc[item.lawArea][item.topic] = [];
+    }
+    acc[item.lawArea][item.topic].push(item);
     return acc;
-  }, {} as Record<string, typeof histories>);
+  }, {} as Record<string, Record<string, typeof histories>>);
 
   return (
     <div
@@ -105,72 +108,74 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
             </div>
           )}
           <div>
-            {Object.keys(groupedHistories).length > 0 ? (Object.entries(groupedHistories) as [string, typeof histories][]).map(([area, items]) => (
-              <div key={area} className="mb-6">
-                <h4 className="w-fit text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 px-1 pb-1 border-b-2 border-cyan-500/30">
-                  {t(`law.areas.${area.toLowerCase()}`)}
-                </h4>
-                <div className="space-y-2">
-                  {(items as typeof histories).map(({ lawArea, topic, interactionMode, servicePath, docCount }, index) => (
-                    <div key={`${lawArea}-${topic}-${index}`} className="flex items-center justify-between group hover:bg-slate-700/20 transition-colors px-1 border-b-2 border-slate-600/50">
-                      <button onClick={() => { onLoadHistory(lawArea as LawArea, topic, interactionMode, servicePath); onClose(); }} className="flex-grow flex items-center gap-3 py-4 text-left min-w-0">
-                        <div className="overflow-hidden min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm text-slate-200 font-medium truncate group-hover:text-white transition-colors">{topic}</p>
-                            {servicePath === 'pro' && (
-                              <span className="text-[8px] bg-violet-600/20 text-violet-400 border border-violet-500/20 px-1 py-0.5 rounded font-bold tracking-tight shrink-0">PRO</span>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-slate-500 truncate group-hover:text-slate-400 transition-colors">
-                            {interactionMode && <span className="">{t(`interaction.modes.${interactionModeMap[interactionMode] || 'advice'}`)}</span>}
-                            {!interactionMode && <span className="opacity-50 italic">{t('history.no_active_mode')}</span>}
-                          </p>
+            {Object.keys(groupedHistories).length > 0 ? (
+              Object.entries(groupedHistories).map(([area, topicsMap]) => (
+                <div key={area} className="mb-6">
+                  <h4 className="w-fit text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 px-1 pb-1 border-b-2 border-cyan-500/30">
+                    {t(`law.areas.${area.toLowerCase()}`)}
+                  </h4>
+                  <div className="space-y-4">
+                    {Object.entries(topicsMap).map(([topic, modes]) => (
+                      <div key={topic} className="bg-slate-700/10 border border-slate-700/50 rounded-xl overflow-hidden">
+                        {/* Topic Header - Links to General Chat (Advice or Analysis) */}
+                        <div className="flex items-center justify-between group hover:bg-slate-700/20 transition-colors px-3 py-3 border-b border-slate-700/50 bg-slate-800/30">
+                          <button
+                            onClick={() => {
+                              // Find the 'main' mode (Advice/StrategicAnalysis) if it exists, else use the first one
+                              const mainMode = (modes as any[]).find(m => m.interactionMode === InteractionMode.Advice || m.interactionMode === InteractionMode.StrategicAnalysis) || modes[0];
+                              onLoadHistory(area as LawArea, topic, mainMode.interactionMode, mainMode.servicePath);
+                              onClose();
+                            }}
+                            className="flex-grow flex items-center gap-3 text-left min-w-0"
+                          >
+                            <CaseIcon className="w-4 h-4 text-cyan-500 shrink-0" />
+                            <div className="flex flex-col min-w-0">
+                              <p className="text-sm text-slate-200 font-bold truncate group-hover:text-white transition-colors">{topic}</p>
+                              {modes.some(m => m.servicePath === 'pro') && (
+                                <span className="w-fit text-[8px] bg-violet-600/20 text-violet-400 border border-violet-500/20 px-1 py-0.5 rounded font-bold tracking-tight mt-0.5">PRO ZONE</span>
+                              )}
+                            </div>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteHistory(area as LawArea, topic);
+                            }}
+                            className="p-1.5 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                            title={t('history.delete_topic')}
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
                         </div>
-                      </button>
-                      <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                        {onViewDocuments && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onViewDocuments(lawArea, topic);
-                            }}
-                            className="relative flex items-center justify-center p-2 text-slate-500 hover:text-cyan-400 transition-all"
-                            title={t('history.documents')}
-                          >
-                            <DocumentTextIcon className="w-6 h-6" />
-                            <span className="absolute top-1 right-2 flex items-center justify-center text-[9px] font-black leading-none group-hover:text-cyan-300">
-                              {docCount || 0}
-                            </span>
-                          </button>
-                        )}
-                        {onViewKnowledge && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onViewKnowledge(lawArea, topic);
-                            }}
-                            className="p-2 text-slate-500 hover:text-cyan-400 transition-all"
-                            title={t('history.knowledge_base')}
-                          >
-                            <BookOpenIcon className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteHistory(lawArea, topic);
-                          }}
-                          className="p-2 text-slate-700 hover:text-red-400 transition-all"
-                          aria-label={`${t('history.delete_tooltip')} ${topic}`}
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
+
+                        {/* Sub-modes (Nested Items) */}
+                        <div className="bg-slate-900/10 divide-y divide-slate-700/30">
+                          {(modes as any[]).map((m, idx) => (
+                            <div key={`${m.interactionMode}-${idx}`} className="flex items-center justify-between group/mode hover:bg-slate-700/10 transition-colors px-4 py-2">
+                              <button
+                                onClick={() => {
+                                  onLoadHistory(area as LawArea, topic, m.interactionMode, m.servicePath);
+                                  onClose();
+                                }}
+                                className="flex-grow flex items-center gap-2 text-left min-w-0"
+                              >
+                                <div className="w-1.5 h-1.5 rounded-full bg-slate-600 group-hover/mode:bg-cyan-500 transition-colors shrink-0" />
+                                <span className="text-[11px] text-slate-400 group-hover/mode:text-slate-200 transition-colors truncate">
+                                  {m.interactionMode ? t(`interaction.modes.${interactionModeMap[m.interactionMode] || 'advice'}`) : t('history.general_chat')}
+                                </span>
+                              </button>
+                              <div className="flex items-center gap-2 text-[10px] text-slate-600">
+                                {m.docCount > 0 && <span className="flex items-center gap-0.5"><DocumentTextIcon className="w-3 h-3" />{m.docCount}</span>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )) : (
+              ))
+            ) : (
               <div className="flex flex-col items-center justify-center py-12 text-slate-500">
                 <CaseIcon className="w-12 h-12 mb-3 opacity-20" />
                 <p>{t('history.empty')}</p>

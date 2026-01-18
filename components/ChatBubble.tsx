@@ -1,6 +1,7 @@
 import React from 'react';
-import { ChatMessage } from '../types';
-import { UserIcon, BotIcon, ArchiveIcon, DocumentTextIcon, CalendarIcon, ListIcon, ExternalLinkIcon, DocumentDuplicateIcon, CheckIcon, PinSlashIcon, TrashIcon, NotebookIcon, PencilIcon, DownloadIcon, PrinterIcon } from './Icons';
+import { useTranslation } from 'react-i18next';
+import { ChatMessage, InteractionMode } from '../types';
+import { UserIcon, BotIcon, ArchiveIcon, DocumentTextIcon, CalendarIcon, ListIcon, ExternalLinkIcon, DocumentDuplicateIcon, CheckIcon, PinSlashIcon, TrashIcon, NotebookIcon, PencilIcon, DownloadIcon, PrinterIcon, SparklesIcon, ChevronRightIcon } from './Icons';
 
 interface ChatBubbleProps {
   message: ChatMessage;
@@ -10,6 +11,7 @@ interface ChatBubbleProps {
   onAddNote?: (content: string, linkedMsg?: string, noteId?: string) => void;
   onUpdateNotePosition?: (noteId: string, position: { x: number, y: number } | null) => void;
   onDeleteNote?: (noteId: string) => void;
+  onSelectMode?: (mode: InteractionMode) => void;
   lawArea?: string;
   topic?: string;
   existingNotes?: any[];
@@ -23,10 +25,12 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   onAddNote,
   onUpdateNotePosition,
   onDeleteNote,
+  onSelectMode,
   lawArea,
   topic,
   existingNotes
 }) => {
+  const { t } = useTranslation();
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
   const [isAddingNote, setIsAddingNote] = React.useState(false);
@@ -304,30 +308,6 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
           : 'bg-slate-700/80 backdrop-blur-sm text-slate-200 rounded-t-2xl rounded-br-2xl'
           }`}
       >
-        {/* Actions Container (Copy + Download) */}
-        <div className="absolute bottom-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-          <button
-            onClick={handleCopy}
-            className={`p-1.5 rounded-lg transition-all ${isUser
-              ? 'text-white/70 hover:text-white hover:bg-white/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-600/50'
-              }`}
-            title="Kopiuj tekst"
-          >
-            {isCopied ? <CheckIcon className="w-4 h-4" /> : <DocumentDuplicateIcon className="w-4 h-4" />}
-          </button>
-
-          <button
-            onClick={handleDownloadPDF}
-            className={`p-1.5 rounded-lg transition-all ${isUser
-              ? 'text-white/70 hover:text-white hover:bg-white/20'
-              : 'text-slate-400 hover:text-white hover:bg-slate-600/50'
-              }`}
-            title="Pobierz PDF / Drukuj"
-          >
-            <DownloadIcon className="w-4 h-4" />
-          </button>
-        </div>
 
         {/* Render Positioned Notes */}
         {positionedNotes?.map((note: any) => (
@@ -434,47 +414,75 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
 
         {onAddNote && (
           <div className="flex flex-col gap-2 mt-4 relative z-0">
-            <div className="flex flex-wrap justify-end gap-2 items-center min-h-[32px]">
-              {/* Render icons for existing notes */}
-              {dockNotes?.map((note: any) => (
+            <div className="flex flex-wrap justify-between gap-2 items-center min-h-[32px]">
+              {/* Message Actions (Copy + Download) */}
+              <div className="flex gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  key={note.id}
-                  onMouseDown={(e) => handleDragStart(e, note)}
-                  onTouchStart={(e) => handleDragStart(e, note)}
-                  onClick={() => {
-                    if (activeNoteId === note.id) {
-                      setActiveNoteId(null);
-                      setIsAddingNote(false);
-                    } else {
-                      setActiveNoteId(note.id);
-                      setIsAddingNote(false);
-                    }
-                  }}
-                  className={`p-2 rounded-lg transition-all border cursor-move ${activeNoteId === note.id
-                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/50'
-                    : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-500/70 hover:text-amber-500 border-amber-500/20'}`}
-                  title="Pokaż notatkę"
+                  onClick={handleCopy}
+                  className={`p-1.5 rounded-lg transition-all ${isUser
+                    ? 'text-white/60 hover:text-white hover:bg-white/10'
+                    : 'text-slate-500 hover:text-cyan-400 hover:bg-slate-700/50'
+                    }`}
+                  title="Kopiuj tekst"
                 >
-                  <DocumentTextIcon className="w-4 h-4" />
+                  {isCopied ? <CheckIcon className="w-4 h-4" /> : <DocumentDuplicateIcon className="w-4 h-4" />}
                 </button>
-              ))}
 
-              {/* Add Note Button */}
-              {!isAddingNote && (
                 <button
-                  onClick={() => {
-                    setIsAddingNote(true);
-                    setActiveNoteId(null);
-                    setNoteContent('');
-                  }}
-                  className={`p-2 rounded-lg transition-all flex items-center justify-center border ${isUser
-                    ? 'bg-white/10 hover:bg-white/20 text-white border-white/10'
-                    : 'bg-slate-600/30 hover:bg-slate-600/50 text-slate-400 hover:text-white border-slate-600/50'}`}
-                  title="Dodaj nową notatkę"
+                  onClick={handleDownloadPDF}
+                  className={`p-1.5 rounded-lg transition-all ${isUser
+                    ? 'text-white/60 hover:text-white hover:bg-white/10'
+                    : 'text-slate-500 hover:text-cyan-400 hover:bg-slate-700/50'
+                    }`}
+                  title="Pobierz PDF / Drukuj"
                 >
-                  <PencilIcon className="w-4 h-4" />
+                  <DownloadIcon className="w-4 h-4" />
                 </button>
-              )}
+              </div>
+
+              {/* Note actions */}
+              <div className="flex flex-wrap justify-end gap-2 items-center">
+                {/* Render icons for existing notes */}
+                {dockNotes?.map((note: any) => (
+                  <button
+                    key={note.id}
+                    onMouseDown={(e) => handleDragStart(e, note)}
+                    onTouchStart={(e) => handleDragStart(e, note)}
+                    onClick={() => {
+                      if (activeNoteId === note.id) {
+                        setActiveNoteId(null);
+                        setIsAddingNote(false);
+                      } else {
+                        setActiveNoteId(note.id);
+                        setIsAddingNote(false);
+                      }
+                    }}
+                    className={`p-2 rounded-lg transition-all border cursor-move ${activeNoteId === note.id
+                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/50'
+                      : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-500/70 hover:text-amber-500 border-amber-500/20'}`}
+                    title="Pokaż notatkę"
+                  >
+                    <DocumentTextIcon className="w-4 h-4" />
+                  </button>
+                ))}
+
+                {/* Add Note Button */}
+                {!isAddingNote && (
+                  <button
+                    onClick={() => {
+                      setIsAddingNote(true);
+                      setActiveNoteId(null);
+                      setNoteContent('');
+                    }}
+                    className={`p-2 rounded-lg transition-all flex items-center justify-center border ${isUser
+                      ? 'bg-white/10 hover:bg-white/20 text-white border-white/10'
+                      : 'bg-slate-600/30 hover:bg-slate-600/50 text-slate-400 hover:text-white border-slate-600/50'}`}
+                    title="Dodaj nową notatkę"
+                  >
+                    <PencilIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Content Area for Active Note (DOCK/FOOTER) or New Note */}
@@ -592,6 +600,38 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
                 )
               ))}
             </ul>
+          </div>
+        )}
+
+        {message.followUpOptions && message.followUpOptions.length > 0 && onSelectMode && (
+          <div className="mt-4 pt-4 border-t border-slate-600/50 flex flex-col gap-2">
+            <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+              <SparklesIcon className="w-3.5 h-3.5" />
+              Sugerowane kolejne kroki:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {message.followUpOptions.map((mode) => {
+                const modeKeyMap: Record<string, string> = {
+                  [InteractionMode.StrategicAnalysis]: 'strategic_analysis',
+                  [InteractionMode.Document]: 'document',
+                  [InteractionMode.LegalTraining]: 'legal_training',
+                  [InteractionMode.Court]: 'court',
+                  [InteractionMode.Negotiation]: 'negotiation'
+                };
+                const translationKey = `interaction.modes.${modeKeyMap[mode] || 'advice'}`;
+
+                return (
+                  <button
+                    key={mode}
+                    onClick={() => onSelectMode(mode)}
+                    className="px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-semibold rounded-lg border border-cyan-500/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 shadow-sm"
+                  >
+                    <span>{t(translationKey)}</span>
+                    <ChevronRightIcon className="w-3 h-3 opacity-50" />
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

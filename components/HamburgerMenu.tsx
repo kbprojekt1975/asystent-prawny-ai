@@ -9,6 +9,7 @@ interface HamburgerMenuProps {
     onGenerateKnowledgeClick?: () => void;
     onHomeClick?: () => void;
     onHistoryClick?: () => void;
+    onAiToolsClick?: () => void;
     onQuickActionsClick?: () => void;
     onExportChat?: () => void;
     onImportChat?: (file: File) => void;
@@ -24,6 +25,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     onGenerateKnowledgeClick,
     onHomeClick,
     onHistoryClick,
+    onAiToolsClick,
     onQuickActionsClick,
     onExportChat,
     onImportChat,
@@ -131,6 +133,17 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                 <span className="text-[8px] bg-indigo-500 text-white px-1 py-0.5 rounded uppercase tracking-tighter">{t('menu.new')}</span>
                             </span>
                         </button>
+
+                        {onAiToolsClick && (
+                            <button
+                                onClick={() => { onAiToolsClick(); setIsOpen(false); }}
+                                className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-white bg-cyan-500/10 hover:bg-cyan-500/20 transition-colors border-y border-slate-700/50"
+                                role="menuitem"
+                            >
+                                <SparklesIcon className="h-5 w-5 text-cyan-400" />
+                                <span className="font-bold">{t('menu.aiTools')}</span>
+                            </button>
+                        )}
 
                         {onHistoryClick && (
                             <button

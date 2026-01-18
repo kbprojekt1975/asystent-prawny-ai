@@ -8,6 +8,7 @@ import TopicSelector from './components/TopicSelector';
 import ProDashboard from './components/ProDashboard';
 import ProCaseInitiator from './components/ProCaseInitiator';
 import InteractionModeSelector from './components/InteractionModeSelector';
+import AiToolsSidebar from './components/AiToolsSidebar';
 import ChatBubble from './components/ChatBubble';
 import LoadingSpinner from './components/LoadingSpinner';
 import ConfirmationModal from './components/ConfirmationModal';
@@ -229,6 +230,7 @@ const App: React.FC = () => {
   const [isQuickActionsModalOpen, setIsQuickActionsModalOpen] = useState(false);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
   const [isCaseManagementModalOpen, setIsCaseManagementModalOpen] = useState(false);
+  const [isAiToolsSidebarOpen, setIsAiToolsSidebarOpen] = useState(false);
   const [isAppHelpSidebarOpen, setIsAppHelpSidebarOpen] = useState(false);
   const [chatHistories, setChatHistories] = useState<{ lawArea: LawArea; topic: string; interactionMode?: InteractionMode; lastUpdated?: any }[]>([]);
 
@@ -403,20 +405,70 @@ const App: React.FC = () => {
     setIsDocumentsModalOpen(true);
   };
 
-  const handleSelectInteractionMode = (mode: InteractionMode) => {
-    if (!selectedLawArea) return;
+  const handleSelectInteractionMode = async (mode: InteractionMode, context: 'current' | 'select' | 'new' = 'current') => {
+    let lawArea = selectedLawArea;
+
+    // If no law area selected (e.g. from sidebar on home page), set a default
+    if (!lawArea) {
+      lawArea = LawArea.Civil;
+      setSelectedLawArea(lawArea);
+    }
+
+    // Determine servicePath based on mode
+    const newServicePath = mode === InteractionMode.StrategicAnalysis ? 'pro' : 'standard';
+
+    // Handle Contexts
+    if (context === 'new') {
+      const now = new Date();
+      const topicName = `Nowa sprawa (${now.toLocaleDateString()} ${now.getHours()}:${now.getMinutes()})`;
+
+      // Step 1: Create the topic (this will update topics list and set local selectedTopic/mode)
+      await handleAddTopic(topicName, mode, newServicePath);
+
+      // Step 2: Set navigation details and load history (which triggers greeting)
+      setServicePath(newServicePath);
+      handleLoadHistory(lawArea, topicName, mode, newServicePath);
+      return;
+    }
+
+    if (context === 'select') {
+      setServicePath(newServicePath);
+      setInteractionMode(mode);
+      setSelectedTopic(null); // Direct user to topic list
+      return;
+    }
+
+    // Default: 'current' context (apply tool to open case)
+    const oldMode = interactionMode;
+    setServicePath(newServicePath);
     setInteractionMode(mode);
 
-    if (selectedTopic && chatHistory.length > 0) {
+    if (selectedTopic && chatHistory.length > 0 && mode !== oldMode) {
       if (mode !== InteractionMode.Court) {
-        const systemContent = getSystemPromptForMode(mode, selectedLawArea, selectedTopic);
-        setChatHistory([{ role: 'system', content: systemContent }]);
+        // Trigger a mode-change response instead of just resetting history
+        // This will cause Gemini to summarize the case in the context of the new mode
+        const modeChangeMessage = `[SYSTEM: ZMIANA TRYBU NA ${mode}]
+        Użytkownik właśnie przełączył się na ten tryb pracy. 
+        TWOJE ZADANIE:
+        1. Krótko streść dotychczasowe ustalenia w sprawie: ${selectedTopic}.
+        2. Wyjaśnij konkretnie, jak Twój obecnie wybrany tryb pracy wspiera użytkownika w tej sytuacji.
+        3. Zaproponuj konkretne działania (np. przygotowanie pisma, analiza konkretnego aspektu) ściśle związane z Twoją specjalizacją w tym trybie.
+        
+        SKUP SIĘ WYŁĄCZNIE NA OBECNYM TRYBIE. Nie sugeruj innych asystentów ani zmiany trybu. Pisz proaktywnie.`;
+
+        handleSendMessage(modeChangeMessage, chatHistory, {
+          lawArea: selectedLawArea,
+          topic: selectedTopic,
+          interactionMode: mode,
+          servicePath: newServicePath
+        });
       }
     }
   };
 
   const getSystemPromptForMode = (mode: InteractionMode, lawArea: LawArea, topic: string) => {
     let prompt = `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${mode}.\n\n`;
+    prompt += `ZASADA KRYTYCZNA: Skup się wyłącznie na obecnym trybie pracy (${mode}). Nie sugeruj zmiany trybu ani korzystania z innych asystentów dostępnych w menu. Twoim celem jest realizacja zadań przypisanych wyłącznie do tej specjalizacji.\n\n`;
 
     switch (mode) {
       case InteractionMode.StrategicAnalysis:
@@ -427,16 +479,27 @@ const App: React.FC = () => {
         3. Szukaj słabych punktów strony przeciwnej.
         4. Oszacuj PROCENTOWO szanse na wygraną na podstawie dowodów.
         5. Sugeruj konkretne przepisy i linie orzecznicze.
-        Działaj proaktywnie, wyłapuj sprzeczności w dokumentach.`;
+        Działaj proaktywnie, wyłapuj sprzeczności w dokumentach.
+        Zawsze proponuj dalsze kroki strategiczne.`;
         break;
       case InteractionMode.Document:
-        prompt += `TWOJE ZADANIE: Generowanie pism procesowych i wniosków...`;
+        prompt += `TWOJE ZADANIE: Jesteś Ekspertem Legislacyjnym i Redaktorem Pism Procesowych.
+        Twój cel to przygotowanie profesjonalnych projektów dokumentów.
+        1. Na podstawie rozmowy wybierz odpowiedni rodzaj pisma (pozew, wniosek, apelacja, umowa).
+        2. Jeśli brakuje danych (daty, sygnatury, strony), poproś o nie LUB zostaw [MIEJSCE NA UZUPEŁNIENIE].
+        3. Generuj pismo w formacie czytelnym dla użytkownika.
+        4. Zawsze umieszczaj projekt wewnątrz tagów: --- PROJEKT PISMA --- [treść] --- PROJEKT PISMA ---.
+        Sugeruj konkretne rodzaje pism, które mogą teraz pomóc użytkownikowi.`;
         break;
       case InteractionMode.Court:
-        prompt += `Tryb formalny, przygotowanie do sali rozpraw...`;
+        prompt += `Tryb formalny, przygotowanie do sali rozpraw. Symuluj sędziego lub pełnomocnika, pomagając użytkownikowi przygotować się do przesłuchania...`;
+        break;
+      case InteractionMode.Negotiation:
+        prompt += `TWOJE ZADANIE: Doradca ds. Negocjacji i Mediacji. 
+        Pomóż przygotować argumentację do rozmów ze stroną przeciwną. Skup się na ugodowym załatwieniu sporu, ale dbaj o interes użytkownika.`;
         break;
       default:
-        prompt += `Zasugeruj analizę i pomoc w oparciu o temat.`;
+        prompt += `Zasugeruj analizę i pomoc w oparciu o temat. Działaj pomocnie i merytorycznie.`;
     }
     return prompt;
   };
@@ -454,7 +517,7 @@ const App: React.FC = () => {
     setInteractionMode(null);
     setIsQuickActionsModalOpen(false);
     setIsFullScreen(false);
-    setIsWelcomeModalOpen(false);
+    setIsWelcomeAssistantOpen(false);
   };
 
 
@@ -465,7 +528,7 @@ const App: React.FC = () => {
 
   const handleLoadHistory = async (lawArea: LawArea, topic: string, mode?: InteractionMode, path?: 'pro' | 'standard') => {
     if (!user) return;
-    setIsWelcomeModalOpen(false);
+    setIsWelcomeAssistantOpen(false);
     setIsLoading(true);
     setChatHistory([]);
 
@@ -527,6 +590,23 @@ const App: React.FC = () => {
           handleSelectCourtRole(courtRole);
         } else if (savedHistory.length === 0 && finalMode) {
           handleInitialGreeting(lawArea, topic, finalMode);
+        } else if (savedHistory.length > 0 && mode && mode !== savedInteractionMode && mode !== InteractionMode.Advice) {
+          // Mode change into existing history - Trigger Summary
+          const modeChangeMessage = `[SYSTEM: ZMIANA TRYBU NA ${mode}]
+          Użytkownik właśnie przełączył się na ten tryb pracy. 
+          TWOJE ZADANIE:
+          1. Krótko streść dotychczasowe ustalenia w sprawie: ${topic}.
+          2. Wyjaśnij konkretnie, jak Twój obecnie wybrany tryb pracy wspiera użytkownika w tej sytuacji.
+          3. Zaproponuj konkretne działania (np. przygotowanie pisma, analiza konkretnego aspektu) ściśle związane z Twoją specjalizacją w tym trybie.
+          
+          SKUP SIĘ WYŁĄCZNIE NA OBECNYM TRYBIE. Nie sugeruj innych asystentów ani zmiany trybu. Pisz proaktywnie.`;
+
+          handleSendMessage(modeChangeMessage, savedHistory, {
+            lawArea: lawArea,
+            topic: topic,
+            interactionMode: mode,
+            servicePath: path || savedServicePath || undefined
+          });
         }
       } else {
         // Fallback for completely new topics that don't have a document yet
@@ -650,7 +730,7 @@ const App: React.FC = () => {
       setSelectedLawArea(result.lawArea);
       setSelectedTopic(result.topic);
       setInteractionMode(result.interactionMode);
-      setIsWelcomeModalOpen(false);
+      setIsWelcomeAssistantOpen(false);
       setIsLoading(false);
 
       handleSendMessage(description, [
@@ -698,7 +778,7 @@ const App: React.FC = () => {
 
   const handleSelectTopic = async (topic: string) => {
     if (selectedLawArea) {
-      handleLoadHistory(selectedLawArea, topic);
+      handleLoadHistory(selectedLawArea, topic, interactionMode || undefined);
     }
   };
 
@@ -727,7 +807,7 @@ const App: React.FC = () => {
     if (path === 'pro') {
       setInteractionMode(InteractionMode.StrategicAnalysis);
     } else {
-      setInteractionMode(null);
+      setInteractionMode(InteractionMode.Advice);
     }
   };
 
@@ -741,7 +821,8 @@ const App: React.FC = () => {
       setInteractionMode(null);
       setCourtRole(null);
     } else if (!selectedTopic && interactionMode && (servicePath === 'hub' || servicePath === 'standard' || !servicePath)) {
-      // W wyborze tematów (ścieżka Hub/Standard) -> powrót do wyboru narzędzia (Hub)
+      // W wyborze tematów (ścieżka Hub/Standard) -> powrót do wyboru usługi (PRO/Hub)
+      setServicePath(null);
       setInteractionMode(null);
       setCourtRole(null);
     } else if (!selectedTopic && !interactionMode && (servicePath === 'hub' || servicePath === 'standard')) {
@@ -999,6 +1080,7 @@ const App: React.FC = () => {
             onHelpClick={() => setIsAppHelpSidebarOpen(true)}
             onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}
             onHistoryClick={() => setIsHistoryPanelOpen(true)}
+            onAiToolsClick={() => setIsAiToolsSidebarOpen(true)}
             onBackClick={
               (selectedTopic && interactionMode) || (selectedTopic && !interactionMode) || (selectedLawArea && !selectedTopic)
                 ? handleUniversalBack
@@ -1057,6 +1139,8 @@ const App: React.FC = () => {
             <div className="flex flex-col flex-1">
               <InteractionModeSelector
                 lawArea={selectedLawArea}
+                selectedTopic={selectedTopic}
+                onSelectTopic={setSelectedTopic}
                 onSelect={handleSelectInteractionMode}
                 onViewDocuments={() => handleViewDocuments(null)}
                 onViewHistory={() => setIsHistoryPanelOpen(true)}
@@ -1075,7 +1159,7 @@ const App: React.FC = () => {
                 await handleAddTopic(topic, InteractionMode.StrategicAnalysis, 'pro');
                 const h = await loadChatHistories();
                 if (h) setChatHistories(h);
-                handleLoadHistory(selectedLawArea!, topic);
+                handleLoadHistory(selectedLawArea!, topic, InteractionMode.StrategicAnalysis, 'pro');
               }}
               onDeleteTopic={(topic) => requestDeleteTopic(selectedLawArea, topic)}
               onBack={() => setServicePath(null)}
@@ -1093,13 +1177,13 @@ const App: React.FC = () => {
                 await handleAddTopic(topic, interactionMode, 'standard'); // Use current mode
                 const h = await loadChatHistories();
                 if (h) setChatHistories(h);
-                handleLoadHistory(selectedLawArea!, topic);
+                handleLoadHistory(selectedLawArea!, topic, interactionMode || undefined);
               }}
               onAddNegotiationTopic={async (topic) => {
                 await handleAddTopic(topic, InteractionMode.Negotiation, 'standard');
                 const h = await loadChatHistories();
                 if (h) setChatHistories(h);
-                handleLoadHistory(selectedLawArea!, topic);
+                handleLoadHistory(selectedLawArea!, topic, InteractionMode.Negotiation);
               }}
               onDeleteTopic={(topic) => requestDeleteTopic(selectedLawArea, topic)}
               onChangeMode={() => {
@@ -1167,6 +1251,7 @@ const App: React.FC = () => {
                           onAddDeadline={handleAddDeadline}
                           onAddTask={handleAddTask}
                           onAddNote={(content, linkedMsg, noteId) => handleAddNote(content, linkedMsg, noteId, msg.role as 'user' | 'model' | 'system')}
+                          onSelectMode={handleSelectInteractionMode}
                           onDeleteNote={deleteNote}
                           onUpdateNotePosition={handleUpdateNotePosition}
                           existingNotes={chatNotes.filter(n =>
@@ -1383,6 +1468,20 @@ const App: React.FC = () => {
           </footer>
         )}
       </div>
+      <AiToolsSidebar
+        isOpen={isAiToolsSidebarOpen}
+        onClose={() => setIsAiToolsSidebarOpen(false)}
+        lawArea={selectedLawArea || LawArea.Civil}
+        selectedTopic={selectedTopic}
+        onSelectTopic={setSelectedTopic}
+        onSelectMode={(mode, context) => {
+          handleSelectInteractionMode(mode, context);
+          setIsAiToolsSidebarOpen(false);
+        }}
+        onViewDocuments={() => setIsDocumentsModalOpen(true)}
+        onViewHistory={() => setIsHistoryPanelOpen(true)}
+        onViewKnowledge={() => setIsKnowledgeModalOpen(true)}
+      />
     </>
   );
 };

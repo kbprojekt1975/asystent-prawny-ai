@@ -138,6 +138,7 @@
         "about": "O aplikacji",
         "myProfile": "Panel Użytkownika",
         "knowledgeBase": "Baza Wiedzy",
+        "aiTools": "Narzędzia AI",
         "helpAi": "Pomoc AI",
         "new": "NOWOŚĆ",
         "history": "Historia Spraw",
@@ -195,6 +196,7 @@
         "newCase": "Nowa Sprawa",
         "newCasePlaceholder": "Np. Sprawa o alimenty, Umowa najmu",
         "analyze": "Analizuj",
+        "consultation": "Konsultacja",
         "newConversation": "Nowa Konwersacja",
         "negotiationDesc": "Mediacje i Negocjacje",
         "negotiationPlaceholder": "Np. Kontakt z dziećmi, Spłata zadłużenia",
@@ -229,6 +231,13 @@
     },
     "interaction": {
         "header": "Wybierz rodzaj pomocy, której potrzebujesz.",
+        "options": {
+            "apply_current": "Zastosuj do otwartej sprawy",
+            "select_topic": "Wybierz temat sprawy",
+            "start_clean": "Rozpocznij z czystą kartą",
+            "current_case_prefix": "Otwarta sprawa:",
+            "no_open_case": "Brak otwartej sprawy"
+        },
         "modes": {
             "strategic_analysis": "Strategiczne Prowadzenie Sprawy",
             "strategic_analysis_desc": "Głęboka analiza teczki dokumentów, ocena szans, zagrożeń i strategii wygranej.",
@@ -401,7 +410,7 @@
         "deepThinking_l1": "Głębokie",
         "deepThinking_l2": "Myślenie",
         "messagePlaceholder": "Napisz wiadomość...",
-        "welcome": "Witaj! Rozpoczynamy nową sprawę w dziale: **{{lawArea}}**. Temat: **{{topic}}**.",
+        "welcome": "Witaj! Rozpoczynamy nową sprawę w dziale: **{{lawArea}}**. Po zbadaniu Twojej sytuacji zaproponuję odpowiedni tryb pracy i dalsze kroki.",
         "steps_intro": "Abyśmy mogli skutecznie zacząć, proszę o wykonanie jednego z poniższych kroków:",
         "step_1": "1. **Opisz krótko swoją sytuację** – napisz, co się wydarzyło i w czym potrzebujesz pomocy.",
         "step_2": "2. **Prześlij dokumenty** – jeśli masz pisma, umowy lub wnioski związane ze sprawą, użyj ikony spinacza, aby dodać je do analizy.",
@@ -917,5 +926,14 @@
             "cancel": "Anuluj",
             "continue": "Kontynuuj"
         }
+    },
+    "law_knowledge": {
+        "title": "Wyszukiwanie w Bazie Wiedzy",
+        "searching": "Szukam przepisów i orzeczeń...",
+        "no_results": "Nie znaleziono konkretnych przepisów. Spróbuj opisać problem innymi słowami.",
+        "found_results": "Znalazłem następujące przepisy i orzeczenia, które mogą być istotne:",
+        "save_to_knowledge": "Zapisz w Bazie Wiedzy",
+        "saved": "Zapisano!",
+        "already_saved": "Już zapisano"
     }
 }

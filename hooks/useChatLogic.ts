@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { doc, updateDoc, setDoc, serverTimestamp, increment, collection, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -107,9 +107,19 @@ export const useChatLogic = ({
         const effectiveLawArea = metadataOverride?.lawArea || selectedLawArea;
         const effectiveTopic = metadataOverride?.topic || selectedTopic;
         const effectiveInteractionMode = metadataOverride?.interactionMode || interactionMode;
-        const effectiveChatId = metadataOverride
-            ? `${metadataOverride.lawArea}_${metadataOverride.topic.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`
+        const sanitizedTopic = (metadataOverride?.topic || selectedTopic || '').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+        let effectiveChatId = metadataOverride
+            ? `${metadataOverride.lawArea}_${sanitizedTopic}`
             : currentChatId;
+
+        // If it's a specialized mode, append it to the chatId to keep context separate
+        if (effectiveInteractionMode &&
+            effectiveInteractionMode !== InteractionMode.Advice &&
+            effectiveInteractionMode !== InteractionMode.Analysis) {
+            const modeSlug = effectiveInteractionMode.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            effectiveChatId = `${effectiveLawArea}_${sanitizedTopic}_${modeSlug}`;
+        }
 
         const messageToSend = messageOverride || currentMessage.trim();
         if ((!messageToSend && !historyOverride) || !effectiveLawArea || !effectiveTopic || !effectiveInteractionMode || (isLoading && !historyOverride) || !user || !effectiveChatId) return;
@@ -119,14 +129,22 @@ export const useChatLogic = ({
 
         let newHistory = [...currentHistory];
 
-        // Only append user message if it's not a history override (which already includes it)
-        if (!historyOverride) {
+        // Ensure the hidden prompt (messageOverride) is appended to the history sent to AI
+        if (messageOverride) {
+            newHistory.push({ role: 'user', content: messageOverride });
+        }
+
+        // Only append UI user message if it's not a technical override/history override
+        if (!historyOverride && !messageOverride) {
             const userMessage: ChatMessage = { role: 'user', content: messageToSend };
             newHistory.push(userMessage);
             setChatHistory(newHistory.filter(m => m.role !== 'system'));
-        } else {
+        } else if (historyOverride) {
             // When using historyOverride (e.g. specialized prompts), only show non-system messages in UI
             setChatHistory(historyOverride.filter(m => m.role !== 'system'));
+        } else if (messageOverride) {
+            // If it's just a technical override message, keep UI as is (newHistory already has it for AI)
+            setChatHistory(currentHistory.filter(m => m.role !== 'system'));
         }
 
         if (!messageOverride) {
@@ -158,11 +176,11 @@ export const useChatLogic = ({
                     messages: historyToSave,
                     lastUpdated: serverTimestamp(),
                     lawArea: effectiveLawArea,
-                    topic: effectiveTopic,
+                    topic: effectiveTopic, // Preserve original topic title
                     interactionMode: effectiveInteractionMode,
-                    servicePath: metadataOverride?.servicePath || (chatHistories.find(h => {
+                    servicePath: metadataOverride?.servicePath || (chatHistories.filter(h => h.lawArea === effectiveLawArea).find(h => {
                         const sanTopic = h.topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                        return h.lawArea === effectiveLawArea && sanTopic === effectiveTopic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                        return sanTopic === effectiveTopic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
                     })?.servicePath) || 'standard'
                 }, { merge: true });
             }
@@ -182,6 +200,18 @@ export const useChatLogic = ({
             const aiMessage: ChatMessage = { role: 'model', content: aiResponse.text };
             if (aiResponse.sources) {
                 aiMessage.sources = aiResponse.sources;
+            }
+
+            // Determine follow-up options
+            const options: InteractionMode[] = [];
+            const lowText = aiResponse.text.toLowerCase();
+            if (lowText.includes('pismo') || lowText.includes('wniosek') || lowText.includes('pozew')) options.push(InteractionMode.Document);
+            if (lowText.includes('szkolenie') || lowText.includes('nauczyć')) options.push(InteractionMode.LegalTraining);
+            if (lowText.includes('sąd') || lowText.includes('rozpraw')) options.push(InteractionMode.Court);
+            if (lowText.includes('ugod') || lowText.includes('negocjacj')) options.push(InteractionMode.Negotiation);
+
+            if (options.length > 0) {
+                aiMessage.followUpOptions = options;
             }
 
             // Final history for UI and storage should NOT include the technical system instructions
@@ -205,11 +235,11 @@ export const useChatLogic = ({
                     messages: finalHistory,
                     lastUpdated: serverTimestamp(),
                     lawArea: effectiveLawArea,
-                    topic: effectiveTopic,
+                    topic: effectiveTopic, // This is the original title
                     interactionMode: effectiveInteractionMode,
-                    servicePath: metadataOverride?.servicePath || (chatHistories.find(h => {
+                    servicePath: metadataOverride?.servicePath || (chatHistories.filter(h => h.lawArea === effectiveLawArea).find(h => {
                         const sanTopic = h.topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                        return h.lawArea === effectiveLawArea && sanTopic === effectiveTopic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                        return sanTopic === effectiveTopic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
                     })?.servicePath) || 'standard'
                 }, { merge: true });
 
@@ -306,8 +336,8 @@ export const useChatLogic = ({
                 const data = chatDoc.data();
                 const parts = chatDoc.id.split('_');
                 if (parts.length >= 2) {
-                    const lawArea = parts[0] as LawArea;
-                    const topic = parts.slice(1).join('_');
+                    const lawArea = (data.lawArea || parts[0]) as LawArea;
+                    const topic = data.topic || parts.slice(1).join('_'); // Prefer data.topic which is the original title
 
                     // Fetch document count
                     let docCount = 0;
@@ -442,40 +472,33 @@ export const useChatLogic = ({
         if (!user) return;
         setIsLoading(true);
 
-        const welcomeMessage = `${t('chat.welcome', { lawArea: t(`law.areas.${lawArea.toLowerCase()}`), topic })}
-        
-${t('chat.steps_intro')}
-${t('chat.step_1')}
-${t('chat.step_2')}
-${t('chat.step_3')}
-
-${t('chat.ready')}`;
-
-        const initialHistory: ChatMessage[] = [
-            { role: 'system', content: `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${mode}` },
-            { role: 'model', content: welcomeMessage }
-        ];
-
+        // Reset history to only the system prompt first
+        const systemPrompt = `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${mode}`;
+        const initialHistory: ChatMessage[] = [{ role: 'system', content: systemPrompt }];
         setChatHistory(initialHistory);
 
-        if (!isLocalOnly) {
-            const chatId = `${lawArea}_${topic.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
-            try {
-                await setDoc(doc(db, 'users', user.uid, 'chats', chatId), {
-                    messages: initialHistory,
-                    lastUpdated: serverTimestamp(),
-                    lawArea,
-                    topic,
-                    interactionMode: mode,
-                    servicePath: 'standard' // Default for new topics from this path
-                }, { merge: true });
-                onRefreshHistories();
-            } catch (e) {
-                console.error("Error saving initial greeting:", e);
-            }
-        }
+        // Define a hidden prompt that forces the AI to introduce itself and ask for details
+        const greetingPrompt = `[SYSTEM: POWITANIE NOWEJ SPRAWY - TRYB ${mode}]
+        Użytkownik właśnie rozpoczął nową sprawę: "${topic}".
+        TWOJE ZADANIE:
+        1. Przedstaw się krótko (np. jako Ekspert ds. Pism, Strateg Procesowy itp. zależnie od trybu).
+        2. Wyjaśnij konkretnie, jak pomożesz w tym trybie.
+        3. Wypisz listę informacji lub dokumentów, których będziesz potrzebować, aby przygotować najlepszą pomoc.
+        4. Zadaj 1-2 konkretne pytania na start, aby użytkownik mógł od razu opisać swoją sytuację.
+        
+        SKUP SIĘ WYŁĄCZNIE NA OBECNYM TRYBIE (${mode}). Nie sugeruj innych asystentów ani zmiany trybu pracy w trakcie rozmowy.
+        Pisz proaktywnie, profesjonalnie i z empatią. Nie używaj ogólników.`;
+
+        // Send this to AI - This will generate the model greeting and save to Firestore
+        await handleSendMessage(greetingPrompt, initialHistory, {
+            lawArea,
+            topic,
+            interactionMode: mode,
+            servicePath: 'standard'
+        });
+
         setIsLoading(false);
-    }, [user, isLocalOnly, onRefreshHistories]);
+    }, [user, handleSendMessage]);
 
     return {
         chatHistory, setChatHistory,

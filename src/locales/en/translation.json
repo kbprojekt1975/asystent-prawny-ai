@@ -138,6 +138,7 @@
         "about": "About App",
         "myProfile": "User Panel",
         "knowledgeBase": "Knowledge Base",
+        "aiTools": "AI Tools",
         "helpAi": "AI Help",
         "new": "NEW",
         "history": "Case History",
@@ -195,6 +196,7 @@
         "newCase": "New Case",
         "newCasePlaceholder": "E.g., Alimony case, Rental agreement",
         "analyze": "Analyze",
+        "consultation": "Consultation",
         "newConversation": "New Conversation",
         "negotiationDesc": "Mediation & Negotiation",
         "negotiationPlaceholder": "E.g., Child contact, Debt repayment",
@@ -229,6 +231,13 @@
     },
     "interaction": {
         "header": "Select the type of help you need.",
+        "options": {
+            "apply_current": "Apply to open case",
+            "select_topic": "Select from history",
+            "start_clean": "Start clean",
+            "current_case_prefix": "Open case:",
+            "no_open_case": "No open case"
+        },
         "modes": {
             "strategic_analysis": "Strategic Case Management",
             "strategic_analysis_desc": "Deep analysis of the case file, assessment of chances, risks, and winning strategy.",
@@ -401,7 +410,7 @@
         "deepThinking_l1": "Deep",
         "deepThinking_l2": "Thinking",
         "messagePlaceholder": "Write a message...",
-        "welcome": "Welcome! Starting a new case in: **{{lawArea}}**. Topic: **{{topic}}**.",
+        "welcome": "Welcome! We are starting a new case in the department: **{{lawArea}}**. After examining your situation, I will suggest the appropriate work mode and further steps.",
         "steps_intro": "To start effectively, please take one of the following steps:",
         "step_1": "1. **Briefly describe your situation** – write what happened and what you need help with.",
         "step_2": "2. **Upload documents** – if you have letters, contracts, or applications related to the case, use the paperclip icon to add them for analysis.",
@@ -917,5 +926,14 @@
             "cancel": "Cancel",
             "continue": "Continue"
         }
+    },
+    "law_knowledge": {
+        "title": "Searching Knowledge Base",
+        "searching": "Searching for regulations and rulings...",
+        "no_results": "No specific regulations were found. Try describing the problem in other words.",
+        "found_results": "I found the following regulations and rulings that may be relevant:",
+        "save_to_knowledge": "Save to Knowledge Base",
+        "saved": "Saved!",
+        "already_saved": "Already saved"
     }
 }

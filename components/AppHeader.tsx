@@ -17,6 +17,7 @@ interface AppHeaderProps {
   changeButtonText?: string;
   onQuickActionsClick?: () => void;
   onHistoryClick?: () => void;
+  onAiToolsClick?: () => void;
   onHomeClick?: () => void;
   onFullScreenClick?: () => void;
   totalCost?: number;
@@ -41,6 +42,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   changeButtonText,
   onQuickActionsClick,
   onHistoryClick,
+  onAiToolsClick,
   onHomeClick,
   onFullScreenClick,
   totalCost = 0,
@@ -249,6 +251,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           onGenerateKnowledgeClick={onGenerateKnowledgeClick}
           onHomeClick={onHomeClick}
           onHistoryClick={onHistoryClick}
+          onAiToolsClick={onAiToolsClick}
           onQuickActionsClick={onQuickActionsClick}
           onExportChat={onExportChat}
           onImportChat={onImportChat}

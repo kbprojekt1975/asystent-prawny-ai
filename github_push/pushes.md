@@ -1,6 +1,20 @@
 # Historia zmian i wdrożeń (GitHub Pushes Log)
+**Ostatnia aktualizacja:** 2026-01-18 20:10
 
-**Ostatnia aktualizacja:** 2026-01-18 14:40
+---
+
+### [temp-hash] 2026-01-18 20:10 | feat: implement !!!!!NEW FLOW!!!!! for AI Tools and mobile UI optimization
+**Zadania:**
+- **AI Tools: !!!!!NEW FLOW!!!!!**:
+    - **Bezpośredni Start**: Tryb "Rozpocznij z czystą kartą" prowadzi teraz bezpośrednio do czatu, omijając wybór tematów.
+    - **Inteligentne Powitanie**: Asystent wprowadza się w oparciu o wybraną rolę (np. Ekspert ds. Pism), wyjaśnia zakres pomocy i proaktywnie pyta o szczegóły sprawy.
+    - **Skupienie na Trybie**: Usunięto promowanie innych narzędzi w trakcie rozmowy; AI trzyma się ściśle wybranej specjalizacji.
+    - **Integracja Kontekstu**: Płynne przełączanie między "Obecną sprawą", "Historią" a "Nową kartą" bez błędów typu TypeError.
+- **Optymalizacja Mobilna**:
+    - Bardziej kompaktowy układ selektora kontekstu (mniejsze paddingi, mniejsze czcionki).
+    - Ukrycie zbędnych opisów w siatce narzędzi na mobile dla lepszej przejrzystości.
+    - Poprawione wyrównanie ikon i etykiet na małych ekranach.
+- **Inne**: Naprawiono błąd "martwego" menu bocznego na stronie głównej (dodano domyślny obszar prawa).
 
 ---
 
