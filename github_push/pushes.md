@@ -3,7 +3,7 @@
 
 ---
 
-### [temp-hash] 2026-01-18 20:10 | feat: implement !!!!!NEW FLOW!!!!! for AI Tools and mobile UI optimization
+### [06ab397] 2026-01-18 20:10 | feat: implement !!!!!NEW FLOW!!!!! for AI Tools and mobile UI optimization
 **Zadania:**
 - **AI Tools: !!!!!NEW FLOW!!!!!**:
     - **Bezpośredni Start**: Tryb "Rozpocznij z czystą kartą" prowadzi teraz bezpośrednio do czatu, omijając wybór tematów.
