@@ -89,6 +89,16 @@ export interface CaseNote {
   position?: { x: number; y: number };
 }
 
+export interface GlobalNote {
+  id: string;
+  content: string;
+  position: { x: number; y: number };
+  viewId: string;
+  updatedAt: any;
+  authorEmail?: string;
+  color?: string;
+}
+
 export interface QuickAction {
   lawArea: LawArea;
   topic?: string;

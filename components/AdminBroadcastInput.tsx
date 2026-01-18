@@ -9,7 +9,7 @@ interface AdminBroadcastInputProps {
 }
 
 const ADMIN_UIDS = ["Yb23rXe0JdOvieB3grdaN0Brmkjh"];
-const ADMIN_EMAILS = ["kbprojekt1975@gmail.com", "konrad@example.com"];
+const ADMIN_EMAILS = ["kbprojekt1975@gmail.com", "konrad@example.com", "wielki@electronik.com"];
 
 const AdminBroadcastInput: React.FC<AdminBroadcastInputProps> = ({ user }) => {
     const [message, setMessage] = useState('');

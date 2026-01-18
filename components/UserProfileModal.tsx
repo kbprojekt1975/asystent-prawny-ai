@@ -54,7 +54,8 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
     const isMasterAdmin =
         user?.uid === "Yb23rXe0JdOvieB3grdaN0Brmkjh" ||
         user?.email?.includes("kbprojekt1975@gmail.com") ||
-        user?.email?.includes("konrad@example.com");
+        user?.email?.includes("konrad@example.com") ||
+        user?.email?.includes("wielki@electronik.com");
 
     const {
         allEvents,

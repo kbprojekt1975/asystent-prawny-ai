@@ -2422,7 +2422,8 @@ const isMasterAdmin = (auth: any): boolean => {
 
     return uid === "Yb23rXe0JdOvieB3grdaN0Brmkjh" ||
         email.includes("kbprojekt1975@gmail.com") ||
-        email.includes("konrad@example.com");
+        email.includes("konrad@example.com") ||
+        email.includes("wielki@electronik.com");
 };
 
 async function deleteCollection(collectionRef: any) {

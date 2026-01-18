@@ -17,10 +17,9 @@ service cloud.firestore {
     function isMasterAdmin() {
       return request.auth != null && (
         request.auth.uid == "Yb23rXe0JdOvieB3grdaN0Brmkjh" ||
-        (request.auth.token.email != null && (
-          request.auth.token.email.matches(".*kbprojekt1975@gmail.com.*") ||
-          request.auth.token.email.matches(".*konrad@example.com.*")
-        ))
+        request.auth.token.email == "kbprojekt1975@gmail.com" ||
+        request.auth.token.email == "konrad@example.com" ||
+        request.auth.token.email == "wielki@electronik.com"
       );
     }
 
@@ -42,6 +41,11 @@ service cloud.firestore {
     match /admins/{adminId} {
         allow read: if request.auth != null && (request.auth.token.admin == true || isMasterAdmin());
         allow write: if false;
+    }
+
+    // 6. Global Admin Notes
+    match /admin_notes/{noteId} {
+        allow read, write: if isMasterAdmin();
     }
 
     // 6. Collection Group Rules

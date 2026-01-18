@@ -67,6 +67,8 @@ import AdminBroadcastInput from './components/AdminBroadcastInput';
 import PWAUpdateNotification from './components/PWAUpdateNotification';
 import AppHelpSidebar from './components/AppHelpSidebar';
 
+const GlobalAdminNotes = React.lazy(() => import('./components/GlobalAdminNotes'));
+
 const initialProfile: UserProfile = {
   quickActions: [],
   totalCost: 0
@@ -142,6 +144,28 @@ const App: React.FC = () => {
 
     return () => unsubscribe();
   }, [user, currentChatId]);
+
+  const isAdmin = useMemo(() => {
+    if (!user) return false;
+    const ADMIN_UIDS = ["Yb23rXe0JdOvieB3grdaN0Brmkjh"];
+    const ADMIN_EMAILS = ["kbprojekt1975@gmail.com", "konrad@example.com", "wielki@electronik.com"];
+    return ADMIN_UIDS.includes(user.uid) || (user.email && ADMIN_EMAILS.some(email => user.email?.includes(email)));
+  }, [user]);
+
+  const currentViewId = useMemo(() => {
+    const sanitize = (id: string) => id.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+    if (!selectedLawArea) return 'home';
+    if (!servicePath) return `law_${sanitize(selectedLawArea)}`;
+    if (!interactionMode) return `service_${sanitize(selectedLawArea)}_${sanitize(servicePath)}`;
+
+    if (!selectedTopic) {
+      if (interactionMode === InteractionMode.Court && !courtRole) return `court_role_selection`;
+      return `mode_${sanitize(selectedLawArea)}_${sanitize(servicePath)}_${sanitize(interactionMode)}`;
+    }
+
+    return `topic_${sanitize(selectedLawArea)}_${sanitize(servicePath)}_${sanitize(interactionMode)}_${sanitize(selectedTopic)}`;
+  }, [selectedLawArea, servicePath, interactionMode, selectedTopic, courtRole]);
 
   const handleUpdateNotePosition = async (noteId: string, position: { x: number, y: number } | null) => {
     if (!user || !currentChatId) return;
@@ -785,6 +809,11 @@ const App: React.FC = () => {
   return (
     <>
       <PWAUpdateNotification />
+      {isAdmin && (
+        <React.Suspense fallback={null}>
+          <GlobalAdminNotes userEmail={user?.email || null} isAdmin={isAdmin} currentViewId={currentViewId} />
+        </React.Suspense>
+      )}
       <AppModals
         isProfileModalOpen={isProfileModalOpen}
         setIsProfileModalOpen={setIsProfileModalOpen}
