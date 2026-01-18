@@ -1,6 +1,22 @@
 # Historia zmian i wdrożeń (GitHub Pushes Log)
 
-**Ostatnia aktualizacja:** 2026-01-17 19:38
+**Ostatnia aktualizacja:** 2026-01-18 14:40
+
+---
+
+### [2e77e6b] 2026-01-18 14:40 | feat: implement admin notes and revert theme infrastructure
+**Zadania:**
+- **Notatki Administratora**:
+    - Implementacja globalnych notatek widocznych dla wszystkich użytkowników.
+    - Możliwość personalizacji kolorów notatek (Standard, Amber, Emerald, Rose, Indigo).
+    - Mechanizm usuwania i edycji notatek przez administratorów.
+    - Synchronizacja w czasie rzeczywistym przez Firestore.
+- **Rollback motywów**:
+    - Całkowite wycofanie infrastruktury "True Black".
+    - Przywrócenie pierwotnej estetyki "Deep Slate" (#0f172a).
+    - Usunięcie przełącznika motywów z nagłówka.
+    - Przywrócenie oryginalnych efektów wizualnych SplashScreen.
+- **Bezpieczeństwo**: Aktualizacja reguł Firestore dla bezpiecznego zarządzania notatkami.
 
 ---
 
