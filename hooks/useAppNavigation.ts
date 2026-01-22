@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { LawArea, InteractionMode, CourtRole } from '../types';
+import { LawArea, InteractionMode, CourtRole, getChatId } from '../types';
 
 const initialTopics: Record<LawArea, string[]> = {
     [LawArea.Criminal]: [],
@@ -48,11 +48,10 @@ export const useAppNavigation = () => {
 
     const currentChatId = useMemo(() => {
         if (selectedLawArea && selectedTopic) {
-            const sanitizedTopic = selectedTopic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            return `${selectedLawArea}_${sanitizedTopic}`;
+            return getChatId(selectedLawArea, selectedTopic, interactionMode);
         }
         return null;
-    }, [selectedLawArea, selectedTopic]);
+    }, [selectedLawArea, selectedTopic, interactionMode]);
 
     const resetNavigation = () => {
         setSelectedLawArea(null);

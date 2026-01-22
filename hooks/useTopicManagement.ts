@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { doc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { InteractionMode, LawArea } from '../types';
+import { InteractionMode, LawArea, getChatId } from '../types';
 import { User } from 'firebase/auth';
 
 export const useTopicManagement = (
@@ -59,7 +59,7 @@ export const useTopicManagement = (
             await setDoc(doc(db, 'users', user.uid), { topics: updatedTopics }, { merge: true });
 
             // Also create the initial chat document so it appears in history immediately
-            const chatId = `${selectedLawArea}_${trimmedTopic.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
+            const chatId = getChatId(selectedLawArea, trimmedTopic, mode);
             await setDoc(doc(db, 'users', user.uid, 'chats', chatId), {
                 messages: [],
                 lastUpdated: serverTimestamp(),

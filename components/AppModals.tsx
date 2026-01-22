@@ -1,5 +1,5 @@
 import React from 'react';
-import { LawArea, InteractionMode, UserProfile, LawArea as LawAreaType } from '../types';
+import { LawArea, InteractionMode, UserProfile, LawArea as LawAreaType, getChatId } from '../types';
 import UserProfileModal from './UserProfileModal';
 import HistoryPanel from './HistoryPanel';
 import QuickActionsModal from './QuickActionsModal';
@@ -25,7 +25,7 @@ interface AppModalsProps {
     chatHistories: any[];
     handleLoadHistory: (lawArea: LawArea, topic: string, mode?: InteractionMode, servicePath?: 'pro' | 'standard') => void;
     handleDeleteHistory: (lawArea: LawArea, topic: string) => void;
-    handleViewKnowledge: (lawArea?: LawArea | null, topic?: string | null) => void;
+    handleViewKnowledge: (lawArea?: LawArea | null, topic?: string | null, mode?: InteractionMode | null) => void;
     handleViewDocuments: (chatId?: string | null) => void;
 
     isQuickActionsModalOpen: boolean;
@@ -101,8 +101,8 @@ const AppModals: React.FC<AppModalsProps> = ({
                 onLoadHistory={handleLoadHistory}
                 onDeleteHistory={handleDeleteHistory}
                 onViewKnowledge={handleViewKnowledge}
-                onViewDocuments={(lawArea, topic) => {
-                    const chatId = `${lawArea}_${topic}`;
+                onViewDocuments={(lawArea, topic, mode) => {
+                    const chatId = getChatId(lawArea, topic, mode);
                     handleViewDocuments(chatId);
                 }}
                 isLocalOnly={isLocalOnly}

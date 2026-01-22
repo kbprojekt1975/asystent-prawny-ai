@@ -98,6 +98,7 @@ export interface GlobalNote {
   updatedAt: any;
   authorEmail?: string;
   color?: string;
+  isMinimized?: boolean;
 }
 
 export interface QuickAction {
@@ -169,3 +170,24 @@ export interface EvidenceSuggestion {
   description: string;
   status: 'missing' | 'collected';
 }
+
+/**
+ * Generates a unified chat ID for Firestore storage.
+ * Handles specialized mode isolation.
+ */
+export const getChatId = (lawArea: string, topic: string, mode?: InteractionMode | null) => {
+  const sanitize = (val: string) => val.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  const sanitizedTopic = sanitize(topic);
+  let id = `${lawArea}_${sanitizedTopic}`;
+
+  // If it's a specialized mode, append it to the chatId to keep context separate
+  // Advice and Analysis share the same base topic ID
+  if (mode &&
+    mode !== InteractionMode.Advice &&
+    mode !== InteractionMode.Analysis) {
+    const slug = sanitize(mode);
+    id = `${lawArea}_${sanitizedTopic}_${slug}`;
+  }
+
+  return id;
+};

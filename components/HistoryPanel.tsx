@@ -15,8 +15,8 @@ interface HistoryPanelProps {
   histories: { lawArea: LawArea, topic: string, interactionMode?: InteractionMode, servicePath?: 'pro' | 'standard', lastUpdated?: any, docCount?: number }[];
   onLoadHistory: (lawArea: LawArea, topic: string, mode?: InteractionMode, servicePath?: 'pro' | 'standard') => void;
   onDeleteHistory: (lawArea: LawArea, topic: string) => void;
-  onViewKnowledge: (lawArea: LawArea, topic: string) => void;
-  onViewDocuments: (lawArea: LawArea, topic: string) => void;
+  onViewKnowledge: (lawArea: LawArea, topic: string, mode?: InteractionMode) => void;
+  onViewDocuments: (lawArea: LawArea, topic: string, mode?: InteractionMode) => void;
 }
 
 const HistoryPanel: React.FC<HistoryPanelProps> = ({
@@ -164,8 +164,24 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                   {m.interactionMode ? t(`interaction.modes.${interactionModeMap[m.interactionMode] || 'advice'}`) : t('history.general_chat')}
                                 </span>
                               </button>
-                              <div className="flex items-center gap-2 text-[10px] text-slate-600">
-                                {m.docCount > 0 && <span className="flex items-center gap-0.5"><DocumentTextIcon className="w-3 h-3" />{m.docCount}</span>}
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); onViewKnowledge(area as LawArea, topic, m.interactionMode); onClose(); }}
+                                  className="p-1 hover:text-cyan-400"
+                                  title="Pokaż bazę wiedzy"
+                                >
+                                  <BookOpenIcon className="w-3.5 h-3.5" />
+                                </button>
+                                {m.docCount > 0 && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); onViewDocuments(area as LawArea, topic, m.interactionMode); onClose(); }}
+                                    className="flex items-center gap-0.5 hover:text-cyan-400"
+                                    title="Pokaż dokumenty"
+                                  >
+                                    <DocumentTextIcon className="w-3.5 h-3.5" />
+                                    {m.docCount}
+                                  </button>
+                                )}
                               </div>
                             </div>
                           ))}

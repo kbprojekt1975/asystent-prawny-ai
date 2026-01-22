@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LawArea, ChatMessage, InteractionMode, UserProfile, QuickAction, SubscriptionStatus, SubscriptionInfo, CourtRole, CaseNote } from './types';
+import { LawArea, ChatMessage, InteractionMode, UserProfile, QuickAction, SubscriptionStatus, SubscriptionInfo, CourtRole, CaseNote, getChatId } from './types';
 import { analyzeLegalCase } from './services/geminiService';
 import LawSelector from './components/LawSelector';
 import ServiceTypeSelector from './components/ServiceTypeSelector';
@@ -388,11 +388,10 @@ const App: React.FC = () => {
     }
   }, [currentMessage]);
 
-  const handleViewKnowledge = (lawArea?: LawArea | null, topic?: string | null) => {
+  const handleViewKnowledge = (lawArea?: LawArea | null, topic?: string | null, mode?: InteractionMode | null) => {
     let chatId: string | null = null;
     if (lawArea && topic) {
-      const sanitizedTopic = topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      chatId = `${lawArea}_${sanitizedTopic}`;
+      chatId = getChatId(lawArea, topic, mode);
     } else if (currentChatId) {
       chatId = currentChatId;
     }
@@ -401,7 +400,7 @@ const App: React.FC = () => {
   };
 
   const handleViewDocuments = (chatId?: string | null) => {
-    setDocumentsModalChatId(chatId || null);
+    setDocumentsModalChatId(chatId || currentChatId || null);
     setIsDocumentsModalOpen(true);
   };
 
@@ -546,8 +545,7 @@ const App: React.FC = () => {
     setSelectedLawArea(lawArea);
     setSelectedTopic(topic);
 
-    const sanitizedTopic = topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    const chatId = `${lawArea}_${sanitizedTopic}`;
+    const chatId = getChatId(lawArea, topic, mode);
 
     // Auto-detect mode from topic name early (for UI responsiveness and new topics)
     let autoInteractionMode: InteractionMode | null = null;
@@ -628,12 +626,29 @@ const App: React.FC = () => {
     }
   };
 
+  // Auto-load history on initialization / refresh
+  useEffect(() => {
+    if (user && selectedLawArea && selectedTopic && chatHistory.length === 0 && !isLoading) {
+      handleLoadHistory(selectedLawArea, selectedTopic, interactionMode || undefined);
+    }
+  }, [user, selectedLawArea, selectedTopic, interactionMode, chatHistory.length, isLoading, handleLoadHistory]);
+
   const handleDeleteHistory = async (lawArea: LawArea, topic: string) => {
     if (!user) return;
-    const sanitizedTopic = topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    const chatId = `${lawArea}_${sanitizedTopic}`;
+
     try {
-      await deleteDoc(doc(db, 'users', user.uid, 'chats', chatId));
+      // Delete main/base session
+      const mainChatId = getChatId(lawArea, topic);
+      await deleteDoc(doc(db, 'users', user.uid, 'chats', mainChatId));
+
+      // Attempt to clean up all specialized variations
+      const deletePromises = Object.values(InteractionMode).map(async (m) => {
+        if (m === InteractionMode.Advice || m === InteractionMode.Analysis) return;
+        const specializedId = getChatId(lawArea, topic, m);
+        await deleteDoc(doc(db, 'users', user.uid, 'chats', specializedId));
+      });
+      await Promise.all(deletePromises);
+
       const h = await loadChatHistories();
       if (h) setChatHistories(h);
     } catch (e) {

@@ -1,5 +1,18 @@
 # Historia zmian i wdrożeń (GitHub Pushes Log)
-**Ostatnia aktualizacja:** 2026-01-18 20:10
+**Ostatnia aktualizacja:** 2026-01-22 21:00
+
+---
+
+### [temp-hash] 2026-01-22 21:00 | fix: FIREBASE history fix!!!!!!!!!! and admin notes minimization
+**Zadania:**
+- **FIREBASE history fix!!!!!!!!!!**:
+    - **Ujednolicenie ID (getChatId)**: Wprowadzenie centralnej funkcji generującej identyfikatory czatów w `types.ts`, co naprawiło błędy znikającej historii w trybach specjalistycznych (Sąd, Negocjacje).
+    - **Automatyczne wczytywanie**: Dodano `useEffect` w `App.tsx` wymuszający załadowanie historii po odświeżeniu strony/inicjalizacji aplikacji.
+    - **Synchronizacja Usuwania**: Rozszerzono `handleDeleteHistory`, aby usuwał wszystkie wariacje trybów (izolowane sesje) dla danego tematu.
+    - **Poprawki UI**: Panel historii (`HistoryPanel.tsx`) poprawnie przekazuje teraz tryb rozmowy do przeglądarki wiedzy i dokumentów.
+- **Notatki Administratora**:
+    - **Trwała Minimalizacja**: Stan zminimalizowania notatek jest teraz zapisywany w Firestore (`isMinimized`), dzięki czemu notatki pozostają schowane po odświeżeniu strony.
+    - **Podgląd Treści**: Zminimalizowane notatki wyświetlają teraz krótki fragment tekstu (pierwsze dwa wyrazy) dla lepszej orientacji.
 
 ---
 

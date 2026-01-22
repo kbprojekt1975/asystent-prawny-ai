@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { doc, updateDoc, setDoc, serverTimestamp, increment, collection, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { getLegalAdvice } from '../services/geminiService';
-import { LawArea, ChatMessage, InteractionMode, UserProfile, SubscriptionStatus, CourtRole, ExportedChat } from '../types';
+import { LawArea, ChatMessage, InteractionMode, UserProfile, SubscriptionStatus, CourtRole, ExportedChat, getChatId } from '../types';
 import { User } from 'firebase/auth';
 
 interface UseChatLogicProps {
@@ -107,19 +107,9 @@ export const useChatLogic = ({
         const effectiveLawArea = metadataOverride?.lawArea || selectedLawArea;
         const effectiveTopic = metadataOverride?.topic || selectedTopic;
         const effectiveInteractionMode = metadataOverride?.interactionMode || interactionMode;
-        const sanitizedTopic = (metadataOverride?.topic || selectedTopic || '').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-
-        let effectiveChatId = metadataOverride
-            ? `${metadataOverride.lawArea}_${sanitizedTopic}`
-            : currentChatId;
-
-        // If it's a specialized mode, append it to the chatId to keep context separate
-        if (effectiveInteractionMode &&
-            effectiveInteractionMode !== InteractionMode.Advice &&
-            effectiveInteractionMode !== InteractionMode.Analysis) {
-            const modeSlug = effectiveInteractionMode.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            effectiveChatId = `${effectiveLawArea}_${sanitizedTopic}_${modeSlug}`;
-        }
+        const effectiveChatId = metadataOverride
+            ? getChatId(metadataOverride.lawArea, metadataOverride.topic, metadataOverride.interactionMode)
+            : getChatId(effectiveLawArea!, effectiveTopic!, effectiveInteractionMode);
 
         const messageToSend = messageOverride || currentMessage.trim();
         if ((!messageToSend && !historyOverride) || !effectiveLawArea || !effectiveTopic || !effectiveInteractionMode || (isLoading && !historyOverride) || !user || !effectiveChatId) return;
@@ -179,8 +169,7 @@ export const useChatLogic = ({
                     topic: effectiveTopic, // Preserve original topic title
                     interactionMode: effectiveInteractionMode,
                     servicePath: metadataOverride?.servicePath || (chatHistories.filter(h => h.lawArea === effectiveLawArea).find(h => {
-                        const sanTopic = h.topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                        return sanTopic === effectiveTopic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                        return getChatId(h.lawArea, h.topic) === getChatId(effectiveLawArea, effectiveTopic);
                     })?.servicePath) || 'standard'
                 }, { merge: true });
             }
@@ -238,8 +227,7 @@ export const useChatLogic = ({
                     topic: effectiveTopic, // This is the original title
                     interactionMode: effectiveInteractionMode,
                     servicePath: metadataOverride?.servicePath || (chatHistories.filter(h => h.lawArea === effectiveLawArea).find(h => {
-                        const sanTopic = h.topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                        return sanTopic === effectiveTopic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                        return getChatId(h.lawArea, h.topic) === getChatId(effectiveLawArea, effectiveTopic);
                     })?.servicePath) || 'standard'
                 }, { merge: true });
 
