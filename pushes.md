@@ -10,7 +10,7 @@
 ---
 ---
 
-### [pending] 2026-01-24 00:00 | fix: Clean Console Warnings
+### [ff01081] 2026-01-24 00:00 | fix: Clean Console Warnings
 **Naprawiono:**
 - **CORS Error**: Usunięto wywołanie `ipapi.co` z kodu klienta, które powodowało błędy CORS. Detekcja języka opiera się teraz wyłącznie na ustawieniach przeglądarki.
 - **Firestore Deprecation**: Zaktualizowano konfigurację Firestore do `initializeFirestore` z `persistentLocalCache`, eliminując ostrzeżenie o przestarzałym `enableMultiTabIndexedDbPersistence`.
