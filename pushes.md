@@ -10,6 +10,11 @@
 ---
 ---
 
+### [pending] 2026-01-24 00:00 | fix: Clean Console Warnings
+**Naprawiono:**
+- **CORS Error**: Usunięto wywołanie `ipapi.co` z kodu klienta, które powodowało błędy CORS. Detekcja języka opiera się teraz wyłącznie na ustawieniach przeglądarki.
+- **Firestore Deprecation**: Zaktualizowano konfigurację Firestore do `initializeFirestore` z `persistentLocalCache`, eliminując ostrzeżenie o przestarzałym `enableMultiTabIndexedDbPersistence`.
+
 ### [8b82238] 2026-01-23 23:50 | fix: Refine Andromeda Persona for International Users
 **Naprawiono:**
 - **System Prompt**: Zmieniono definicję roli dla EN/ES. Zamiast "Asystent prawny" (co sugerowało polską jurysdykcję i język), Andromeda działa teraz jako "International Legal Consultant", którego misją jest wyjaśnianie polskiego prawa użytkownikom zagranicznym. To eliminuje blokadę "I am designed to provide legal assistance in Polish".

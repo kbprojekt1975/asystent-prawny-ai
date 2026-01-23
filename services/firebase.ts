@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, connectAuthEmulator } from "firebase/auth";
-import { getFirestore, connectFirestoreEmulator, enableMultiTabIndexedDbPersistence } from "firebase/firestore";
+import { getFirestore, connectFirestoreEmulator, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 
@@ -16,7 +16,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+});
 export const storage = getStorage(app);
 export const functions = getFunctions(app, 'us-central1');
 export const googleProvider = new GoogleAuthProvider();
@@ -40,11 +44,4 @@ if ((isLocalhost || isNgrok || isLocalNetwork) && USE_EMULATORS) {
   console.log("Using production Firebase environment.");
 }
 
-// 2. Enable persistence (After emulator connection, if any)
-enableMultiTabIndexedDbPersistence(db).catch((err) => {
-  if (err.code === 'failed-precondition') {
-    console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
-  } else if (err.code === 'unimplemented-browser') {
-    console.warn('The current browser doesn\'t support all of the features required to enable persistence');
-  }
-});
+// 2. Persistence is now handled via initializeFirestore options above.

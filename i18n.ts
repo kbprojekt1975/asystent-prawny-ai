@@ -52,29 +52,7 @@ i18n.on('languageChanged', (lng) => {
     localStorage.setItem('i18nextLng', lng);
 });
 
-// 5. IP-based Detection (Optional/Async)
-// Only run if no language was explicitly saved
-if (!localStorage.getItem('i18nextLng')) {
-    fetch('https://ipapi.co/json/')
-        .then(res => res.json())
-        .then(data => {
-            const country = data.country_code;
-            let detected: string | null = null;
-
-            if (country === 'PL') {
-                detected = 'pl';
-            } else if (['ES', 'MX', 'AR', 'CO', 'PE', 'CL', 'VE', 'EC', 'GT', 'CU', 'BO', 'DO', 'HN', 'PY', 'SV', 'NI', 'CR', 'UY', 'PA', 'GQ'].includes(country)) {
-                detected = 'es';
-            }
-
-            if (detected && detected !== i18n.language) {
-                console.log(`Auto-detected language for country ${country}: ${detected}`);
-                i18n.changeLanguage(detected);
-            }
-        })
-        .catch(err => {
-            console.warn('IP-based language detection failed, falling back to browser settings.', err);
-        });
-}
+// 5. IP-based Detection removed due to CORS issues.
+// Browser detection in getInitialLanguage is sufficient.
 
 export default i18n;
