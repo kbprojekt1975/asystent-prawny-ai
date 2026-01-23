@@ -10,7 +10,7 @@
 ---
 ---
 
-### [pending] 2026-01-23 23:00 | fix: Enforce Andromeda Response Language
+### [2357e1e] 2026-01-23 23:00 | fix: Enforce Andromeda Response Language
 **Naprawiono:**
 - **Prompt Engineering**: Wdrożono "CRITICAL INSTRUCTION" w promptach systemowych, wymuszając odpowiedź w wybranym języku (EN/ES) niezależnie od języka kontekstu prawnego (RAG).
 
