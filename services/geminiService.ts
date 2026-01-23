@@ -91,3 +91,14 @@ export const getLegalFAQ = async (lawArea: LawArea, language: string = 'pl'): Pr
         ]; // Fallback questions
     }
 };
+
+export const askAndromeda = async (history: ChatMessage[], language: string = 'pl', chatId: string | null = null): Promise<{ text: string, usage?: { totalTokenCount: number } }> => {
+    try {
+        const askAndromedaFunction = httpsCallable(functions, 'askAndromeda');
+        const result = await askAndromedaFunction({ history, language, chatId });
+        return result.data as { text: string, usage?: { totalTokenCount: number } };
+    } catch (error) {
+        console.error("Error calling Cloud Function askAndromeda:", error);
+        return { text: "Przepraszam, wystąpił błąd podczas łączenia z systemem Andromeda." };
+    }
+};

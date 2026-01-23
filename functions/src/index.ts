@@ -2924,3 +2924,188 @@ async function ingestAndSearchISAP(query: string, vector: number[]): Promise<str
         return "";
     }
 }
+
+/**
+ * ANDROMEDA - GLOBAL LEGAL COMPASS
+ * Dedicated function for the main greeting screen.
+ * Uses Google Search for real-time verification and Vector Library for global RAG.
+ */
+export const askAndromeda = onCall({
+    cors: true,
+    secrets: [GEMINI_API_KEY]
+}, async (request) => {
+    logger.info("=== askAndromeda CALLED ===");
+
+    const genAI = getAiClient();
+    if (!genAI) throw new HttpsError('failed-precondition', 'AI Client not initialized.');
+
+    const { history, language = 'pl', chatId } = request.data;
+    const uid = request.auth?.uid;
+
+    // Fetch existing knowledge if chatId is provided
+    let existingKnowledgeContext = "";
+    if (chatId && uid) {
+        try {
+            const knowledgeSnap = await db.collection(`users/${uid}/andromeda_chats/${chatId}/knowledge`).get();
+            if (!knowledgeSnap.empty) {
+                const knowledgeList = knowledgeSnap.docs.map(doc => `- ${doc.data().content}`).join('\n');
+                existingKnowledgeContext = `\nZGROMADZONA WIEDZA O SPRAWIE:\n${knowledgeList}\n`;
+            }
+        } catch (e) {
+            logger.error("Error fetching knowledge", e);
+        }
+    }
+
+    const systemInstruction = `
+    # ROLA: ANDROMEDA - WSZECHWIEDZĄCY KOMPAS PRAWNY
+    Jesteś Andromedą, najbardziej zaawansowanym asystentem prawnym AI. Twoim zadaniem jest udzielanie natychmiastowych, precyzyjnych i kompleksowych odpowiedzi na wszelkie pytania dotyczące prawa.
+    
+    # TWOJA CHARAKTERYSTYKA:
+    - Masz dostęp do całego polskiego ustawodawstwa (ISAP) i orzecznictwa (SAOS).
+    - Masz dostęp do globalnej bazy wiedzy (RAG).
+    - Masz dostęp do LOKALNEJ wiedzy o tej konkretnej sprawie (zgromadzone fakty/dokumenty).
+    ${existingKnowledgeContext}
+    - Twój ton jest profesjonalny, pewny siebie i pomocny.
+    
+    # ZASADY:
+    1. Korzystaj z narzędzi (ISAP, SAOS, RAG), aby potwierdzić swoje odpowiedzi. 
+    2. Cytuj konkretne artykuły i akty prawne.
+    3. Twoim celem jest rozwiązanie problemu użytkownika tutaj i teraz. **Jeśli użytkownik prosi o przeanalizowanie sprawy, zrób to rzetelnie i szczegółowo.**
+    4. Masz być w stanie analizować sprawy, interpretować fakty i sugerować rozwiązania.
+    5. Jeśli zauważysz, że sprawa wymaga bardzo zaawansowanej analizy wielu dokumentów naraz lub budowania strategii procesowej, wspomnij: "Jeśli potrzebujesz zaawansowanej analizy dokumentów lub strategii procesowej, możesz skorzystać z 'Narzędzi Specjalistycznych' w panelu bocznym. Tam znajdziesz opcje, które mogą pomóc w głębszym zrozumieniu Twojej sytuacji prawnej."
+    
+    # STRUKTURA ODPOWIEDZI:
+    - Rzetelna analiza sytuacji.
+    - Podstawa prawna (zaznaczone jako **Podstawa Prawna**).
+    - Rekomendowane kroki lub konkluzja.
+
+    Odpowiadaj w języku użytkownika (Język: ${language}).
+    `;
+
+    const model = genAI.getGenerativeModel({
+        model: 'gemini-2.0-flash-exp',
+        systemInstruction,
+        tools: [
+            {
+                functionDeclarations: [
+                    {
+                        name: "search_legal_acts",
+                        description: "Wyszukuje polskie akty prawne. Wpisz TYLKO główną nazwę (np. 'Kodeks cywilny').",
+                        parameters: {
+                            type: SchemaType.OBJECT,
+                            properties: {
+                                keyword: { type: SchemaType.STRING, description: "Słowo kluczowe" }
+                            },
+                            required: ["keyword"]
+                        }
+                    },
+                    {
+                        name: "search_vector_library",
+                        description: "Wyszukuje przepisy w globalnej bazie wektorowej (RAG).",
+                        parameters: {
+                            type: SchemaType.OBJECT,
+                            properties: {
+                                query: { type: SchemaType.STRING, description: "Zapytanie semantyczne" }
+                            },
+                            required: ["query"]
+                        }
+                    },
+                    {
+                        name: "search_court_rulings",
+                        description: "Wyszukuje polskie wyroki sądowe (SAOS).",
+                        parameters: {
+                            type: SchemaType.OBJECT,
+                            properties: {
+                                query: { type: SchemaType.STRING, description: "Słowa kluczowe wyroku" }
+                            },
+                            required: ["query"]
+                        }
+                    }
+                ]
+            },
+            {
+                functionDeclarations: [
+                    {
+                        name: "add_to_chat_knowledge",
+                        description: "Zapisuje ważny fakt, datę, kwotę lub streszczenie dokumentu do trwałej pamięci tej sprawy. Używaj tego, gdy użytkownik podaje kluczowe dane.",
+                        parameters: {
+                            type: SchemaType.OBJECT,
+                            properties: {
+                                content: { type: SchemaType.STRING, description: "Zwięzła notatka do zapamiętania (np. 'Data ślubu: 2010-05-12', 'Umowa najmu na czas określony')" }
+                            },
+                            required: ["content"]
+                        }
+                    }
+                ]
+            }
+        ] as any
+    }, { apiVersion: 'v1beta' });
+
+    let contents = (history || []).map((msg: any) => ({
+        role: msg.role === 'model' ? 'model' : 'user',
+        parts: [{ text: msg.content }]
+    }));
+
+    if (contents.length === 0 || contents[0].role === 'model') {
+        contents.unshift({ role: 'user', parts: [{ text: "Dzień dobry." }] });
+    }
+
+    const chat = model.startChat({ history: contents.slice(0, -1) });
+    let result = await chat.sendMessage(contents[contents.length - 1].parts);
+
+    let callCount = 0;
+    while (result.response.candidates?.[0]?.content?.parts?.some(p => p.functionCall) && callCount < 5) {
+        callCount++;
+        const functionCalls = result.response.candidates[0].content.parts.filter(p => p.functionCall);
+        const toolResponses = [];
+
+        for (const call of functionCalls) {
+            const { name, args } = call.functionCall!;
+            if (name === "search_legal_acts") {
+                const searchResults = await searchLegalActs(args as any);
+                toolResponses.push({ functionResponse: { name, response: { result: searchResults } } });
+            } else if (name === "search_vector_library") {
+                const { query: searchQuery } = args as any;
+                try {
+                    const embedModel = genAI!.getGenerativeModel({ model: "text-embedding-004" });
+                    const embRes = await embedModel.embedContent(searchQuery);
+                    const vector = embRes.embedding.values;
+                    const { VectorValue } = require("firebase-admin/firestore");
+                    const chunksSnap = await db.collectionGroup('chunks')
+                        .where('userId', 'in', ['GLOBAL', uid].filter(Boolean))
+                        .findNearest('embedding', VectorValue.create(vector), { limit: 5, distanceMeasure: 'COSINE' })
+                        .get();
+                    const r = chunksSnap.docs.map(doc => {
+                        const d = doc.data();
+                        return `AKT: ${d.metadata?.title} (${d.metadata?.publisher} ${d.metadata?.year}/${d.metadata?.pos})\nArt. ${d.articleNo}\n${d.content}`;
+                    }).join('\n---\n');
+                    toolResponses.push({ functionResponse: { name, response: { result: r || "Brak wyników w RAG." } } });
+                } catch (e) {
+                    toolResponses.push({ functionResponse: { name, response: { result: "Error in RAG." } } });
+                }
+            } else if (name === "search_court_rulings") {
+                const searchResults = await searchJudgments({ all: (args as any).query });
+                toolResponses.push({ functionResponse: { name, response: { result: searchResults } } });
+            } else if (name === "add_to_chat_knowledge") {
+                const { content } = args as any;
+                let resultMsg = "Skipped (no context).";
+                if (uid && chatId) {
+                    await db.collection(`users/${uid}/andromeda_chats/${chatId}/knowledge`).add({
+                        content,
+                        createdAt: new Date().toISOString()
+                    });
+                    resultMsg = "Saved to case memory.";
+                }
+                toolResponses.push({ functionResponse: { name, response: { result: resultMsg } } });
+            }
+        }
+        result = await chat.sendMessage(toolResponses);
+    }
+
+    return {
+        text: result.response.text(),
+        usage: {
+            totalTokenCount: result.response.usageMetadata?.totalTokenCount || 0
+        }
+    };
+});

@@ -31,6 +31,7 @@ interface AppHeaderProps {
   onImportChat?: (file: File) => void;
   onInstallApp?: () => void;
   onHelpClick?: () => void;
+  onAndromedaClick?: () => void;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({
@@ -55,7 +56,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   onExportChat,
   onImportChat,
   onInstallApp,
-  onHelpClick
+  onHelpClick,
+  onAndromedaClick
 }) => {
   const { t, i18n } = useTranslation();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -198,6 +200,24 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             title={t('app.quickActions')}
           >
             <SparklesIcon className="h-6 w-6" />
+          </button>
+        )}
+        {onAndromedaClick && (
+          <button
+            onClick={onAndromedaClick}
+            className="p-2 text-slate-300 hover:text-cyan-400 hover:bg-slate-700/50 rounded-full transition-all"
+            title="Powrót do Andromeda"
+          >
+            <div className="relative p-0.5">
+              <div className="grid grid-cols-3 gap-0.5">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="w-1.5 h-1.5 bg-current rounded-sm" />
+                ))}
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center translate-y-[-0.5px]">
+                <div className="w-[120%] h-0.5 bg-red-500/80 -rotate-45 rounded-full shadow-[0_0_4px_rgba(239,68,68,0.5)]" />
+              </div>
+            </div>
           </button>
         )}
 

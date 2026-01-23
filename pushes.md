@@ -6,6 +6,24 @@
 
 ---
 
+### [pending] 2026-01-23 21:50 | feat: Andromeda Chat & Knowledge Base implementation
+**Zadania:**
+- **Historia Wielowątkowa (Multi-Topic History)**:
+    - **Panel Boczny (Sidebar)**: Responsywny panel (stały na PC, wysuwany "drawer" na mobile) zarządzający listą rozmów.
+    - **Zarządzanie Czatami**: Możliwość tworzenia nowych wątków ("Nowa rozmowa"), przełączania się między nimi i usuwania.
+    - **Persystencja**: Czaty i ich historia są teraz trwale zapisywane w Firestore (`andromeda_chats`), co pozwala na powrót do rozmowy w dowolnym momencie.
+    - **Tytułowanie**: Automatyczne generowanie tytułów rozmów na podstawie pierwszej wiadomości.
+- **Obsługa Plików i Baza Wiedzy**:
+    - **Przesyłanie Plików**: Dodano przycisk "spinacza" (PaperClip) w interfejsie czatu. Obsługa formatów tekstowych (.txt, .md, .json, .xml).
+    - **Analiza Dokumentów**: Przesłane pliki są automatycznie analizowane przez backend (Gemini).
+    - **Trwała Pamięć Sprawy**: Wdrożono narzędzie backendowe `add_to_chat_knowledge`, które pozwala AI zapamiętywać kluczowe fakty z dokumentów w kontekście konkretnego wątku.
+- **Zmiany w UI/UX**:
+    - **Ergonomia**: Przeniesienie przycisku dodawania plików na lewą stronę pola tekstowego, oddzielając go od przycisku wysyłania.
+    - **Ikony**: Dodano brakujące ikony (Bars3Icon, TrashIcon, PaperClipIcon) do systemu ikonografii.
+    - **Backend**: Aktualizacja Cloud Functions (`askAndromeda`) o obsługę `chatId` i kontekstowe wczytywanie wiedzy.
+
+---
+
 ### [temp-hash] 2026-01-22 21:00 | fix: FIREBASE history fix!!!!!!!!!! and admin notes minimization
 **Zadania:**
 - **FIREBASE history fix!!!!!!!!!!**:

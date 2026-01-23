@@ -67,6 +67,7 @@ import GlobalAnnouncement from './components/GlobalAnnouncement';
 import AdminBroadcastInput from './components/AdminBroadcastInput';
 import PWAUpdateNotification from './components/PWAUpdateNotification';
 import AppHelpSidebar from './components/AppHelpSidebar';
+import AndromedaAssistant from './components/AndromedaAssistant';
 
 const GlobalAdminNotes = React.lazy(() => import('./components/GlobalAdminNotes'));
 
@@ -246,6 +247,7 @@ const App: React.FC = () => {
   const [documentsModalChatId, setDocumentsModalChatId] = useState<string | null>(null);
   const [isWelcomeAssistantOpen, setIsWelcomeAssistantOpen] = useState(false);
   const [welcomeModalInitialViewMode, setWelcomeModalInitialViewMode] = useState<'selection' | 'input'>('selection');
+  const [isShowAndromeda, setIsShowAndromeda] = useState(false);
 
   // Trigger Welcome Assistant for new users
   useEffect(() => {
@@ -799,7 +801,6 @@ const App: React.FC = () => {
 
   const handleGoHome = () => {
     resetNavigation();
-    setChatHistory([]);
   };
 
   const handleBackToLawArea = () => {
@@ -828,38 +829,46 @@ const App: React.FC = () => {
 
   const handleUniversalBack = () => {
     if (selectedTopic) {
-      // W czacie -> powrót do wyboru tematu
       setSelectedTopic(null);
     } else if (!selectedTopic && interactionMode && (servicePath === 'pro')) {
-      // W wyborze tematów (ścieżka PRO) -> powrót do wyboru usługi (PRO/Hub)
       setServicePath(null);
       setInteractionMode(null);
       setCourtRole(null);
     } else if (!selectedTopic && interactionMode && (servicePath === 'hub' || servicePath === 'standard' || !servicePath)) {
-      // W wyborze tematów (ścieżka Hub/Standard) -> powrót do wyboru usługi (PRO/Hub)
       setServicePath(null);
       setInteractionMode(null);
       setCourtRole(null);
     } else if (!selectedTopic && !interactionMode && (servicePath === 'hub' || servicePath === 'standard')) {
-      // W Hubie -> powrót do wyboru usługi (PRO/Hub)
       setServicePath(null);
     } else if (!selectedTopic && !interactionMode && !servicePath && selectedLawArea) {
-      // W wyborze usługi -> powrót do wyboru dziedziny
       setSelectedLawArea(null);
     }
   };
 
-  const isAppDataLoading = authLoading || profileLoading || (isLoading && chatHistory.length === 0 && !interactionMode && !isWelcomeModalOpen && selectedTopic);
-
-  // Consolidated loading experience with marketing messages
   if (!isSplashDismissed) {
     return (
       <SplashScreen
-        isReady={!isAppDataLoading}
-        onStart={() => setIsSplashDismissed(true)}
+        isReady={!authLoading && !profileLoading}
+        onStart={() => {
+          setIsShowAndromeda(true);
+          setIsSplashDismissed(true);
+        }}
       />
     );
   }
+
+  if (isShowAndromeda) {
+    return (
+      <AndromedaAssistant
+        onProceed={() => setIsShowAndromeda(false)}
+        userProfile={userProfile}
+      />
+    );
+  }
+
+  const isAppDataLoading = authLoading || profileLoading || (isLoading && chatHistory.length === 0 && !interactionMode && !isWelcomeModalOpen && selectedTopic);
+
+  // Consolidated loading experience with marketing messages
 
   if (!user) {
     return <Auth />;
@@ -904,6 +913,12 @@ const App: React.FC = () => {
 
   return (
     <>
+      {isShowAndromeda && (
+        <AndromedaAssistant
+          onProceed={() => setIsShowAndromeda(false)}
+          language={i18n.language}
+        />
+      )}
       <PWAUpdateNotification />
       {isAdmin && (
         <React.Suspense fallback={null}>
@@ -1118,6 +1133,7 @@ const App: React.FC = () => {
                 setInteractionMode(data.interactionMode);
               });
             } : undefined}
+            onAndromedaClick={() => setIsShowAndromeda(true)}
           />
         )}
 
