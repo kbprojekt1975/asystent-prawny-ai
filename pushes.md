@@ -10,7 +10,7 @@
 ---
 ---
 
-### [pending] 2026-01-24 00:10 | fix: Absolute Language Override in Andromeda
+### [b9f9b2b] 2026-01-24 00:10 | fix: Absolute Language Override in Andromeda
 **Naprawiono:**
 - **Nuclear Option**: Dodano sekcję "ABSOLUTE LANGUAGE REQUIREMENT" na samym początku promptu systemowego (przed wszystkimi innymi instrukcjami)
 - **Caps Lock + Emoji**: Użyto wielkich liter i emoji ostrzeżenia (⚠️), aby model nie mógł zignorować instrukcji językowej
