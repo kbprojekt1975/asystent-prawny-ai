@@ -10,7 +10,7 @@
 ---
 ---
 
-### [pending] 2026-01-23 23:30 | fix: Loading Spinner Localization
+### [035dbd0] 2026-01-23 23:30 | fix: Loading Spinner Localization
 **Naprawiono:**
 - **UI**: Zastąpiono tekst "Analizuję Twoje zapytanie..." dynamicznym tłumaczeniem w komponencie ładującym.
 - **Backend**: (Potwierdzenie) Wymuszenie języka odpowiedzi w promptach systemowych.
