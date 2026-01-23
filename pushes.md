@@ -9,7 +9,7 @@
 
 ---
 
-### [pending] 2026-01-23 22:00 | feat: Andromeda Multilingual Support (EN/ES) & Function Rebuild
+### [5dbfbb5] 2026-01-23 22:00 | feat: Andromeda Multilingual Support (EN/ES) & Function Rebuild
 **Zadania:**
 - **Wsparcie Językowe**:
     - **Backend (Cloud Functions)**: Dynamiczne instrukcje systemowe w `askAndromeda`, które dostosowują "osobowość" i język odpowiedzi AI (Polski, Angielski, Hiszpański) w zależności od parametru `language`.
