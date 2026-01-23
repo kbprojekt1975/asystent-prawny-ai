@@ -6,7 +6,8 @@ export enum LawArea {
   Labor = 'Prawo Pracy',
   RealEstate = 'Prawo Nieruchomości',
   Tax = 'Prawo Podatkowe',
-  Administrative = 'Prawo Administracyjne'
+  Administrative = 'Prawo Administracyjne',
+  Universal = 'Asystent Prawny'
 }
 
 export enum InteractionMode {

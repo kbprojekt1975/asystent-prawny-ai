@@ -26,7 +26,9 @@ const isLocalhost = location.hostname === "localhost" || location.hostname === "
 const isNgrok = location.hostname.endsWith(".ngrok-free.app") || location.hostname.endsWith(".ngrok.io");
 const isLocalNetwork = /^192\.168\.|^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(location.hostname);
 
-if (isLocalhost || isNgrok || isLocalNetwork) {
+const USE_EMULATORS = localStorage.getItem('useEmulators') === 'true';
+
+if ((isLocalhost || isNgrok || isLocalNetwork) && USE_EMULATORS) {
   const host = isLocalhost ? "127.0.0.1" : location.hostname;
   console.log(`Connecting to Firebase Emulators on ${host}...`);
 
@@ -34,6 +36,8 @@ if (isLocalhost || isNgrok || isLocalNetwork) {
   connectFirestoreEmulator(db, host, 8080);
   connectFunctionsEmulator(functions, host, 5001);
   connectStorageEmulator(storage, host, 9199);
+} else {
+  console.log("Using production Firebase environment.");
 }
 
 // 2. Enable persistence (After emulator connection, if any)

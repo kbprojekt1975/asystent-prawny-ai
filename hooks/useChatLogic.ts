@@ -20,6 +20,28 @@ interface UseChatLogicProps {
     isLocalOnly?: boolean;
 }
 
+const normalizeHistory = (history: ChatMessage[]): ChatMessage[] => {
+    const alternating: ChatMessage[] = [];
+    // Filter out system messages as they are handled separately by the backend
+    const nonSystem = history.filter(m => m.role !== 'system');
+
+    nonSystem.forEach((msg) => {
+        if (alternating.length > 0 && alternating[alternating.length - 1].role === msg.role) {
+            // Merge consecutive messages of the same role
+            alternating[alternating.length - 1].content += "\n\n" + msg.content;
+            if (msg.sources) {
+                alternating[alternating.length - 1].sources = [
+                    ...(alternating[alternating.length - 1].sources || []),
+                    ...msg.sources
+                ];
+            }
+        } else {
+            alternating.push({ ...msg });
+        }
+    });
+    return alternating;
+};
+
 export const useChatLogic = ({
     user,
     userProfile,
@@ -174,8 +196,10 @@ export const useChatLogic = ({
                 }, { merge: true });
             }
 
+            const normalizedHistoryForAI = normalizeHistory(newHistory);
+
             const aiResponse = await getLegalAdvice(
-                newHistory,
+                normalizedHistoryForAI,
                 effectiveLawArea,
                 effectiveInteractionMode,
                 effectiveTopic,
