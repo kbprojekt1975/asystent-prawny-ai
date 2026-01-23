@@ -1,5 +1,8 @@
 # Historia zmian i wdrożeń (GitHub Pushes Log)
-**Ostatnia aktualizacja:** 2026-01-22 21:00
+
+| Date | Branch | Commit Hash | Message |
+| :--- | :--- | :--- | :--- |
+| 2026-01-23 | main | 27d656b | fix: resolve asystent prawny validation error and normalize chat history roles |
 
 ---
 
@@ -25,7 +28,7 @@
     - **Integracja Kontekstu**: Płynne przełączanie między "Obecną sprawą", "Historią" a "Nową kartą" bez błędów typu TypeError.
 - **Optymalizacja Mobilna**:
     - Bardziej kompaktowy układ selektora kontekstu (mniejsze paddingi, mniejsze czcionki).
-    - Ukrycie zbędnych opisów w siatce narzędzi na mobile dla lepszej przejrzystości.
+    - Ukrycie zbędnych opisów w siatce narzędzi na mobile dla lepszej przejrzości.
     - Poprawione wyrównanie ikon i etykiet na małych ekranach.
 - **Inne**: Naprawiono błąd "martwego" menu bocznego na stronie głównej (dodano domyślny obszar prawa).
 
@@ -171,11 +174,11 @@
 
 ### [fd1ed61] 2026-01-16 19:32 | feat: implement FAQ translations, update dependencies, and fix splash screen typo
 **Zadania:**
-1. **Aktualizacja zależności backendu** (`functions/package.json`): Podbito `firebase-functions` do `^7.0.3`.
-2. **Rozwiązanie blokad infrastrukturalnych**: Włączono wymagane API (Cloud Build, Compute Engine, Pub/Sub).
-3. **Poprawka tłumaczeń FAQ (Backend)** (`functions/src/index.ts`): Wsparcie dla parametru `language`.
-4. **Poprawka tłumaczeń FAQ (Frontend)** (`components/LegalFAQ.tsx`): Tłumaczenie nagłówków dziedzin prawa.
-5. **Finalny Deployment**: Wdrążenie funkcji Firebase.
+- **Aktualizacja zależności backendu** (`functions/package.json`): Podbito `firebase-functions` do `^7.0.3`.
+- **Rozwiązanie blokad infrastrukturalnych**: Włączono wymagane API (Cloud Build, Compute Engine, Pub/Sub).
+- **Poprawka tłumaczeń FAQ (Backend)** (`functions/src/index.ts`): Wsparcie dla parametru `language`.
+- **Poprawka tłumaczeń FAQ (Frontend)** (`components/LegalFAQ.tsx`): Tłumaczenie nagłówków dziedzin prawa.
+- **Finalny Deployment**: Wdrążenie funkcji Firebase.
 
 ---
 
