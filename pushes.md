@@ -10,6 +10,10 @@
 ---
 ---
 
+### [pending] 2026-01-23 23:00 | fix: Enforce Andromeda Response Language
+**Naprawiono:**
+- **Prompt Engineering**: Wdrożono "CRITICAL INSTRUCTION" w promptach systemowych, wymuszając odpowiedź w wybranym języku (EN/ES) niezależnie od języka kontekstu prawnego (RAG).
+
 ### [56f6105] 2026-01-23 22:30 | fix: Andromeda UI Localization
 **Naprawiono:**
 - **Tłumaczenie Interfejsu**: Wszystkie elementy UI Andromedy (nagłówki, placeholdery, etykiety) są teraz dynamicznie tłumaczone (PL, EN, ES).

@@ -2983,7 +2983,9 @@ export const askAndromeda = onCall({
     - Legal basis (marked as **Legal Basis**).
     - Recommended steps or conclusion.
 
-    Answer in English.
+    # CRITICAL INSTRUCTION:
+    Regardless of the language of the provided context or knowledge base, you MUST answer in English. Translate any Polish legal terms or context into English for the user.
+    OUTPUT LANGUAGE: ENGLISH.
     `;
     } else if (language.startsWith('es')) {
         systemInstruction = `
@@ -3009,7 +3011,9 @@ export const askAndromeda = onCall({
     - Base legal (marcada como **Base Legal**).
     - Pasos recomendados o conclusión.
 
-    Responde en español.
+    # INSTRUCCIÓN CRÍTICA:
+    Independientemente del idioma del contexto proporcionado o de la base de conocimientos, DEBES responder en español. Traduce cualquier término legal polaco o contexto al español para el usuario.
+    IDIOMA DE SALIDA: ESPAÑOL.
     `;
     } else {
         systemInstruction = `
