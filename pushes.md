@@ -7,6 +7,17 @@
 
 ---
 
+---
+
+### [pending] 2026-01-23 22:00 | feat: Andromeda Multilingual Support (EN/ES) & Function Rebuild
+**Zadania:**
+- **Wsparcie Językowe**:
+    - **Backend (Cloud Functions)**: Dynamiczne instrukcje systemowe w `askAndromeda`, które dostosowują "osobowość" i język odpowiedzi AI (Polski, Angielski, Hiszpański) w zależności od parametru `language`.
+    - **Zachowanie Wiedzy**: System zachowuje dostęp do polskiej bazy prawnej (ISAP/SAOS) niezależnie od języka rozmowy, tłumacząc zawiłości prawne na język użytkownika.
+- **Konserwacja**:
+    - **Rebuild funkcji**: Przebudowa i ponowne wdrożenie Cloud Functions po zmianach w logice językowej.
+    - **Dokumentacja**: Aktualizacja logów wdrożeniowych.
+
 ### [f819413] 2026-01-23 21:50 | feat: Andromeda Chat & Knowledge Base implementation
 **Zadania:**
 - **Historia Wielowątkowa (Multi-Topic History)**:
@@ -22,6 +33,7 @@
     - **Ergonomia**: Przeniesienie przycisku dodawania plików na lewą stronę pola tekstowego, oddzielając go od przycisku wysyłania.
     - **Ikony**: Dodano brakujące ikony (Bars3Icon, TrashIcon, PaperClipIcon) do systemu ikonografii.
     - **Backend**: Aktualizacja Cloud Functions (`askAndromeda`) o obsługę `chatId` i kontekstowe wczytywanie wiedzy.
+    - **Wsparcie Językowe**: Pełna obsługa języka angielskiego (EN) i hiszpańskiego (ES) w Andromedzie, z dedykowanymi promptami systemowymi.
 
 ---
 
