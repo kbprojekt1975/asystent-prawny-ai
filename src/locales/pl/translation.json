@@ -798,6 +798,21 @@
             "inputPlaceholder": "Np. Zarabiam 4000 zł, a na jedzenie dla dziecka wydaję 600 zł..."
         }
     },
+    "andromeda": {
+        "sidebarTitle": "Historia Andromeda",
+        "newChat": "Nowa rozmowa",
+        "active": "Aktywny",
+        "subtitle": "Wirtualny Kompas Prawny",
+        "inputPlaceholder": "Np.: Rozwód bez orzekania o winie - jak zacząć?",
+        "modeGlobal": "Tryb: Globalny",
+        "baseIsapSaos": "Baza: ISAP + SAOS",
+        "uploadFile": "Dodaj plik do analizy",
+        "welcomeTitle": "W czym mogę Ci dzisiaj pomóc?",
+        "welcomeDesc": "Zadaj dowolne pytanie prawne. Przeszukam dla Ciebie aktualne przepisy, wyroki oraz najnowsze informacje.",
+        "fileUploaded": "Przesłano plik: {{name}}",
+        "analyzingFile": "Analiza dokumentu...",
+        "error": "Przepraszam, wystąpił błąd. Spróbuj ponownie."
+    },
     "quickActionsModal": {
         "title": "Szybkie Akcje",
         "noActions": "Brak zdefiniowanych szybkich akcji. Możesz je dodać w Panelu Użytkownika."

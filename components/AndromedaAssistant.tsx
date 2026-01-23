@@ -206,7 +206,7 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
             `}>
                 <div className="flex flex-col h-full">
                     <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Historia Andromeda</span>
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{t('andromeda.sidebarTitle')}</span>
                         <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-1 text-slate-400 hover:text-white">
                             <PlusIcon className="w-5 h-5 rotate-45" />
                         </button>
@@ -218,7 +218,7 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
                             className="w-full flex items-center gap-2 justify-center py-2 px-4 bg-cyan-600/10 hover:bg-cyan-600/20 text-cyan-400 rounded-xl transition-all border border-cyan-500/20 font-medium text-sm mb-4"
                         >
                             <PlusIcon className="w-4 h-4" />
-                            <span>Nowa rozmowa</span>
+                            <span>{t('andromeda.newChat')}</span>
                         </button>
                     </div>
 
@@ -250,7 +250,7 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs font-medium text-white truncate">{user?.email}</p>
-                                <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Aktywny</p>
+                                <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">{t('andromeda.active')}</p>
                             </div>
                         </div>
                     </div>
@@ -289,7 +289,7 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
                             <h1 className="text-base md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 tracking-tight">
                                 Andromeda
                             </h1>
-                            <p className="text-[8px] md:text-[10px] text-cyan-400 uppercase tracking-widest font-bold">Wirtualny Kompas Prawny</p>
+                            <p className="text-[8px] md:text-[10px] text-cyan-400 uppercase tracking-widest font-bold">{t('andromeda.subtitle')}</p>
                         </div>
                     </div>
                     <button
@@ -314,9 +314,9 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
                                     <BotIcon className="w-8 h-8 md:w-10 md:h-10 text-cyan-400" />
                                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-4 border-slate-950 animate-pulse" />
                                 </div>
-                                <h2 className="text-xl md:text-3xl font-bold text-white mb-4 px-4">W czym mogę Ci dzisiaj pomóc?</h2>
+                                <h2 className="text-xl md:text-3xl font-bold text-white mb-4 px-4">{t('andromeda.welcomeTitle')}</h2>
                                 <p className="text-slate-400 text-sm md:text-lg max-w-md mx-auto leading-relaxed px-6">
-                                    Zadaj dowolne pytanie prawne. Przeszukam dla Ciebie aktualne przepisy, wyroki oraz najnowsze informacje.
+                                    {t('andromeda.welcomeDesc')}
                                 </p>
                             </div>
                         )}
@@ -341,7 +341,7 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
                             <div className="flex justify-start">
                                 <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center gap-3 shadow-xl">
                                     <LoadingSpinner size="sm" color="cyan" />
-                                    <span className="text-sm text-slate-400 font-medium animate-pulse truncate">Andromeda analizuje sprawę...</span>
+                                    <span className="text-sm text-slate-400 font-medium animate-pulse truncate">{t('andromeda.analyzingFile')}</span>
                                 </div>
                             </div>
                         )}
@@ -359,7 +359,7 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder="Np.: Rozwód bez orzekania o winie - jak zacząć?"
+                                placeholder={t('andromeda.inputPlaceholder')}
                                 className="w-full bg-transparent px-4 py-4 text-white placeholder-slate-500 focus:outline-none resize-none min-h-[60px] max-h-[300px] text-sm md:text-base"
                                 rows={1}
                             />
@@ -376,13 +376,13 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
                                         onClick={() => fileInputRef.current?.click()}
                                         disabled={isLoading}
                                         className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all border border-transparent hover:border-slate-600"
-                                        title="Dodaj plik do analizy"
+                                        title={t('andromeda.uploadFile')}
                                     >
                                         <PaperClipIcon className="w-5 h-5" />
                                     </button>
                                     <div className="hidden md:flex flex-col text-[8px] md:text-[10px] text-slate-500 uppercase tracking-widest font-bold truncate">
-                                        <span>Tryb: Globalny</span>
-                                        <span>Baza: ISAP + SAOS</span>
+                                        <span>{t('andromeda.modeGlobal')}</span>
+                                        <span>{t('andromeda.baseIsapSaos')}</span>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">

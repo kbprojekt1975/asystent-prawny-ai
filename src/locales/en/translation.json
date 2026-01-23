@@ -798,6 +798,21 @@
             "inputPlaceholder": "E.g. I earn 4000 PLN, and I spend 600 PLN on food for the child..."
         }
     },
+    "andromeda": {
+        "sidebarTitle": "Andromeda History",
+        "newChat": "New Conversation",
+        "active": "Active",
+        "subtitle": "Virtual Legal Compass",
+        "inputPlaceholder": "Ex: Divorce without adjudication of guilt - how to start?",
+        "modeGlobal": "Mode: Global",
+        "baseIsapSaos": "Base: ISAP + SAOS",
+        "uploadFile": "Upload file for analysis",
+        "welcomeTitle": "How can I help you today?",
+        "welcomeDesc": "Ask any legal question. I will search current regulations, judgments, and the latest information for you.",
+        "fileUploaded": "Uploaded file: {{name}}",
+        "analyzingFile": "Analyzing document...",
+        "error": "Sorry, an error occurred. Please try again."
+    },
     "quickActionsModal": {
         "title": "Quick Actions",
         "noActions": "No quick actions defined. You can add them in the User Panel."

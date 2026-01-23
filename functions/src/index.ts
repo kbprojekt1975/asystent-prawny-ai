@@ -2940,6 +2940,7 @@ export const askAndromeda = onCall({
     if (!genAI) throw new HttpsError('failed-precondition', 'AI Client not initialized.');
 
     const { history, language = 'pl', chatId } = request.data;
+    logger.info(`askAndromeda called with language: ${language}, chatId: ${chatId}`);
     const uid = request.auth?.uid;
 
     // Fetch existing knowledge if chatId is provided
@@ -2958,7 +2959,7 @@ export const askAndromeda = onCall({
 
     let systemInstruction = "";
 
-    if (language === 'en') {
+    if (language.startsWith('en')) {
         systemInstruction = `
     # ROLE: ANDROMEDA - ALL-KNOWING LEGAL COMPASS
     You are Andromeda, the most advanced AI legal assistant. Your task is to provide immediate, precise, and comprehensive answers to any legal questions.
@@ -2984,7 +2985,7 @@ export const askAndromeda = onCall({
 
     Answer in English.
     `;
-    } else if (language === 'es') {
+    } else if (language.startsWith('es')) {
         systemInstruction = `
     # ROL: ANDROMEDA - BRÚJULA LEGAL OMNISCIENTE
     Eres Andrómeda, el asistente legal de IA más avanzado. Tu tarea es proporcionar respuestas inmediatas, precisas y completas a cualquier pregunta legal.

@@ -790,6 +790,21 @@
             "inputPlaceholder": "Ej. Gano 4000 PLN y gasto 600 PLN en comida para el niño..."
         }
     },
+    "andromeda": {
+        "sidebarTitle": "Historia Andromeda",
+        "newChat": "Nueva conversación",
+        "active": "Activo",
+        "subtitle": "Brújula Legal Virtual",
+        "inputPlaceholder": "Ej.: Divorcio sin adjudicación de culpa - ¿cómo empezar?",
+        "modeGlobal": "Modo: Global",
+        "baseIsapSaos": "Base: ISAP + SAOS",
+        "uploadFile": "Subir archivo para análisis",
+        "welcomeTitle": "¿En qué puedo ayudarte hoy?",
+        "welcomeDesc": "Haz cualquier pregunta legal. Buscaré regulaciones actuales, sentencias y la información más reciente para ti.",
+        "fileUploaded": "Archivo subido: {{name}}",
+        "analyzingFile": "Analizando documento...",
+        "error": "Lo siento, ocurrió un error. Inténtalo de nuevo."
+    },
     "quickActionsModal": {
         "title": "Acciones Rápidas",
         "noActions": "No hay acciones rápidas definidas. Puedes añadirlas en el Panel de Usuario."

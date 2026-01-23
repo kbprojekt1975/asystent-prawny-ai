@@ -8,6 +8,12 @@
 ---
 
 ---
+---
+
+### [pending] 2026-01-23 22:30 | fix: Andromeda UI Localization
+**Naprawiono:**
+- **Tłumaczenie Interfejsu**: Wszystkie elementy UI Andromedy (nagłówki, placeholdery, etykiety) są teraz dynamicznie tłumaczone (PL, EN, ES).
+- **Backend**: Poprawiono detekcję języka, aby obsługiwała warianty lokalne (np. en-US).
 
 ### [5dbfbb5] 2026-01-23 22:00 | feat: Andromeda Multilingual Support (EN/ES) & Function Rebuild
 **Zadania:**
