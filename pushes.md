@@ -10,7 +10,7 @@
 ---
 ---
 
-### [pending] 2026-01-23 23:50 | fix: Refine Andromeda Persona for International Users
+### [8b82238] 2026-01-23 23:50 | fix: Refine Andromeda Persona for International Users
 **Naprawiono:**
 - **System Prompt**: Zmieniono definicję roli dla EN/ES. Zamiast "Asystent prawny" (co sugerowało polską jurysdykcję i język), Andromeda działa teraz jako "International Legal Consultant", którego misją jest wyjaśnianie polskiego prawa użytkownikom zagranicznym. To eliminuje blokadę "I am designed to provide legal assistance in Polish".
 
