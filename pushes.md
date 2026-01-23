@@ -2,11 +2,12 @@
 
 | Date | Branch | Commit Hash | Message |
 | :--- | :--- | :--- | :--- |
+| 2026-01-23 | main | f819413 | feat: Andromeda Chat & Knowledge Base - implementation of multi-topic history, file analysis, and responsive UI |
 | 2026-01-23 | main | 27d656b | fix: resolve asystent prawny validation error and normalize chat history roles |
 
 ---
 
-### [pending] 2026-01-23 21:50 | feat: Andromeda Chat & Knowledge Base implementation
+### [f819413] 2026-01-23 21:50 | feat: Andromeda Chat & Knowledge Base implementation
 **Zadania:**
 - **Historia Wielowątkowa (Multi-Topic History)**:
     - **Panel Boczny (Sidebar)**: Responsywny panel (stały na PC, wysuwany "drawer" na mobile) zarządzający listą rozmów.
