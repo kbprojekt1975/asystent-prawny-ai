@@ -861,7 +861,7 @@ const App: React.FC = () => {
     return (
       <AndromedaAssistant
         onProceed={() => setIsShowAndromeda(false)}
-        userProfile={userProfile}
+        language={i18n.language}
       />
     );
   }
