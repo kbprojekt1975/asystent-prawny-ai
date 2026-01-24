@@ -10,6 +10,16 @@
 ---
 ---
 
+### [temp-hash] 2026-01-24 14:45 | feat: implementacja proaktywnego zapytania o instalację PWA
+**Zadania:**
+- **Prompt Instalacji (PWA)**:
+    - Dodano mechanizm wykrywania gotowości do instalacji (`beforeinstallprompt`).
+    - Nowy komponent `InstallPWAPrompt` – eleganckie okno z pytaniem o instalację aplikacji.
+    - Funkcja „Nie pytaj więcej” – wybór użytkownika jest zapisywany w profilu (Firestore) i trwale respektowany.
+    - Automatyczne wyzwalanie promptu z 3-sekundowym opóźnieniem przy pierwszym uruchomieniu po zalogowaniu.
+- **Tłumaczenia**:
+    - Pełna polska lokalizacja dla wszystkich komunikatów związanych z instalacją.
+
 ### [6ecd228] 2026-01-24 11:50 | style: poprawa UI
 **Zadania:**
 - **Ikona Andromeda (Header)**:

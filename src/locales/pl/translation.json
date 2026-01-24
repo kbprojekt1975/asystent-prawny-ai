@@ -152,6 +152,13 @@
         "myPlan": "Mój Plan",
         "balance": "Saldo"
     },
+    "install": {
+        "title": "Zainstaluj aplikację",
+        "description": "Dodaj nas do ekany głównego, aby mieć szybki dostęp do swoich spraw i otrzymywać powiadomienia nawet bez przeglądarki.",
+        "button": "Zainstaluj teraz",
+        "later": "Może później",
+        "dont_ask": "Nie pytaj więcej"
+    },
     "law": {
         "header": "Wybierz dziedzinę prawa lub skorzystaj z inteligentnej analizy.",
         "analyzeMyCase": "Analizuj moją sprawę",

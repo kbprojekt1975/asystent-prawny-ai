@@ -212,6 +212,10 @@ const App: React.FC = () => {
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       console.log('User accepted the install prompt');
+      handleUpdateProfile({
+        ...userProfile,
+        hasDismissedPwaInstall: true
+      }, false);
     }
     setDeferredPrompt(null);
   };
@@ -248,6 +252,7 @@ const App: React.FC = () => {
   const [isWelcomeAssistantOpen, setIsWelcomeAssistantOpen] = useState(false);
   const [welcomeModalInitialViewMode, setWelcomeModalInitialViewMode] = useState<'selection' | 'input'>('selection');
   const [isShowAndromeda, setIsShowAndromeda] = useState(false);
+  const [isInstallPromptOpen, setIsInstallPromptOpen] = useState(false);
 
   // Trigger Welcome Assistant for new users
   useEffect(() => {
@@ -259,6 +264,17 @@ const App: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [user, userProfile?.hasSeenWelcomeAssistant]);
+
+  // Trigger PWA Install Prompt
+  useEffect(() => {
+    if (deferredPrompt && userProfile && !userProfile.hasDismissedPwaInstall && !isInstallPromptOpen) {
+      // Delay slightly so it doesn't pop up immediately on first load
+      const timer = setTimeout(() => {
+        setIsInstallPromptOpen(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [deferredPrompt, userProfile?.hasDismissedPwaInstall, isInstallPromptOpen]);
 
   // --- Mobile Toolbar Logic ---
   const [mobileToolbarAlwaysShow, setMobileToolbarAlwaysShow] = useState(() => {
@@ -985,6 +1001,9 @@ const App: React.FC = () => {
         isLocalOnly={isLocalOnly}
         isWelcomeAssistantOpen={isWelcomeAssistantOpen}
         setIsWelcomeAssistantOpen={setIsWelcomeAssistantOpen}
+        isInstallPromptOpen={isInstallPromptOpen}
+        setIsInstallPromptOpen={setIsInstallPromptOpen}
+        onInstall={handleInstallApp}
       />
 
       <PlanSelectionModal

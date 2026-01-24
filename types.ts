@@ -128,6 +128,7 @@ export interface UserProfile {
   hasSeenWelcomeAssistant?: boolean;
   cookieConsent?: boolean;
   cookieConsentDate?: any;
+  hasDismissedPwaInstall?: boolean;
 }
 
 export interface LegalAct {

@@ -11,6 +11,7 @@ import PlanSelectionModal from './PlanSelectionModal';
 import DocumentPreviewModal from './DocumentPreviewModal';
 import CaseManagementModal from './CaseManagementModal';
 import WelcomeAssistantModal from './WelcomeAssistantModal';
+import InstallPWAPrompt from './InstallPWAPrompt';
 
 interface AppModalsProps {
     isProfileModalOpen: boolean;
@@ -63,6 +64,9 @@ interface AppModalsProps {
 
     isWelcomeAssistantOpen: boolean;
     setIsWelcomeAssistantOpen: (open: boolean) => void;
+    isInstallPromptOpen: boolean;
+    setIsInstallPromptOpen: (open: boolean) => void;
+    onInstall: () => void;
 }
 
 const AppModals: React.FC<AppModalsProps> = ({
@@ -76,7 +80,8 @@ const AppModals: React.FC<AppModalsProps> = ({
     isPreviewModalOpen, setIsPreviewModalOpen, previewContent, previewTitle,
     isCaseManagementModalOpen, setIsCaseManagementModalOpen, currentChatId, onChangeMode,
     isLocalOnly,
-    isWelcomeAssistantOpen, setIsWelcomeAssistantOpen
+    isWelcomeAssistantOpen, setIsWelcomeAssistantOpen,
+    isInstallPromptOpen, setIsInstallPromptOpen, onInstall
 }) => {
     return (
         <>
@@ -161,6 +166,20 @@ const AppModals: React.FC<AppModalsProps> = ({
                 userId={user?.uid || ''}
                 caseId={currentChatId || ''}
                 onChangeMode={onChangeMode}
+            />
+
+            <InstallPWAPrompt
+                isOpen={isInstallPromptOpen}
+                onClose={() => setIsInstallPromptOpen(false)}
+                onInstall={onInstall}
+                onDismissForever={(dontAsk) => {
+                    if (dontAsk) {
+                        handleUpdateProfile({
+                            ...userProfile,
+                            hasDismissedPwaInstall: true
+                        }, false);
+                    }
+                }}
             />
         </>
     );
