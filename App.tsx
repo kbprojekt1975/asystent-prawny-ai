@@ -253,6 +253,7 @@ const App: React.FC = () => {
   const [welcomeModalInitialViewMode, setWelcomeModalInitialViewMode] = useState<'selection' | 'input'>('selection');
   const [isShowAndromeda, setIsShowAndromeda] = useState(false);
   const [isInstallPromptOpen, setIsInstallPromptOpen] = useState(false);
+  const [isInstallPromptSessionDismissed, setIsInstallPromptSessionDismissed] = useState(false);
 
   // Trigger Welcome Assistant for new users
   useEffect(() => {
@@ -267,14 +268,14 @@ const App: React.FC = () => {
 
   // Trigger PWA Install Prompt
   useEffect(() => {
-    if (deferredPrompt && userProfile && !userProfile.hasDismissedPwaInstall && !isInstallPromptOpen) {
+    if (deferredPrompt && userProfile && !userProfile.hasDismissedPwaInstall && !isInstallPromptOpen && !isInstallPromptSessionDismissed) {
       // Delay slightly so it doesn't pop up immediately on first load
       const timer = setTimeout(() => {
         setIsInstallPromptOpen(true);
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [deferredPrompt, userProfile?.hasDismissedPwaInstall, isInstallPromptOpen]);
+  }, [deferredPrompt, userProfile?.hasDismissedPwaInstall, isInstallPromptOpen, isInstallPromptSessionDismissed]);
 
   // --- Mobile Toolbar Logic ---
   const [mobileToolbarAlwaysShow, setMobileToolbarAlwaysShow] = useState(() => {
@@ -1002,7 +1003,10 @@ const App: React.FC = () => {
         isWelcomeAssistantOpen={isWelcomeAssistantOpen}
         setIsWelcomeAssistantOpen={setIsWelcomeAssistantOpen}
         isInstallPromptOpen={isInstallPromptOpen}
-        setIsInstallPromptOpen={setIsInstallPromptOpen}
+        setIsInstallPromptOpen={(open) => {
+          setIsInstallPromptOpen(open);
+          if (!open) setIsInstallPromptSessionDismissed(true);
+        }}
         onInstall={handleInstallApp}
       />
 
