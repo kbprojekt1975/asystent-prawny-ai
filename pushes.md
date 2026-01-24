@@ -10,7 +10,14 @@
 ---
 ---
 
-### [5480d0d] 2026-01-24 14:45 | feat: implementacja proaktywnego zapytania o instalację PWA
+### [c0838e6] 2026-01-24 16:05 | fix: zmiana domeny autoryzacji Google na asystent-prawny.pro
+**Zadania:**
+- **Firebase Auth**:
+    - Zmieniono `authDomain` na `asystent-prawny.pro` w konfiguracji Firebase.
+    - Cel: Spójność brandingu – podczas logowania przez Google użytkownicy widzą Twoją docelową domenę zamiast technicznego adresu Firebase.
+    - Synchronizacja: Skonfigurowano „Authorized JavaScript origins” oraz „Authorized redirect URIs” w Google Cloud Console.
+
+### [3318ea2] 2026-01-24 14:45 | feat: implementacja proaktywnego zapytania o instalację PWA
 **Zadania:**
 - **Prompt Instalacji (PWA)**:
     - Dodano mechanizm wykrywania gotowości do instalacji (`beforeinstallprompt`).
