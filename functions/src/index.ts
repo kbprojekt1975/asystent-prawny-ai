@@ -2941,6 +2941,8 @@ export const askAndromeda = onCall({
 
     const { history, language = 'pl', chatId } = request.data;
     logger.info(`askAndromeda called with language: ${language}, chatId: ${chatId}`);
+    logger.info(`Language parameter type: ${typeof language}, value: "${language}"`);
+    logger.info(`Language starts with 'en': ${language.startsWith('en')}, starts with 'es': ${language.startsWith('es')}`);
     const uid = request.auth?.uid;
 
     // Fetch existing knowledge if chatId is provided
@@ -3054,6 +3056,9 @@ export const askAndromeda = onCall({
     Odpowiadaj w języku polskim.
     `;
     }
+
+    logger.info(`Selected language branch: ${language.startsWith('en') ? 'ENGLISH' : language.startsWith('es') ? 'SPANISH' : 'POLISH'}`);
+    logger.info(`System instruction preview (first 300 chars): ${systemInstruction.substring(0, 300)}...`);
 
     const model = genAI.getGenerativeModel({
         model: 'gemini-2.0-flash-exp',
