@@ -38,7 +38,7 @@ const InstallPWAPrompt: React.FC<InstallPWAPromptProps> = ({ isOpen, onClose, on
                         {t('install.title', 'Zainstaluj aplikację')}
                     </h2>
                     <p className="text-slate-400 text-sm leading-relaxed">
-                        {t('install.description', 'Dodaj nas do ekany głównego, aby mieć szybki dostęp do swoich spraw i otrzymywać powiadomienia nawet bez przeglądarki.')}
+                        {t('install.description', 'Dodaj nas do ekranu głównego, aby mieć szybki dostęp do swoich spraw i otrzymywać powiadomienia nawet bez przeglądarki.')}
                     </p>
                 </div>
 
