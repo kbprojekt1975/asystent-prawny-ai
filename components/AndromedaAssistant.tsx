@@ -33,19 +33,10 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onPr
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [placeholderIndex, setPlaceholderIndex] = useState(0);
     const [isPlaceholderVisible, setIsPlaceholderVisible] = useState(true);
+    const [isLocalOnly, setIsLocalOnly] = useState(false);
+    const [localChats, setLocalChats] = useState<AndromedaChat[]>([]);
 
-    const placeholders = [
-        "Np.: Rozwód bez orzekania o winie - jak zacząć?",
-        "Np.: Jak odzyskać kaucję za wynajem mieszkania?",
-        "Np.: Czy pracodawca może skrócić okres wypowiedzenia?",
-        "Np.: Jak napisać wezwanie do zapłaty?",
-        "Np.: Co grozi za jazdę po alkoholu?",
-        "Np.: Jak przeprowadzić podział majątku po rozwodzie?",
-        "Np.: Reklamacja towaru z tytułu rękojmi - co muszę wiedzieć?",
-        "Np.: Jakie są zasady dziedziczenia ustawowego?",
-        "Np.: Jak złożyć wniosek o upadłość konsumencką?",
-        "Np.: Mobbing w pracy - jak zbierać dowody?"
-    ];
+    const placeholders = t('andromeda.placeholders', { returnObjects: true }) as string[];
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -86,15 +77,39 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onPr
             try {
                 const profileDoc = await getDoc(doc(db, 'users', user.uid));
                 if (profileDoc.exists()) {
-                    setUserProfile(profileDoc.data().profile as UserProfile);
+                    const profile = profileDoc.data().profile as UserProfile;
+                    setUserProfile(profile);
+                    setIsLocalOnly(!profile.dataProcessingConsent);
+                } else {
+                    // Default to local if no profile exists yet
+                    setIsLocalOnly(true);
                 }
             } catch (error) {
                 console.error('Error fetching user profile:', error);
+                setIsLocalOnly(true);
             }
         };
 
         fetchProfile();
     }, [user]);
+
+    // Load Local Chats
+    useEffect(() => {
+        if (!isLocalOnly) return;
+        const saved = localStorage.getItem('andromeda_local_chats');
+        if (saved) {
+            try {
+                setLocalChats(JSON.parse(saved));
+            } catch (e) {
+                console.error("Local chats parse error:", e);
+            }
+        }
+    }, [isLocalOnly]);
+
+    const saveLocalChats = (updatedChats: AndromedaChat[]) => {
+        setLocalChats(updatedChats);
+        localStorage.setItem('andromeda_local_chats', JSON.stringify(updatedChats));
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -120,7 +135,13 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onPr
         e.stopPropagation();
         if (!user) return;
         try {
-            await deleteDoc(doc(db, 'users', user.uid, 'andromeda_chats', chatId));
+            if (!isLocalOnly) {
+                await deleteDoc(doc(db, 'users', user.uid, 'andromeda_chats', chatId));
+            } else {
+                const updatedLocal = localChats.filter(c => c.id !== chatId);
+                saveLocalChats(updatedLocal);
+            }
+
             if (currentChatId === chatId) {
                 handleNewChat();
             }
@@ -144,21 +165,43 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onPr
             const finalHistory = [...newHistory, assistantMessage];
             setHistory(finalHistory);
 
-            // Save to Firestore
-            if (currentChatId) {
-                await updateDoc(doc(db, 'users', user.uid, 'andromeda_chats', currentChatId), {
-                    messages: finalHistory,
-                    lastUpdated: serverTimestamp()
-                });
+            // Save to Firestore OR Local Storage
+            if (!isLocalOnly) {
+                if (currentChatId) {
+                    await updateDoc(doc(db, 'users', user.uid, 'andromeda_chats', currentChatId), {
+                        messages: finalHistory,
+                        lastUpdated: serverTimestamp()
+                    });
+                } else {
+                    const title = input.length > 30 ? input.substring(0, 30) + '...' : input;
+                    const docRef = await addDoc(collection(db, 'users', user.uid, 'andromeda_chats'), {
+                        title,
+                        messages: finalHistory,
+                        lastUpdated: serverTimestamp(),
+                        createdAt: serverTimestamp()
+                    });
+                    setCurrentChatId(docRef.id);
+                }
             } else {
+                // Local Storage Logic
                 const title = input.length > 30 ? input.substring(0, 30) + '...' : input;
-                const docRef = await addDoc(collection(db, 'users', user.uid, 'andromeda_chats'), {
+                const chatId = currentChatId || `local_${Date.now()}`;
+                const newChat: AndromedaChat = {
+                    id: chatId,
                     title,
                     messages: finalHistory,
-                    lastUpdated: serverTimestamp(),
-                    createdAt: serverTimestamp()
-                });
-                setCurrentChatId(docRef.id);
+                    lastUpdated: new Date().toISOString()
+                };
+
+                const updatedLocal = [...localChats];
+                const index = updatedLocal.findIndex(c => c.id === chatId);
+                if (index > -1) {
+                    updatedLocal[index] = newChat;
+                } else {
+                    updatedLocal.unshift(newChat);
+                }
+                saveLocalChats(updatedLocal);
+                setCurrentChatId(chatId);
             }
         } catch (error) {
             console.error("Andromeda error:", error);
@@ -274,7 +317,7 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onPr
                     </div>
 
                     <div className="flex-1 overflow-y-auto px-2 space-y-1 custom-scrollbar">
-                        {chats.map((chat) => (
+                        {(isLocalOnly ? localChats : chats).map((chat) => (
                             <div
                                 key={chat.id}
                                 onClick={() => handleSelectChat(chat)}
@@ -345,7 +388,16 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onPr
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs font-medium text-white truncate">{user?.email}</p>
-                                <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">{t('andromeda.active')}</p>
+                                {isLocalOnly ? (
+                                    <div className="flex items-center gap-2 bg-red-500/20 border-red-500/50 px-3 py-2 rounded-xl animate-pulse whitespace-nowrap mt-1">
+                                        <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
+                                        <span className="text-[10px] font-bold text-red-500 uppercase tracking-tight">
+                                            {t('app.noGdprConsent')}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">{t('andromeda.active')}</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -387,6 +439,8 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onPr
                             <p className="text-[8px] md:text-[10px] text-cyan-400 uppercase tracking-widest font-bold">{t('andromeda.subtitle')}</p>
                         </div>
                     </div>
+
+
                     <button
                         onClick={onProceed}
                         className="group relative p-3 bg-slate-800/40 hover:bg-slate-700/60 rounded-xl transition-all border border-slate-700/50 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-900/20"

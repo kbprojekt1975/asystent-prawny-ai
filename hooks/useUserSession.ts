@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, onSnapshot, collection } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
-import { UserProfile, LawArea } from '../types';
+import { UserProfile, LawArea, SubscriptionStatus } from '../types';
 
 const initialProfile: UserProfile = {
     quickActions: [],
@@ -17,6 +17,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
     const [userProfile, setUserProfile] = useState<UserProfile>(initialProfile);
     const [totalCost, setTotalCost] = useState<number>(0);
     const [isLocalOnly, setIsLocalOnly] = useState<boolean>(false);
+    const [subsLoading, setSubsLoading] = useState(true);
 
     // Auth Listener
     const welcomeTriggered = useRef<string | null>(null);
@@ -178,6 +179,44 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
         return () => unsubscribe();
     }, [user]);
 
+    // Sync Stripe Subscriptions
+    useEffect(() => {
+        if (!user) return;
+
+        const subsRef = collection(db, 'customers', user.uid, 'subscriptions');
+        const unsubscribe = onSnapshot(subsRef, (snapshot) => {
+            try {
+                const activeSub = snapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() } as any))
+                    .find(sub => ['active', 'trialing'].includes(sub.status));
+
+                if (activeSub) {
+                    setUserProfile(prev => ({
+                        ...prev,
+                        subscription: {
+                            status: activeSub.status as SubscriptionStatus,
+                            isPaid: activeSub.status === 'active',
+                            activatedAt: activeSub.created,
+                            expiresAt: activeSub.current_period_end,
+                            priceId: activeSub.items?.[0]?.price?.id, // Useful for multi-plan
+                            creditLimit: 10.00, // Hardcoded for now per user req
+                            spentAmount: prev.subscription?.spentAmount || 0
+                        }
+                    }));
+                }
+            } catch (e) {
+                console.error("Error in subscription listener:", e);
+            } finally {
+                setSubsLoading(false);
+            }
+        }, (error) => {
+            console.error("Subscription listener failed:", error);
+            setSubsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user, isLocalOnly]);
+
     const handleUpdateProfile = useCallback(async (newProfile: UserProfile, isSessionOnly: boolean = false) => {
         setUserProfile(newProfile);
 
@@ -205,7 +244,8 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
     return {
         user,
         authLoading,
-        profileLoading, // Export this
+        profileLoading,
+        subsLoading,
         userProfile,
         setUserProfile,
         totalCost,

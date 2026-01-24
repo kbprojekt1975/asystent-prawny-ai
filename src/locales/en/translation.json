@@ -811,7 +811,19 @@
         "welcomeDesc": "Ask any legal question. I will search current regulations, judgments, and the latest information for you.",
         "fileUploaded": "Uploaded file: {{name}}",
         "analyzingFile": "Analyzing document...",
-        "error": "Sorry, an error occurred. Please try again."
+        "error": "Sorry, an error occurred. Please try again.",
+        "placeholders": [
+            "Ex.: Divorce without adjudication of guilt - how to start?",
+            "Ex.: How to recover the security deposit for renting an apartment?",
+            "Ex.: Can the employer shorten the notice period?",
+            "Ex.: How to write a payment demand?",
+            "Ex.: What are the penalties for drunk driving?",
+            "Ex.: How to divide assets after divorce?",
+            "Ex.: Warranty complaint for goods - what do I need to know?",
+            "Ex.: What are the rules of statutory inheritance?",
+            "Ex.: How to file for consumer bankruptcy?",
+            "Ex.: Workplace mobbing - how to collect evidence?"
+        ]
     },
     "quickActionsModal": {
         "title": "Quick Actions",

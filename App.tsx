@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LawArea, ChatMessage, InteractionMode, UserProfile, QuickAction, SubscriptionStatus, SubscriptionInfo, CourtRole, CaseNote, getChatId } from './types';
+import { LawArea, InteractionMode, ChatMessage, SubscriptionStatus, SubscriptionInfo, CourtRole, ChecklistItem, TimelineEvent, CaseNote, UserProfile, getChatId, QuickAction } from './types';
+import { auth, db, googleProvider } from './services/firebase';
+import { createCheckoutSession, PRICE_IDS } from './services/stripeService';
 import { analyzeLegalCase } from './services/geminiService';
 import LawSelector from './components/LawSelector';
 import ServiceTypeSelector from './components/ServiceTypeSelector';
@@ -41,7 +43,6 @@ import QuickActionsModal from './components/QuickActionsModal';
 import CaseAnalysisInput from './components/CaseAnalysisInput';
 import WelcomeAnalysisModal from './components/WelcomeAnalysisModal';
 import Auth from './components/Auth';
-import { auth, db } from './services/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, addDoc, getDoc, setDoc, collection, getDocs, deleteDoc, serverTimestamp, updateDoc, increment, Timestamp, onSnapshot, query, orderBy } from 'firebase/firestore';
 import PlanSelectionModal from './components/PlanSelectionModal';
@@ -108,7 +109,8 @@ const App: React.FC = () => {
     setTotalCost,
     handleUpdateProfile,
     isLocalOnly,
-    setIsLocalOnly
+    setIsLocalOnly,
+    subsLoading
   } = useUserSession(initialTopics);
 
   const {
@@ -158,15 +160,15 @@ const App: React.FC = () => {
     const sanitize = (id: string) => id.replace(/[^a-z0-9]/gi, '_').toLowerCase();
 
     if (!selectedLawArea) return 'home';
-    if (!servicePath) return `law_${sanitize(selectedLawArea)}`;
-    if (!interactionMode) return `service_${sanitize(selectedLawArea)}_${sanitize(servicePath)}`;
+    if (!servicePath) return `law_${sanitize(selectedLawArea)} `;
+    if (!interactionMode) return `service_${sanitize(selectedLawArea)}_${sanitize(servicePath)} `;
 
     if (!selectedTopic) {
       if (interactionMode === InteractionMode.Court && !courtRole) return `court_role_selection`;
-      return `mode_${sanitize(selectedLawArea)}_${sanitize(servicePath)}_${sanitize(interactionMode)}`;
+      return `mode_${sanitize(selectedLawArea)}_${sanitize(servicePath)}_${sanitize(interactionMode)} `;
     }
 
-    return `topic_${sanitize(selectedLawArea)}_${sanitize(servicePath)}_${sanitize(interactionMode)}_${sanitize(selectedTopic)}`;
+    return `topic_${sanitize(selectedLawArea)}_${sanitize(servicePath)}_${sanitize(interactionMode)}_${sanitize(selectedTopic)} `;
   }, [selectedLawArea, servicePath, interactionMode, selectedTopic, courtRole]);
 
   const handleUpdateNotePosition = async (noteId: string, position: { x: number, y: number } | null) => {
@@ -403,7 +405,7 @@ const App: React.FC = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       const scrollHeight = textareaRef.current.scrollHeight;
-      textareaRef.current.style.height = `${scrollHeight}px`;
+      textareaRef.current.style.height = `${scrollHeight} px`;
     }
   }, [currentMessage]);
 
@@ -438,7 +440,7 @@ const App: React.FC = () => {
     // Handle Contexts
     if (context === 'new') {
       const now = new Date();
-      const topicName = `Nowa sprawa (${now.toLocaleDateString()} ${now.getHours()}:${now.getMinutes()})`;
+      const topicName = `Nowa sprawa(${now.toLocaleDateString()} ${now.getHours()}: ${now.getMinutes()})`;
 
       // Step 1: Create the topic (this will update topics list and set local selectedTopic/mode)
       await handleAddTopic(topicName, mode, newServicePath);
@@ -468,11 +470,11 @@ const App: React.FC = () => {
         const modeChangeMessage = `[SYSTEM: ZMIANA TRYBU NA ${mode}]
         Użytkownik właśnie przełączył się na ten tryb pracy. 
         TWOJE ZADANIE:
-        1. Krótko streść dotychczasowe ustalenia w sprawie: ${selectedTopic}.
-        2. Wyjaśnij konkretnie, jak Twój obecnie wybrany tryb pracy wspiera użytkownika w tej sytuacji.
-        3. Zaproponuj konkretne działania (np. przygotowanie pisma, analiza konkretnego aspektu) ściśle związane z Twoją specjalizacją w tym trybie.
+1. Krótko streść dotychczasowe ustalenia w sprawie: ${selectedTopic}.
+2. Wyjaśnij konkretnie, jak Twój obecnie wybrany tryb pracy wspiera użytkownika w tej sytuacji.
+        3. Zaproponuj konkretne działania(np.przygotowanie pisma, analiza konkretnego aspektu) ściśle związane z Twoją specjalizacją w tym trybie.
         
-        SKUP SIĘ WYŁĄCZNIE NA OBECNYM TRYBIE. Nie sugeruj innych asystentów ani zmiany trybu. Pisz proaktywnie.`;
+        SKUP SIĘ WYŁĄCZNIE NA OBECNYM TRYBIE.Nie sugeruj innych asystentów ani zmiany trybu.Pisz proaktywnie.`;
 
         handleSendMessage(modeChangeMessage, chatHistory, {
           lawArea: selectedLawArea,
@@ -485,15 +487,15 @@ const App: React.FC = () => {
   };
 
   const getSystemPromptForMode = (mode: InteractionMode, lawArea: LawArea, topic: string) => {
-    let prompt = `Specjalizacja: ${lawArea}. Temat: ${topic}. Tryb: ${mode}.\n\n`;
-    prompt += `ZASADA KRYTYCZNA: Skup się wyłącznie na obecnym trybie pracy (${mode}). Nie sugeruj zmiany trybu ani korzystania z innych asystentów dostępnych w menu. Twoim celem jest realizacja zadań przypisanych wyłącznie do tej specjalizacji.\n\n`;
+    let prompt = `Specjalizacja: ${lawArea}.Temat: ${topic}.Tryb: ${mode}.\n\n`;
+    prompt += `ZASADA KRYTYCZNA: Skup się wyłącznie na obecnym trybie pracy(${mode}).Nie sugeruj zmiany trybu ani korzystania z innych asystentów dostępnych w menu.Twoim celem jest realizacja zadań przypisanych wyłącznie do tej specjalizacji.\n\n`;
 
     switch (mode) {
       case InteractionMode.StrategicAnalysis:
         prompt += `TWOJE ZADANIE: Jesteś Starszym Strategiem Procesowym. 
-        Analizuj całą dostępną dokumentację użytkownika (teczkę sprawy).
+        Analizuj całą dostępną dokumentację użytkownika(teczkę sprawy).
         1. Zidentyfikuj MOCNE i SŁABE strony stanowiska użytkownika.
-        2. Wskaż ZAGROŻENIA i SZANSE (analiza SWOT).
+        2. Wskaż ZAGROŻENIA i SZANSE(analiza SWOT).
         3. Szukaj słabych punktów strony przeciwnej.
         4. Oszacuj PROCENTOWO szanse na wygraną na podstawie dowodów.
         5. Sugeruj konkretne przepisy i linie orzecznicze.
@@ -503,21 +505,21 @@ const App: React.FC = () => {
       case InteractionMode.Document:
         prompt += `TWOJE ZADANIE: Jesteś Ekspertem Legislacyjnym i Redaktorem Pism Procesowych.
         Twój cel to przygotowanie profesjonalnych projektów dokumentów.
-        1. Na podstawie rozmowy wybierz odpowiedni rodzaj pisma (pozew, wniosek, apelacja, umowa).
-        2. Jeśli brakuje danych (daty, sygnatury, strony), poproś o nie LUB zostaw [MIEJSCE NA UZUPEŁNIENIE].
-        3. Generuj pismo w formacie czytelnym dla użytkownika.
-        4. Zawsze umieszczaj projekt wewnątrz tagów: --- PROJEKT PISMA --- [treść] --- PROJEKT PISMA ---.
+        1. Na podstawie rozmowy wybierz odpowiedni rodzaj pisma(pozew, wniosek, apelacja, umowa).
+        2. Jeśli brakuje danych(daty, sygnatury, strony), poproś o nie LUB zostaw[MIEJSCE NA UZUPEŁNIENIE].
+3. Generuj pismo w formacie czytelnym dla użytkownika.
+        4. Zawsze umieszczaj projekt wewnątrz tagów: --- PROJEKT PISMA-- - [treść]-- - PROJEKT PISMA-- -.
         Sugeruj konkretne rodzaje pism, które mogą teraz pomóc użytkownikowi.`;
         break;
       case InteractionMode.Court:
-        prompt += `Tryb formalny, przygotowanie do sali rozpraw. Symuluj sędziego lub pełnomocnika, pomagając użytkownikowi przygotować się do przesłuchania...`;
+        prompt += `Tryb formalny, przygotowanie do sali rozpraw.Symuluj sędziego lub pełnomocnika, pomagając użytkownikowi przygotować się do przesłuchania...`;
         break;
       case InteractionMode.Negotiation:
-        prompt += `TWOJE ZADANIE: Doradca ds. Negocjacji i Mediacji. 
-        Pomóż przygotować argumentację do rozmów ze stroną przeciwną. Skup się na ugodowym załatwieniu sporu, ale dbaj o interes użytkownika.`;
+        prompt += `TWOJE ZADANIE: Doradca ds.Negocjacji i Mediacji. 
+        Pomóż przygotować argumentację do rozmów ze stroną przeciwną.Skup się na ugodowym załatwieniu sporu, ale dbaj o interes użytkownika.`;
         break;
       default:
-        prompt += `Zasugeruj analizę i pomoc w oparciu o temat. Działaj pomocnie i merytorycznie.`;
+        prompt += `Zasugeruj analizę i pomoc w oparciu o temat.Działaj pomocnie i merytorycznie.`;
     }
     return prompt;
   };
@@ -621,11 +623,11 @@ const App: React.FC = () => {
           const modeChangeMessage = `[SYSTEM: ZMIANA TRYBU NA ${mode}]
           Użytkownik właśnie przełączył się na ten tryb pracy. 
           TWOJE ZADANIE:
-          1. Krótko streść dotychczasowe ustalenia w sprawie: ${topic}.
-          2. Wyjaśnij konkretnie, jak Twój obecnie wybrany tryb pracy wspiera użytkownika w tej sytuacji.
-          3. Zaproponuj konkretne działania (np. przygotowanie pisma, analiza konkretnego aspektu) ściśle związane z Twoją specjalizacją w tym trybie.
+1. Krótko streść dotychczasowe ustalenia w sprawie: ${topic}.
+2. Wyjaśnij konkretnie, jak Twój obecnie wybrany tryb pracy wspiera użytkownika w tej sytuacji.
+          3. Zaproponuj konkretne działania(np.przygotowanie pisma, analiza konkretnego aspektu) ściśle związane z Twoją specjalizacją w tym trybie.
           
-          SKUP SIĘ WYŁĄCZNIE NA OBECNYM TRYBIE. Nie sugeruj innych asystentów ani zmiany trybu. Pisz proaktywnie.`;
+          SKUP SIĘ WYŁĄCZNIE NA OBECNYM TRYBIE.Nie sugeruj innych asystentów ani zmiany trybu.Pisz proaktywnie.`;
 
           await handleSendMessage(modeChangeMessage, savedHistory, {
             lawArea: lawArea,
@@ -729,7 +731,7 @@ const App: React.FC = () => {
       await setDoc(doc(checklistRef), {
         text, completed: false, createdAt: serverTimestamp()
       });
-      alert(`Dodano zadanie: ${text}`);
+      alert(`Dodano zadanie: ${text} `);
     } catch (e) {
       console.error("Error adding task:", e);
     }
@@ -739,7 +741,7 @@ const App: React.FC = () => {
     if (!user || !currentChatId) return;
     try {
       const notesRef = collection(db, 'users', user.uid, 'chats', currentChatId, 'notes');
-      const finalNoteId = noteId || `note_${Date.now()}`;
+      const finalNoteId = noteId || `note_${Date.now()} `;
 
       const payload: any = {
         content,
@@ -790,7 +792,7 @@ const App: React.FC = () => {
       setIsLoading(false);
 
       handleSendMessage(description, [
-        { role: 'system', content: `Specjalizacja: ${result.lawArea}. Temat: ${result.topic}. Tryb: ${result.interactionMode}` },
+        { role: 'system', content: `Specjalizacja: ${result.lawArea}.Temat: ${result.topic}.Tryb: ${result.interactionMode} ` },
         { role: 'user', content: description }
       ], {
         lawArea: result.lawArea,
@@ -807,22 +809,15 @@ const App: React.FC = () => {
     if (!user) return;
     setIsLoading(true);
     try {
-      const newSubscription: SubscriptionInfo = {
-        status: SubscriptionStatus.Pending,
-        isPaid: false,
-        selectedAt: serverTimestamp(),
-        activatedAt: null,
-        creditLimit: 10.00,
-        spentAmount: 0
-      };
-      await handleUpdateProfile({
-        ...userProfile,
-        subscription: newSubscription,
-        dataProcessingConsent: true,
-        consentDate: serverTimestamp()
-      });
-    } catch (e) {
-      console.error("Error selecting plan:", e);
+      if (PRICE_IDS.STARTER_10PLN.includes("...")) {
+        alert("Konfiguracja płatności nie została ukończona (brak Price ID).");
+        return;
+      }
+      const checkoutUrl = await createCheckoutSession(user.uid, PRICE_IDS.STARTER_10PLN);
+      window.location.assign(checkoutUrl);
+    } catch (e: any) {
+      console.error("Error initiating payment:", e);
+      alert("Wystąpił błąd podczas inicjowania płatności: " + e.message);
     } finally {
       setIsLoading(false);
     }
@@ -1011,7 +1006,7 @@ const App: React.FC = () => {
       />
 
       <PlanSelectionModal
-        isOpen={!profileLoading && (!userProfile?.subscription || userProfile.subscription.status === SubscriptionStatus.Expired)}
+        isOpen={!profileLoading && !subsLoading && !userProfile?.isActive && (!userProfile?.subscription || userProfile.subscription.status === SubscriptionStatus.Expired)}
         onSelectPlan={handleSelectPlan}
         subscription={userProfile?.subscription}
         isLoading={isLoading}
@@ -1070,7 +1065,7 @@ const App: React.FC = () => {
                 // Level 2: Law Area
                 if (selectedLawArea) {
                   breadcrumbParts.push({
-                    label: t(`law.areas.${selectedLawArea.toLowerCase()}`),
+                    label: t(`law.areas.${selectedLawArea.toLowerCase()} `),
                     color: 'text-slate-400 hover:text-white',
                     onClick: () => {
                       setSelectedTopic(null);
@@ -1097,7 +1092,7 @@ const App: React.FC = () => {
                   };
 
                   breadcrumbParts.push({
-                    label: t(`interaction.modes.${interactionModeMap[interactionMode] || 'advice'}`),
+                    label: t(`interaction.modes.${interactionModeMap[interactionMode] || 'advice'} `),
                     color: 'text-slate-400 hover:text-white',
                     icon: ScaleIcon,
                     onClick: () => {
@@ -1129,13 +1124,13 @@ const App: React.FC = () => {
                         {part.onClick ? (
                           <button
                             onClick={part.onClick}
-                            className={`flex items-center gap-1 ${part.isCurrent ? 'font-semibold' : 'font-medium'} whitespace-nowrap transition-colors ${part.color}`}
+                            className={`flex items - center gap - 1 ${part.isCurrent ? 'font-semibold' : 'font-medium'} whitespace - nowrap transition - colors ${part.color} `}
                           >
                             {part.icon && <part.icon className="w-3.5 h-3.5 flex-shrink-0" />}
                             <span>{part.label}</span>
                           </button>
                         ) : (
-                          <div className={`flex items-center gap-1 ${part.isCurrent ? 'font-semibold' : 'font-medium'} whitespace-nowrap ${part.color}`}>
+                          <div className={`flex items - center gap - 1 ${part.isCurrent ? 'font-semibold' : 'font-medium'} whitespace - nowrap ${part.color} `}>
                             {part.icon && <part.icon className="w-3.5 h-3.5 flex-shrink-0" />}
                             <span>{part.label}</span>
                           </div>
@@ -1353,18 +1348,18 @@ const App: React.FC = () => {
         />
 
         {selectedTopic && interactionMode && servicePath !== 'pro' && (
-          <footer className={`bg-slate-900 transition-all duration-200 ${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow && !isFullScreen) ? 'py-0.5 px-2 md:p-4' : 'p-2 md:p-4'}`}>
+          <footer className={`bg - slate - 900 transition - all duration - 200 ${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow && !isFullScreen) ? 'py-0.5 px-2 md:p-4' : 'p-2 md:p-4'} `}>
             <div className="max-w-4xl mx-auto">
               {showQuickActions && !isFullScreen && (
-                <div className={`${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow) ? 'hidden md:block' : 'block'}`}>
+                <div className={`${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow) ? 'hidden md:block' : 'block'} `}>
                   <QuickActions interactionMode={interactionMode} onActionClick={handleQuickActionClick} />
                 </div>
               )}
-              <div className={`flex flex-col gap-2 md:gap-3 ${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow) ? 'mt-0 md:mt-3' : 'mt-1 md:mt-3'}`}>
+              <div className={`flex flex - col gap - 2 md: gap - 3 ${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow) ? 'mt-0 md:mt-3' : 'mt-1 md:mt-3'} `}>
                 {!isFullScreen && (
                   <>
                     {/* Mobile Collapse Toggle: Visible ONLY on mobile + collapsed + NOT always show */}
-                    <div className={`md:hidden ${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow) ? 'block' : 'hidden'}`}>
+                    <div className={`md:hidden ${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow) ? 'block' : 'hidden'} `}>
                       <button
                         onClick={() => setIsMobileToolbarOpen(true)}
                         className="p-1 text-slate-500 hover:text-white transition-colors"
@@ -1375,7 +1370,7 @@ const App: React.FC = () => {
                     </div>
 
                     {/* Toolbar Content: Visible on Desktop OR (Mobile + Expanded) OR (Mobile + Always Show) */}
-                    <div className={`${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow) ? 'hidden md:flex' : 'flex'} flex-col md:flex-row md:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-200 md:animate-none`}>
+                    <div className={`${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow) ? 'hidden md:flex' : 'flex'} flex - col md: flex - row md: items - center justify - between gap - 3 animate -in fade -in slide -in -from - top - 2 duration - 200 md: animate - none`}>
                       <div className="flex items-center justify-between gap-3 flex-wrap w-full">
                         <div className="flex items-center">
                           <label htmlFor="deep-thinking-toggle" className="text-[10px] sm:text-xs leading-tight font-medium text-slate-400 mr-2 cursor-pointer flex flex-col items-center">
@@ -1385,9 +1380,9 @@ const App: React.FC = () => {
                           <button
                             id="deep-thinking-toggle"
                             onClick={() => setIsDeepThinkingEnabled(!isDeepThinkingEnabled)}
-                            className={`relative inline-flex items-center h-5 rounded-full w-10 transition-colors ${isDeepThinkingEnabled ? 'bg-cyan-600' : 'bg-slate-600'}`}
+                            className={`relative inline - flex items - center h - 5 rounded - full w - 10 transition - colors ${isDeepThinkingEnabled ? 'bg-cyan-600' : 'bg-slate-600'} `}
                           >
-                            <span className={`inline-block w-3.5 h-3.5 transform bg-white rounded-full transition-transform ${isDeepThinkingEnabled ? 'translate-x-5.5' : 'translate-x-1'}`} />
+                            <span className={`inline - block w - 3.5 h - 3.5 transform bg - white rounded - full transition - transform ${isDeepThinkingEnabled ? 'translate-x-5.5' : 'translate-x-1'} `} />
                           </button>
 
                           {selectedTopic && (
@@ -1441,7 +1436,7 @@ const App: React.FC = () => {
                           <div className="flex items-center gap-1 md:hidden">
                             <button
                               onClick={() => setIsFullScreen(!isFullScreen)}
-                              className={`p-1.5 text-slate-300 hover:text-white rounded-lg transition-colors border border-slate-700 ${isFullScreen ? 'bg-cyan-900/50 text-cyan-400 border-cyan-500/50' : 'bg-slate-800/50'}`}
+                              className={`p - 1.5 text - slate - 300 hover: text - white rounded - lg transition - colors border border - slate - 700 ${isFullScreen ? 'bg-cyan-900/50 text-cyan-400 border-cyan-500/50' : 'bg-slate-800/50'} `}
                               title={isFullScreen ? "Wyjdź z pełnego ekranu" : "Pełny ekran"}
                             >
                               {isFullScreen ? <ArrowsContractIcon className="w-4 h-4" /> : <ArrowsExpandIcon className="w-4 h-4" />}
@@ -1470,8 +1465,8 @@ const App: React.FC = () => {
                         </button>
                         <div className="flex items-center gap-2 cursor-pointer" onClick={toggleMobileToolbarAlwaysShow}>
                           <span className="text-[10px] text-slate-400">{t('mobile.showAlways')}</span>
-                          <div className={`relative inline-flex items-center h-4 rounded-full w-8 transition-colors ${mobileToolbarAlwaysShow ? 'bg-cyan-600' : 'bg-slate-700'}`}>
-                            <span className={`inline-block w-2.5 h-2.5 transform bg-white rounded-full transition-transform ${mobileToolbarAlwaysShow ? 'translate-x-4.5' : 'translate-x-1'}`} />
+                          <div className={`relative inline - flex items - center h - 4 rounded - full w - 8 transition - colors ${mobileToolbarAlwaysShow ? 'bg-cyan-600' : 'bg-slate-700'} `}>
+                            <span className={`inline - block w - 2.5 h - 2.5 transform bg - white rounded - full transition - transform ${mobileToolbarAlwaysShow ? 'translate-x-4.5' : 'translate-x-1'} `} />
                           </div>
                         </div>
                       </div>

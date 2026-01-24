@@ -392,7 +392,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                                                     }}
                                                     className="text-[10px] bg-cyan-600 hover:bg-cyan-500 text-white px-2 py-1 rounded font-bold transition-colors"
                                                 >
-                                                    WYRAŹ ZGODĘ
+                                                    {t('userProfile.personal.giveConsent')}
                                                 </button>
                                             </div>
                                         )}

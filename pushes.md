@@ -10,6 +10,19 @@
 ---
 ---
 
+### [pending-hash] 2026-01-24 21:40 | feat: GDPR warning localization & Stripe Sandbox
+**Zadania:**
+- **-------STRIPE SAND BOX--------**:
+    - **UWAGA**: Konfiguracja Stripe działa w trybie testowym (Sandbox). Nie wdrażać na produkcję bez weryfikacji kluczy!
+- **RODO / GDPR**:
+    - **Lokalizacja Badge'a**: Dodano styled component dla ostrzeżenia "BRAK ZGODY RODO" w pasku bocznym profilu.
+    - **Tłumaczenia**:
+        - Dodano klucz `app.noGdprConsent` dla wszystkich języków (PL/EN/ES).
+        - Zaktualizowano przycisk akceptacji zgody w profilu (`WYRAŹ ZGODĘ` -> `t('userProfile.personal.giveConsent')`).
+        - Spójny wygląd ostrzeżenia w nagłówku i w profilu użytkownika.
+    - **Andromeda**:
+        - Zlokalizowano placeholdery (przykładowe pytania) w czacie Andromedy dla PL, EN i ES.
+
 ### [c0838e6] 2026-01-24 16:05 | fix: zmiana domeny autoryzacji Google na asystent-prawny.pro
 **Zadania:**
 - **Firebase Auth**:

@@ -803,7 +803,19 @@
         "welcomeDesc": "Haz cualquier pregunta legal. Buscaré regulaciones actuales, sentencias y la información más reciente para ti.",
         "fileUploaded": "Archivo subido: {{name}}",
         "analyzingFile": "Analizando documento...",
-        "error": "Lo siento, ocurrió un error. Inténtalo de nuevo."
+        "error": "Lo siento, ocurrió un error. Inténtalo de nuevo.",
+        "placeholders": [
+            "Ej.: Divorcio sin adjudicación de culpa - ¿cómo empezar?",
+            "Ej.: ¿Cómo recuperar la fianza del alquiler de un piso?",
+            "Ej.: ¿Puede el empleador acortar el período de aviso?",
+            "Ej.: ¿Cómo escribir una reclamación de pago?",
+            "Ej.: ¿Cuáles son las sanciones por conducir ebrio?",
+            "Ej.: ¿Cómo dividir los bienes después del divorcio?",
+            "Ej.: Reclamación de garantía por bienes - ¿qué necesito saber?",
+            "Ej.: ¿Cuáles son las reglas de la herencia legal?",
+            "Ej.: ¿Cómo solicitar la quiebra del consumidor?",
+            "Ej.: Acoso laboral - ¿cómo reunir pruebas?"
+        ]
     },
     "quickActionsModal": {
         "title": "Acciones Rápidas",

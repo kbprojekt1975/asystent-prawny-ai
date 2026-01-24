@@ -32,8 +32,15 @@ export enum CourtRole {
 
 export enum SubscriptionStatus {
   None = 'none',
-  Pending = 'pending',
+  Trialing = 'trialing',
   Active = 'active',
+  PastDue = 'past_due',
+  Canceled = 'canceled',
+  Unpaid = 'unpaid',
+  Incomplete = 'incomplete',
+  IncompleteExpired = 'incomplete_expired',
+  // Deprecated project-specific statuses
+  Pending = 'pending',
   Expired = 'expired'
 }
 
@@ -43,6 +50,7 @@ export interface SubscriptionInfo {
   selectedAt?: any;
   activatedAt?: any;
   expiresAt?: any;
+  priceId?: string;
   creditLimit: number;
   spentAmount: number;
 }

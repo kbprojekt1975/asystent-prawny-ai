@@ -818,7 +818,19 @@
         "welcomeDesc": "Zadaj dowolne pytanie prawne. Przeszukam dla Ciebie aktualne przepisy, wyroki oraz najnowsze informacje.",
         "fileUploaded": "Przesłano plik: {{name}}",
         "analyzingFile": "Analiza dokumentu...",
-        "error": "Przepraszam, wystąpił błąd. Spróbuj ponownie."
+        "error": "Przepraszam, wystąpił błąd. Spróbuj ponownie.",
+        "placeholders": [
+            "Np.: Rozwód bez orzekania o winie - jak zacząć?",
+            "Np.: Jak odzyskać kaucję za wynajem mieszkania?",
+            "Np.: Czy pracodawca może skrócić okres wypowiedzenia?",
+            "Np.: Jak napisać wezwanie do zapłaty?",
+            "Np.: Co grozi za jazdę po alkoholu?",
+            "Np.: Jak przeprowadzić podział majątku po rozwodzie?",
+            "Np.: Reklamacja towaru z tytułu rękojmi - co muszę wiedzieć?",
+            "Np.: Jakie są zasady dziedziczenia ustawowego?",
+            "Np.: Jak złożyć wniosek o upadłość konsumencką?",
+            "Np.: Mobbing w pracy - jak zbierać dowody?"
+        ]
     },
     "quickActionsModal": {
         "title": "Szybkie Akcje",

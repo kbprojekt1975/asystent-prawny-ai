@@ -12,8 +12,25 @@ service cloud.firestore {
         allow read, write, list: if request.auth != null && request.auth.uid == userId;
       }
     }
+    
+    // 2. Stripe Extension Rules
+    match /customers/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      match /checkout_sessions/{id} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      match /subscriptions/{id} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+      }
 
-    // 2. Master Admin check
+      match /payments/{id} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // 3. Master Admin check
     function isMasterAdmin() {
       return request.auth != null && (
         request.auth.uid == "Yb23rXe0JdOvieB3grdaN0Brmkjh" ||
