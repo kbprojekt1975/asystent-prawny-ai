@@ -208,14 +208,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             className="p-2 text-slate-300 hover:text-cyan-400 hover:bg-slate-700/50 rounded-full transition-all"
             title="Powrót do Andromeda"
           >
-            <div className="relative p-0.5">
-              <div className="grid grid-cols-3 gap-0.5">
+            <div className="relative flex items-center justify-center p-1 w-8 h-8">
+              <div className="grid grid-cols-3 gap-[2px]">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="w-1.5 h-1.5 bg-current rounded-sm" />
+                  <div key={i} className="w-[6px] h-[6px] bg-current rounded-full" />
                 ))}
               </div>
-              <div className="absolute inset-0 flex items-center justify-center translate-y-[-0.5px]">
-                <div className="w-[120%] h-0.5 bg-red-500/80 -rotate-45 rounded-full shadow-[0_0_4px_rgba(239,68,68,0.5)]" />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-6 h-[1.5px] bg-red-500/90 -rotate-45 rounded-full" />
               </div>
             </div>
           </button>

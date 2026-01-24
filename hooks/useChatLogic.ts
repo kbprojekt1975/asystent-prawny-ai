@@ -215,16 +215,20 @@ export const useChatLogic = ({
                 aiMessage.sources = aiResponse.sources;
             }
 
-            // Determine follow-up options
-            const options: InteractionMode[] = [];
-            const lowText = aiResponse.text.toLowerCase();
-            if (lowText.includes('pismo') || lowText.includes('wniosek') || lowText.includes('pozew')) options.push(InteractionMode.Document);
-            if (lowText.includes('szkolenie') || lowText.includes('nauczyć')) options.push(InteractionMode.LegalTraining);
-            if (lowText.includes('sąd') || lowText.includes('rozpraw')) options.push(InteractionMode.Court);
-            if (lowText.includes('ugod') || lowText.includes('negocjacj')) options.push(InteractionMode.Negotiation);
+            // Determine follow-up options - ONLY if user has already interacted (real familiarization)
+            // History check: 1st user msg is hidden greeting, 2nd is real user input.
+            const userMsgCount = newHistory.filter(m => m.role === 'user').length;
+            if (userMsgCount >= 2) {
+                const options: InteractionMode[] = [];
+                const lowText = aiResponse.text.toLowerCase();
+                if (lowText.includes('pismo') || lowText.includes('wniosek') || lowText.includes('pozew')) options.push(InteractionMode.Document);
+                if (lowText.includes('szkolenie') || lowText.includes('nauczyć')) options.push(InteractionMode.LegalTraining);
+                if (lowText.includes('sąd') || lowText.includes('rozpraw')) options.push(InteractionMode.Court);
+                if (lowText.includes('ugod') || lowText.includes('negocjacj')) options.push(InteractionMode.Negotiation);
 
-            if (options.length > 0) {
-                aiMessage.followUpOptions = options;
+                if (options.length > 0) {
+                    aiMessage.followUpOptions = options;
+                }
             }
 
             // Final history for UI and storage should NOT include the technical system instructions
@@ -508,8 +512,6 @@ export const useChatLogic = ({
             interactionMode: mode,
             servicePath: 'standard'
         });
-
-        setIsLoading(false);
     }, [user, handleSendMessage]);
 
     return {

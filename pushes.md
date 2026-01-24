@@ -10,6 +10,19 @@
 ---
 ---
 
+### [temp-hash] 2026-01-24 11:50 | style: poprawa UI
+**Zadania:**
+- **Ikona Andromeda (Header)**:
+    - Naprawiono problem z „rozciąganiem” i rozmyciem ikony na urządzeniach mobilnych.
+    - Zastosowano stałe wymiary (6px) dla kropek, co zapewnia idealną ostrość i okrągły kształt bez względu na rozdzielczość.
+    - Zsynchronizowano wagę linii z ikonami menu hamburger.
+- **Notatki Globalne (Admin)**:
+    - Dodano funkcję pełnej minimalizacji paska narzędzi administratora do postaci małego, dyskretnego punktu (kropki).
+    - Stan zminimalizowania całego paska (nie tylko pojedynczych notatek) jest teraz zapamiętywany w lokalnej pamięci.
+- **Inne poprawki**:
+    - Usunięto zbędne odznaki kontekstowe z dolnej części czatu.
+    - Opóźniono wyświetlanie sugerowanych akcji do momentu wprowadzenia pierwszej wiadomości przez użytkownika (po zapoznaniu się ze sprawą).
+
 ### [b9f9b2b] 2026-01-24 00:10 | fix: Absolute Language Override in Andromeda
 **Naprawiono:**
 - **Nuclear Option**: Dodano sekcję "ABSOLUTE LANGUAGE REQUIREMENT" na samym początku promptu systemowego (przed wszystkimi innymi instrukcjami)

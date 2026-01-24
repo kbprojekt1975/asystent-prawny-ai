@@ -59,7 +59,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 bg-black bg-opacity-60 z-50 transition-opacity duration-300 ease-in-out ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      className={`fixed inset-0 bg-black bg-opacity-60 z-[100] transition-opacity duration-300 ease-in-out ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
       aria-labelledby="history-panel-title"
       role="dialog"
       aria-modal="true"

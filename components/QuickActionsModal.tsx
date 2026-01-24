@@ -1,16 +1,17 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { QuickAction } from '../types';
-import { XIcon, CaseIcon } from './Icons';
+import { XIcon, CaseIcon, TrashIcon } from './Icons';
 
 interface QuickActionsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (action: QuickAction) => void;
+  onRemove: (index: number) => void;
   quickActions: QuickAction[];
 }
 
-const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ isOpen, onClose, onSelect, quickActions }) => {
+const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ isOpen, onClose, onSelect, onRemove, quickActions }) => {
   const { t } = useTranslation();
 
   if (!isOpen) return null;
@@ -42,19 +43,30 @@ const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ isOpen, onClose, 
         <div className="mt-2 space-y-2 max-h-96 overflow-y-auto">
           {quickActions.length > 0 ? (
             quickActions.map((action, index) => (
-              <button
-                key={index}
-                onClick={() => onSelect(action)}
-                className="w-full flex items-center gap-4 p-3 text-left bg-slate-700/50 rounded-lg hover:bg-slate-700/70 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              >
-                <div className="w-8 h-8 bg-slate-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <CaseIcon />
-                </div>
-                <div>
-                  <p className="text-white font-semibold">{t(`law.areas.${action.lawArea.toLowerCase()}`)}</p>
-                  {action.topic && <p className="text-sm text-slate-400">{action.topic}</p>}
-                </div>
-              </button>
+              <div key={index} className="relative group">
+                <button
+                  onClick={() => onSelect(action)}
+                  className="w-full flex items-center gap-4 p-3 pr-12 text-left bg-slate-700/50 rounded-lg hover:bg-slate-700/70 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                >
+                  <div className="w-8 h-8 bg-slate-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CaseIcon />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-semibold truncate">{t(`law.areas.${action.lawArea.toLowerCase()}`)}</p>
+                    {action.topic && <p className="text-sm text-slate-400 truncate">{action.topic}</p>}
+                  </div>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove(index);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                  title={t('common.delete')}
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+              </div>
             ))
           ) : (
             <p className="text-slate-400 text-center py-8">

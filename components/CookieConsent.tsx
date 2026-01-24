@@ -6,9 +6,10 @@ import { UserProfile } from '../types';
 interface CookieConsentProps {
     userProfile?: UserProfile;
     onUpdateProfile?: (profile: UserProfile, isSessionOnly: boolean) => void;
+    isLoading?: boolean;
 }
 
-const CookieConsent: React.FC<CookieConsentProps> = ({ userProfile, onUpdateProfile }) => {
+const CookieConsent: React.FC<CookieConsentProps> = ({ userProfile, onUpdateProfile, isLoading }) => {
     const { t } = useTranslation();
     const [isVisible, setIsVisible] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
@@ -31,12 +32,15 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ userProfile, onUpdateProf
         }
 
         if (!localConsent && !profileConsent) {
-            setIsVisible(true);
-            console.log('[DEBUG] Setting CookieConsent to Visible');
+            // Only show if definitely NOT loading and no consent found anywhere
+            if (!isLoading) {
+                setIsVisible(true);
+                // console.log('[DEBUG] Setting CookieConsent to Visible');
+            }
         } else {
             setIsVisible(false);
         }
-    }, [userProfile?.cookieConsent, onUpdateProfile]);
+    }, [userProfile?.cookieConsent, onUpdateProfile, isLoading]);
 
     const handleAccept = () => {
         console.log('[DEBUG] CookieConsent Accepted');

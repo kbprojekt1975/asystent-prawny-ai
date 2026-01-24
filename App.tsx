@@ -509,7 +509,6 @@ const App: React.FC = () => {
     setSelectedLawArea(action.lawArea);
     if (action.topic) {
       setSelectedTopic(action.topic);
-      // Logic to load history would normally go here, but App.tsx has handleLoadHistory
       handleLoadHistory(action.lawArea, action.topic);
     } else {
       setSelectedTopic(null);
@@ -519,6 +518,16 @@ const App: React.FC = () => {
     setIsQuickActionsModalOpen(false);
     setIsFullScreen(false);
     setIsWelcomeAssistantOpen(false);
+  };
+
+  const handleRemoveQuickAction = (index: number) => {
+    if (!userProfile?.quickActions) return;
+    const updatedActions = [...userProfile.quickActions];
+    updatedActions.splice(index, 1);
+    handleUpdateProfile({
+      ...userProfile,
+      quickActions: updatedActions
+    }, false);
   };
 
 
@@ -589,7 +598,7 @@ const App: React.FC = () => {
         if (finalMode === InteractionMode.Court && courtRole) {
           handleSelectCourtRole(courtRole);
         } else if (savedHistory.length === 0 && finalMode) {
-          handleInitialGreeting(lawArea, topic, finalMode);
+          await handleInitialGreeting(lawArea, topic, finalMode);
         } else if (savedHistory.length > 0 && mode && mode !== savedInteractionMode && mode !== InteractionMode.Advice) {
           // Mode change into existing history - Trigger Summary
           const modeChangeMessage = `[SYSTEM: ZMIANA TRYBU NA ${mode}]
@@ -601,7 +610,7 @@ const App: React.FC = () => {
           
           SKUP SIĘ WYŁĄCZNIE NA OBECNYM TRYBIE. Nie sugeruj innych asystentów ani zmiany trybu. Pisz proaktywnie.`;
 
-          handleSendMessage(modeChangeMessage, savedHistory, {
+          await handleSendMessage(modeChangeMessage, savedHistory, {
             lawArea: lawArea,
             topic: topic,
             interactionMode: mode,
@@ -617,7 +626,7 @@ const App: React.FC = () => {
           if (modeToUse === InteractionMode.Court && courtRole) {
             handleSelectCourtRole(courtRole);
           } else {
-            handleInitialGreeting(lawArea, topic, modeToUse);
+            await handleInitialGreeting(lawArea, topic, modeToUse);
           }
         }
       }
@@ -653,6 +662,19 @@ const App: React.FC = () => {
 
       const h = await loadChatHistories();
       if (h) setChatHistories(h);
+
+      // Sync with Quick Actions: Remove actions related to this topic
+      if (userProfile?.quickActions) {
+        const updatedActions = userProfile.quickActions.filter(
+          action => !(action.lawArea === lawArea && action.topic === topic)
+        );
+        if (updatedActions.length !== userProfile.quickActions.length) {
+          handleUpdateProfile({
+            ...userProfile,
+            quickActions: updatedActions
+          }, false);
+        }
+      }
     } catch (e) {
       console.error("Error deleting history:", e);
     }
@@ -857,14 +879,6 @@ const App: React.FC = () => {
     );
   }
 
-  if (isShowAndromeda) {
-    return (
-      <AndromedaAssistant
-        onProceed={() => setIsShowAndromeda(false)}
-        language={i18n.language}
-      />
-    );
-  }
 
   const isAppDataLoading = authLoading || profileLoading || (isLoading && chatHistory.length === 0 && !interactionMode && !isWelcomeModalOpen && selectedTopic);
 
@@ -916,6 +930,7 @@ const App: React.FC = () => {
       {isShowAndromeda && (
         <AndromedaAssistant
           onProceed={() => setIsShowAndromeda(false)}
+          onProfileClick={() => setIsProfileModalOpen(true)}
           language={i18n.language}
         />
       )}
@@ -925,6 +940,7 @@ const App: React.FC = () => {
           <GlobalAdminNotes userEmail={user?.email || null} isAdmin={isAdmin} currentViewId={currentViewId} />
         </React.Suspense>
       )}
+      <AdminBroadcastInput user={user} />
       <AppModals
         isProfileModalOpen={isProfileModalOpen}
         setIsProfileModalOpen={setIsProfileModalOpen}
@@ -942,6 +958,7 @@ const App: React.FC = () => {
         isQuickActionsModalOpen={isQuickActionsModalOpen}
         setIsQuickActionsModalOpen={setIsQuickActionsModalOpen}
         handleSelectQuickAction={handleSelectQuickAction}
+        handleRemoveQuickAction={handleRemoveQuickAction}
         isWelcomeModalOpen={isWelcomeModalOpen}
         setIsWelcomeModalOpen={setIsWelcomeModalOpen}
         handleCaseAnalysis={handleCaseAnalysis}
@@ -1138,11 +1155,6 @@ const App: React.FC = () => {
         )}
 
         <main ref={chatContainerRef} className="flex-1 overflow-y-auto">
-          {!selectedLawArea && (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-              <AdminBroadcastInput user={user} />
-            </div>
-          )}
           {!selectedLawArea ? (
             <LawSelector
               onSelect={handleSelectLawArea}
@@ -1304,10 +1316,13 @@ const App: React.FC = () => {
         </main>
 
         <RemindersWidget user={user} />
-        <CookieConsent
-          userProfile={userProfile}
-          onUpdateProfile={handleUpdateProfile}
-        />
+        {!profileLoading && (
+          <CookieConsent
+            userProfile={userProfile}
+            onUpdateProfile={handleUpdateProfile}
+            isLoading={profileLoading}
+          />
+        )}
         <AppHelpSidebar
           isOpen={isAppHelpSidebarOpen}
           onClose={() => setIsAppHelpSidebarOpen(false)}
@@ -1439,44 +1454,6 @@ const App: React.FC = () => {
                       </div>
                     </div>
                   </>
-                )}
-                {/* Context Badge */}
-                {!isFullScreen && (interactionMode || selectedTopic) && (
-                  <div className={`items-center gap-2 px-4 py-2 bg-slate-900/50 border-t border-slate-700/30 text-xs ${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow) ? 'hidden md:flex' : 'flex'}`}>
-                    {interactionMode && (
-                      <>
-                        <ScaleIcon className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                        <span className="text-slate-400">{t('interaction.header')}:</span>
-                        <span className="text-cyan-400 font-semibold">
-                          {(() => {
-                            const interactionModeMap: Record<string, string> = {
-                              [InteractionMode.Advice]: 'advice',
-                              [InteractionMode.Analysis]: 'analysis',
-                              [InteractionMode.Document]: 'document',
-                              [InteractionMode.LegalTraining]: 'legal_training',
-                              [InteractionMode.SuggestRegulations]: 'suggest_regulations',
-                              [InteractionMode.FindRulings]: 'find_rulings',
-                              [InteractionMode.Court]: 'court',
-                              [InteractionMode.Negotiation]: 'negotiation',
-                              [InteractionMode.StrategicAnalysis]: 'strategic_analysis',
-                              [InteractionMode.AppHelp]: 'app_help'
-                            };
-                            return t(`interaction.modes.${interactionModeMap[interactionMode] || 'advice'}`);
-                          })()}
-                        </span>
-                      </>
-                    )}
-                    {interactionMode && selectedTopic && (
-                      <span className="text-slate-600">|</span>
-                    )}
-                    {selectedTopic && (
-                      <>
-                        <CaseIcon className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                        <span className="text-slate-400">{t('topic.header')}:</span>
-                        <span className="text-amber-400 font-semibold truncate">{selectedTopic}</span>
-                      </>
-                    )}
-                  </div>
                 )}
 
                 <div className="flex items-end gap-2 bg-slate-800 rounded-xl p-1.5 md:p-2 border border-slate-700/50">

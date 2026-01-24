@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SparklesIcon, SendIcon, BotIcon, Bars3Icon, PlusIcon, ClockIcon, TrashIcon, PaperClipIcon } from './Icons';
-import { ChatMessage } from '../types';
+import { SparklesIcon, SendIcon, BotIcon, Bars3Icon, PlusIcon, ClockIcon, TrashIcon, PaperClipIcon, UserIcon } from './Icons';
+import { ChatMessage, UserProfile } from '../types';
 import { askAndromeda } from '../services/geminiService';
 import LoadingSpinner from './LoadingSpinner';
 import { auth, db } from '../services/firebase';
-import { collection, query, orderBy, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, deleteDoc, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, deleteDoc, getDocs, getDoc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 
 interface AndromedaChat {
     id: string;
@@ -16,10 +17,11 @@ interface AndromedaChat {
 
 interface AndromedaAssistantProps {
     onProceed: () => void;
+    onProfileClick: () => void;
     language: string;
 }
 
-const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, language }) => {
+const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onProfileClick, language }) => {
     const { t, i18n } = useTranslation();
     const [input, setInput] = useState('');
     const [history, setHistory] = useState<ChatMessage[]>([]);
@@ -27,6 +29,23 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
     const [currentChatId, setCurrentChatId] = useState<string | null>(null);
     const [chats, setChats] = useState<AndromedaChat[]>([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const [placeholderIndex, setPlaceholderIndex] = useState(0);
+    const [isPlaceholderVisible, setIsPlaceholderVisible] = useState(true);
+
+    const placeholders = [
+        "Np.: Rozwód bez orzekania o winie - jak zacząć?",
+        "Np.: Jak odzyskać kaucję za wynajem mieszkania?",
+        "Np.: Czy pracodawca może skrócić okres wypowiedzenia?",
+        "Np.: Jak napisać wezwanie do zapłaty?",
+        "Np.: Co grozi za jazdę po alkoholu?",
+        "Np.: Jak przeprowadzić podział majątku po rozwodzie?",
+        "Np.: Reklamacja towaru z tytułu rękojmi - co muszę wiedzieć?",
+        "Np.: Jakie są zasady dziedziczenia ustawowego?",
+        "Np.: Jak złożyć wniosek o upadłość konsumencką?",
+        "Np.: Mobbing w pracy - jak zbierać dowody?"
+    ];
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -57,6 +76,24 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
         });
 
         return () => unsubscribe();
+    }, [user]);
+
+    // Fetch User Profile
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchProfile = async () => {
+            try {
+                const profileDoc = await getDoc(doc(db, 'users', user.uid));
+                if (profileDoc.exists()) {
+                    setUserProfile(profileDoc.data().profile as UserProfile);
+                }
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+            }
+        };
+
+        fetchProfile();
     }, [user]);
 
     const scrollToBottom = () => {
@@ -196,6 +233,20 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
         }
     }, [input]);
 
+    // Rotating placeholders logic with fade effect
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setIsPlaceholderVisible(false); // Start fade out
+
+            setTimeout(() => {
+                setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+                setIsPlaceholderVisible(true); // Start fade in
+            }, 600); // Wait for fade out duration
+
+        }, 4500); // Total cycle time
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <div className="fixed inset-0 z-50 flex bg-slate-950 text-slate-100 overflow-hidden font-sans">
             {/* Sidebar - Desktop (Fixed) & Mobile (Drawer) */}
@@ -243,9 +294,53 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
                         ))}
                     </div>
 
-                    <div className="p-4 mt-auto border-t border-slate-800">
-                        <div className="flex items-center gap-3 px-3 py-2 bg-slate-900/50 rounded-xl border border-slate-800">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-[10px] font-bold">
+                    <div className="p-4 mt-auto border-t border-slate-800 relative">
+                        {isUserMenuOpen && (
+                            <div className="absolute bottom-full left-4 mb-2 w-64 bg-slate-900/90 border border-slate-700/50 rounded-2xl shadow-2xl backdrop-blur-xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                <div className="p-2 space-y-1">
+                                    {userProfile?.subscription && (
+                                        <div className="px-4 py-3 border-b border-slate-800/50">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t('menu.myPlan')}</span>
+                                                <span className="text-[10px] text-cyan-400 font-mono font-bold px-2 py-0.5 bg-cyan-400/10 rounded-full">
+                                                    {Math.max(0, ((userProfile.subscription.creditLimit - userProfile.subscription.spentAmount) / userProfile.subscription.creditLimit) * 100).toFixed(1)}%
+                                                </span>
+                                            </div>
+                                            <div className="text-xs text-white font-medium">
+                                                {t('menu.balance')}: {(userProfile.subscription.creditLimit - userProfile.subscription.spentAmount).toFixed(2)} PLN
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={() => { onProfileClick(); setIsUserMenuOpen(false); }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all"
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
+                                            <UserIcon />
+                                        </div>
+                                        <span className="font-medium">{t('menu.myProfile')}</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => signOut(auth)}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all"
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                        </div>
+                                        <span className="font-medium">{t('menu.logout')}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        <div
+                            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                            className="flex items-center gap-3 px-3 py-2 bg-slate-900/50 hover:bg-slate-800/80 cursor-pointer rounded-xl border border-slate-800 transition-all group"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-[10px] font-bold shadow-lg group-hover:scale-105 transition-transform">
                                 {user?.email?.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -353,14 +448,19 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
                 <footer className="relative z-10 p-4 md:p-6 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent">
                     <div className="max-w-3xl mx-auto relative group">
                         <div className="absolute inset-0 bg-cyan-600/5 blur-xl group-focus-within:bg-cyan-600/10 transition-colors rounded-2xl" />
-                        <div className="relative flex flex-col bg-slate-900/80 border border-slate-800 group-focus-within:border-cyan-500/50 rounded-2xl transition-all backdrop-blur-xl shadow-2xl">
+                        <div className="relative flex flex-col bg-slate-900/80 border border-slate-800 group-focus-within:border-cyan-500/50 rounded-2xl transition-all backdrop-blur-xl shadow-2xl overflow-hidden">
+                            {/* Animated Placeholder Overlay */}
+                            {!input && (
+                                <div className={`absolute top-0 left-0 w-full px-4 py-4 text-slate-500 text-sm md:text-base pointer-events-none transition-all duration-700 ease-in-out ${isPlaceholderVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'}`}>
+                                    {placeholders[placeholderIndex]}
+                                </div>
+                            )}
                             <textarea
                                 ref={textareaRef}
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder={t('andromeda.inputPlaceholder')}
-                                className="w-full bg-transparent px-4 py-4 text-white placeholder-slate-500 focus:outline-none resize-none min-h-[60px] max-h-[300px] text-sm md:text-base"
+                                className="w-full bg-transparent px-4 py-4 text-white focus:outline-none resize-none min-h-[60px] max-h-[300px] text-sm md:text-base relative z-10"
                                 rows={1}
                             />
                             <div className="flex items-center justify-between px-4 pb-4">
@@ -380,10 +480,6 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, lang
                                     >
                                         <PaperClipIcon className="w-5 h-5" />
                                     </button>
-                                    <div className="hidden md:flex flex-col text-[8px] md:text-[10px] text-slate-500 uppercase tracking-widest font-bold truncate">
-                                        <span>{t('andromeda.modeGlobal')}</span>
-                                        <span>{t('andromeda.baseIsapSaos')}</span>
-                                    </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { db } from '../services/firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp, updateDoc, query } from 'firebase/firestore';
 import { GlobalNote } from '../types';
-import { PencilIcon, TrashIcon, CheckIcon, PlusIcon, XMarkIcon, ListIcon, HomeIcon, EyeIcon, SwatchIcon } from './Icons';
+import { PencilIcon, TrashIcon, CheckIcon, PlusIcon, XMarkIcon, ListIcon, HomeIcon, EyeIcon, SwatchIcon, ChevronDownIcon, ChevronUpIcon } from './Icons';
 
 interface GlobalAdminNotesProps {
     userEmail: string | null;
@@ -24,6 +24,13 @@ const GlobalAdminNotes: React.FC<GlobalAdminNotesProps> = ({ userEmail, isAdmin,
     const [editContent, setEditContent] = useState('');
     const [isListOpen, setIsListOpen] = useState(false);
     const [showDebug, setShowDebug] = useState(false);
+    const [isToolbarMinimized, setIsToolbarMinimized] = useState(() => {
+        return localStorage.getItem('admin_notes_toolbar_minimized') === 'true';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('admin_notes_toolbar_minimized', isToolbarMinimized.toString());
+    }, [isToolbarMinimized]);
 
     useEffect(() => {
         if (!isAdmin) return;
@@ -68,6 +75,18 @@ const GlobalAdminNotes: React.FC<GlobalAdminNotesProps> = ({ userEmail, isAdmin,
             });
         } catch (error) {
             console.error('Error updating note color:', error);
+        }
+    };
+
+    const handleUpdateMinimized = async (id: string, isMinimized: boolean) => {
+        if (!isAdmin) return;
+        try {
+            await updateDoc(doc(db, 'admin_notes', id), {
+                isMinimized,
+                updatedAt: serverTimestamp()
+            });
+        } catch (error) {
+            console.error('Error updating note minimization:', error);
         }
     };
 
@@ -141,97 +160,115 @@ const GlobalAdminNotes: React.FC<GlobalAdminNotesProps> = ({ userEmail, isAdmin,
     return (
         <div className="fixed inset-0 pointer-events-none z-[9999]">
             {/* Admin Toolbar (Add & List) */}
-            <div className="fixed bottom-6 right-6 pointer-events-auto flex items-center gap-2">
-                {isListOpen && (
-                    <div className="bg-slate-800 border-2 border-slate-700 rounded-xl shadow-2xl p-4 mb-2 mr-2 w-80 animate-in fade-in slide-in-from-bottom-5 duration-200">
-                        <div className="flex justify-between items-center mb-3">
-                            <h3 className="text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                                <ListIcon className="w-4 h-4 text-orange-400" />
-                                Zarządzaj Notatkami
-                            </h3>
-                            <button onClick={() => setIsListOpen(false)} className="text-slate-400 hover:text-white p-1">
-                                <XMarkIcon className="w-4 h-4" />
-                            </button>
-                        </div>
+            <div className={`fixed bottom-6 right-6 pointer-events-auto flex items-center gap-2 ${isToolbarMinimized ? 'opacity-50 hover:opacity-100 transition-opacity' : ''}`}>
+                {isToolbarMinimized ? (
+                    <button
+                        onClick={() => setIsToolbarMinimized(false)}
+                        className="w-3 h-3 bg-orange-500 rounded-full shadow-lg hover:w-6 hover:h-6 transition-all border border-orange-400/50"
+                        title="Rozwiń narzędzia admina"
+                    />
+                ) : (
+                    <>
+                        {isListOpen && (
+                            <div className="bg-slate-800 border-2 border-slate-700 rounded-xl shadow-2xl p-4 mb-2 mr-2 w-80 animate-in fade-in slide-in-from-bottom-5 duration-200">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h3 className="text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                                        <ListIcon className="w-4 h-4 text-orange-400" />
+                                        Zarządzaj Notatkami
+                                    </h3>
+                                    <button onClick={() => setIsListOpen(false)} className="text-slate-400 hover:text-white p-1">
+                                        <XMarkIcon className="w-4 h-4" />
+                                    </button>
+                                </div>
 
-                        {/* Debug Info Toggle */}
-                        <div className="flex items-center justify-between mb-4 p-2 bg-slate-900/50 rounded border border-slate-700">
-                            <span className="text-[10px] text-slate-400">Tryb diagnostyczny</span>
-                            <button
-                                onClick={() => setShowDebug(!showDebug)}
-                                className={`p-1 rounded transition-colors ${showDebug ? 'text-orange-400' : 'text-slate-500'}`}
-                            >
-                                <EyeIcon className="w-4 h-4" />
-                            </button>
-                        </div>
+                                {/* Debug Info Toggle */}
+                                <div className="flex items-center justify-between mb-4 p-2 bg-slate-900/50 rounded border border-slate-700">
+                                    <span className="text-[10px] text-slate-400">Tryb diagnostyczny</span>
+                                    <button
+                                        onClick={() => setShowDebug(!showDebug)}
+                                        className={`p-1 rounded transition-colors ${showDebug ? 'text-orange-400' : 'text-slate-500'}`}
+                                    >
+                                        <EyeIcon className="w-4 h-4" />
+                                    </button>
+                                </div>
 
-                        {showDebug && (
-                            <div className="mb-4 p-2 bg-orange-900/20 border border-orange-500/30 rounded text-[10px] text-orange-200 break-all font-mono">
-                                Current View ID: <br /> {currentViewId}
+                                {showDebug && (
+                                    <div className="mb-4 p-2 bg-orange-900/20 border border-orange-500/30 rounded text-[10px] text-orange-200 break-all font-mono">
+                                        Current View ID: <br /> {currentViewId}
+                                    </div>
+                                )}
+
+                                <div className="space-y-4 max-h-80 overflow-y-auto custom-scrollbar pr-1">
+                                    {/* Section: This Screen */}
+                                    <div>
+                                        <h4 className="text-[10px] text-orange-400 font-bold mb-2 uppercase">Na tym ekranie ({activeNotes.length})</h4>
+                                        {activeNotes.length === 0 ? (
+                                            <p className="text-slate-500 text-[10px] italic py-2">Brak notatek.</p>
+                                        ) : (
+                                            activeNotes.map(note => (
+                                                <div key={note.id} className="p-2 bg-slate-900/80 rounded border border-slate-600 mb-1">
+                                                    <p className="text-slate-200 text-xs line-clamp-2 mb-2">{note.content}</p>
+                                                    <button
+                                                        onClick={() => resetNotePosition(note.id)}
+                                                        className="text-[9px] bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 py-1 rounded w-full flex items-center justify-center gap-1"
+                                                    >
+                                                        <HomeIcon className="w-2.5 h-2.5" /> Przywołaj
+                                                    </button>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    {/* Section: Other Screens */}
+                                    <div>
+                                        <h4 className="text-[10px] text-slate-500 font-bold mb-2 uppercase">Inne ekrany ({otherNotes.length})</h4>
+                                        {otherNotes.map(note => (
+                                            <div key={note.id} className="p-2 bg-slate-900/40 rounded border border-slate-700/50 mb-1 group">
+                                                <p className="text-slate-400 text-[11px] line-clamp-1 italic mb-1">{note.content}</p>
+                                                <div className="flex justify-between items-center opacity-40 group-hover:opacity-100 transition-opacity">
+                                                    <span className="text-[8px] text-slate-500 truncate max-w-[100px]">{note.viewId}</span>
+                                                    <button
+                                                        onClick={() => assignToCurrentScreen(note.id)}
+                                                        className="text-[9px] text-orange-400/80 hover:text-orange-400 font-bold"
+                                                    >
+                                                        Przenieś tutaj
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         )}
 
-                        <div className="space-y-4 max-h-80 overflow-y-auto custom-scrollbar pr-1">
-                            {/* Section: This Screen */}
-                            <div>
-                                <h4 className="text-[10px] text-orange-400 font-bold mb-2 uppercase">Na tym ekranie ({activeNotes.length})</h4>
-                                {activeNotes.length === 0 ? (
-                                    <p className="text-slate-500 text-[10px] italic py-2">Brak notatek.</p>
-                                ) : (
-                                    activeNotes.map(note => (
-                                        <div key={note.id} className="p-2 bg-slate-900/80 rounded border border-slate-600 mb-1">
-                                            <p className="text-slate-200 text-xs line-clamp-2 mb-2">{note.content}</p>
-                                            <button
-                                                onClick={() => resetNotePosition(note.id)}
-                                                className="text-[9px] bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 py-1 rounded w-full flex items-center justify-center gap-1"
-                                            >
-                                                <HomeIcon className="w-2.5 h-2.5" /> Przywołaj
-                                            </button>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
+                        <button
+                            onClick={() => setIsListOpen(!isListOpen)}
+                            className={`p-3 rounded-full shadow-2xl transition-all active:scale-95 border-2 ${isListOpen ? 'bg-slate-700 border-slate-500 text-white' : 'bg-slate-800 border-slate-700 text-orange-400 hover:bg-slate-700'}`}
+                            title="Zarządzaj notatkami"
+                        >
+                            <ListIcon className="w-6 h-6" />
+                        </button>
 
-                            {/* Section: Other Screens */}
-                            <div>
-                                <h4 className="text-[10px] text-slate-500 font-bold mb-2 uppercase">Inne ekrany ({otherNotes.length})</h4>
-                                {otherNotes.map(note => (
-                                    <div key={note.id} className="p-2 bg-slate-900/40 rounded border border-slate-700/50 mb-1 group">
-                                        <p className="text-slate-400 text-[11px] line-clamp-1 italic mb-1">{note.content}</p>
-                                        <div className="flex justify-between items-center opacity-40 group-hover:opacity-100 transition-opacity">
-                                            <span className="text-[8px] text-slate-500 truncate max-w-[100px]">{note.viewId}</span>
-                                            <button
-                                                onClick={() => assignToCurrentScreen(note.id)}
-                                                className="text-[9px] text-orange-400/80 hover:text-orange-400 font-bold"
-                                            >
-                                                Przenieś tutaj
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+                        <button
+                            onClick={addNewNote}
+                            className="p-4 bg-orange-600 hover:bg-orange-500 text-white rounded-full shadow-2xl transition-all active:scale-95 group flex items-center gap-2 border-2 border-orange-400/50"
+                            title="Dodaj nową notatkę"
+                        >
+                            <PlusIcon className="w-6 h-6" />
+                            <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap text-sm font-bold">
+                                Nowa Notatka
+                            </span>
+                        </button>
+
+                        <button
+                            onClick={() => setIsToolbarMinimized(true)}
+                            className="p-1.5 text-slate-500 hover:text-slate-300 transition-colors ml-1"
+                            title="Minimalizuj narzędzia admina"
+                        >
+                            <XMarkIcon className="w-4 h-4" />
+                        </button>
+                    </>
                 )}
-
-                <button
-                    onClick={() => setIsListOpen(!isListOpen)}
-                    className={`p-3 rounded-full shadow-2xl transition-all active:scale-95 border-2 ${isListOpen ? 'bg-slate-700 border-slate-500 text-white' : 'bg-slate-800 border-slate-700 text-orange-400 hover:bg-slate-700'}`}
-                    title="Zarządzaj notatkami"
-                >
-                    <ListIcon className="w-6 h-6" />
-                </button>
-
-                <button
-                    onClick={addNewNote}
-                    className="p-4 bg-orange-600 hover:bg-orange-500 text-white rounded-full shadow-2xl transition-all active:scale-95 group flex items-center gap-2 border-2 border-orange-400/50"
-                    title="Dodaj nową notatkę"
-                >
-                    <PlusIcon className="w-6 h-6" />
-                    <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap text-sm font-bold">
-                        Nowa Notatka
-                    </span>
-                </button>
             </div>
 
             {activeNotes.map(note => (
@@ -240,6 +277,7 @@ const GlobalAdminNotes: React.FC<GlobalAdminNotesProps> = ({ userEmail, isAdmin,
                     note={note}
                     onUpdatePosition={(x, y) => handleUpdatePosition(note.id, x, y)}
                     onUpdateColor={(color) => handleUpdateColor(note.id, color)}
+                    onUpdateMinimized={(min) => handleUpdateMinimized(note.id, min)}
                     onDelete={() => handleDeleteNote(note.id)}
                     isEditing={editingNoteId === note.id}
                     onStartEdit={() => {
@@ -260,6 +298,7 @@ interface DraggableNoteProps {
     note: GlobalNote;
     onUpdatePosition: (x: number, y: number) => void;
     onUpdateColor: (color: string) => void;
+    onUpdateMinimized: (isMinimized: boolean) => void;
     onDelete: () => void;
     isEditing: boolean;
     onStartEdit: () => void;
@@ -279,7 +318,8 @@ const DraggableNote: React.FC<DraggableNoteProps> = ({
     editContent,
     onEditContentChange,
     onSave,
-    onCancelEdit
+    onCancelEdit,
+    onUpdateMinimized
 }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [pos, setPos] = useState(note.position);
@@ -343,39 +383,53 @@ const DraggableNote: React.FC<DraggableNoteProps> = ({
         >
             <div className={`w-64 ${colorConfig.bg} border-2 ${isEditing ? 'border-orange-500 shadow-orange-500/20' : `${colorConfig.border} shadow-xl shadow-black/20`} rounded-lg overflow-hidden transition-all duration-200`}>
                 <div className={`p-2 ${isEditing ? 'bg-orange-500' : colorConfig.header} flex justify-between items-center select-none`}>
-                    <span className="text-[10px] font-bold text-black/60 uppercase">Notatka Admina</span>
+                    <span className="text-[10px] font-bold text-black/60 uppercase">{note.isMinimized ? '...' : 'Notatka Admina'}</span>
                     <div className="flex gap-1">
                         {!isEditing ? (
                             <>
-                                <div className="relative">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setIsColorPickerOpen(!isColorPickerOpen);
-                                        }}
-                                        className="p-1 hover:bg-black/10 rounded"
-                                    >
-                                        <SwatchIcon className="w-3.5 h-3.5" />
-                                    </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onUpdateMinimized(!note.isMinimized);
+                                    }}
+                                    className="p-1 hover:bg-black/10 rounded mr-1"
+                                    title={note.isMinimized ? "Rozwiń" : "Minimalizuj"}
+                                >
+                                    {note.isMinimized ? <ChevronDownIcon className="w-3.5 h-3.5" /> : <ChevronUpIcon className="w-3.5 h-3.5" />}
+                                </button>
+                                {!note.isMinimized && (
+                                    <>
+                                        <div className="relative">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setIsColorPickerOpen(!isColorPickerOpen);
+                                                }}
+                                                className="p-1 hover:bg-black/10 rounded"
+                                            >
+                                                <SwatchIcon className="w-3.5 h-3.5" />
+                                            </button>
 
-                                    {isColorPickerOpen && (
-                                        <div className="absolute top-full mt-1 right-0 bg-white shadow-xl rounded-lg p-1.5 flex gap-1 z-[10001] animate-in zoom-in-95 duration-100 border border-black/10">
-                                            {NOTE_COLORS.map(c => (
-                                                <button
-                                                    key={c.name}
-                                                    onClick={() => {
-                                                        onUpdateColor(c.name);
-                                                        setIsColorPickerOpen(false);
-                                                    }}
-                                                    className={`w-5 h-5 rounded-full ${c.header} border border-black/10 hover:scale-110 transition-transform ${note.color === c.name ? 'ring-2 ring-black/40 ring-offset-1' : ''}`}
-                                                    title={c.name}
-                                                />
-                                            ))}
+                                            {isColorPickerOpen && (
+                                                <div className="absolute top-full mt-1 right-0 bg-white shadow-xl rounded-lg p-1.5 flex gap-1 z-[10001] animate-in zoom-in-95 duration-100 border border-black/10">
+                                                    {NOTE_COLORS.map(c => (
+                                                        <button
+                                                            key={c.name}
+                                                            onClick={() => {
+                                                                onUpdateColor(c.name);
+                                                                setIsColorPickerOpen(false);
+                                                            }}
+                                                            className={`w-5 h-5 rounded-full ${c.header} border border-black/10 hover:scale-110 transition-transform ${note.color === c.name ? 'ring-2 ring-black/40 ring-offset-1' : ''}`}
+                                                            title={c.name}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                                <button onClick={onStartEdit} className="p-1 hover:bg-black/10 rounded"><PencilIcon className="w-3.5 h-3.5" /></button>
-                                <button onClick={onDelete} className="p-1 hover:bg-red-500/20 rounded text-red-700"><TrashIcon className="w-3.5 h-3.5" /></button>
+                                        <button onClick={onStartEdit} className="p-1 hover:bg-black/10 rounded"><PencilIcon className="w-3.5 h-3.5" /></button>
+                                        <button onClick={onDelete} className="p-1 hover:bg-red-500/20 rounded text-red-700"><TrashIcon className="w-3.5 h-3.5" /></button>
+                                    </>
+                                )}
                             </>
                         ) : (
                             <>
@@ -385,7 +439,7 @@ const DraggableNote: React.FC<DraggableNoteProps> = ({
                         )}
                     </div>
                 </div>
-                <div className="p-3">
+                <div className={`${note.isMinimized ? 'p-1 px-3' : 'p-3'}`}>
                     {isEditing ? (
                         <textarea
                             autoFocus
@@ -394,15 +448,17 @@ const DraggableNote: React.FC<DraggableNoteProps> = ({
                             onChange={(e) => onEditContentChange(e.target.value)}
                         />
                     ) : (
-                        <p className={`text-sm ${colorConfig.text} whitespace-pre-wrap font-medium leading-relaxed`}>
+                        <p className={`${note.isMinimized ? 'text-[11px] truncate max-w-[180px]' : 'text-sm whitespace-pre-wrap'} ${colorConfig.text} font-medium leading-relaxed`}>
                             {note.content}
                         </p>
                     )}
                 </div>
-                <div className={`${colorConfig.accent} p-1 px-2 text-[8px] ${colorConfig.text} opacity-50 italic flex justify-between`}>
-                    <span>{note.authorEmail}</span>
-                    <span>{note.updatedAt?.toDate() ? new Date(note.updatedAt.toDate()).toLocaleString() : ''}</span>
-                </div>
+                {!note.isMinimized && (
+                    <div className={`${colorConfig.accent} p-1 px-2 text-[8px] ${colorConfig.text} opacity-50 italic flex justify-between`}>
+                        <span>{note.authorEmail}</span>
+                        <span>{note.updatedAt?.toDate() ? new Date(note.updatedAt.toDate()).toLocaleString() : ''}</span>
+                    </div>
+                )}
             </div>
         </div>
     );

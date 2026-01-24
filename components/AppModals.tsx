@@ -31,6 +31,7 @@ interface AppModalsProps {
     isQuickActionsModalOpen: boolean;
     setIsQuickActionsModalOpen: (open: boolean) => void;
     handleSelectQuickAction: (action: any) => void;
+    handleRemoveQuickAction: (index: number) => void;
 
     isWelcomeModalOpen: boolean;
     setIsWelcomeModalOpen: (open: boolean) => void;
@@ -67,7 +68,7 @@ interface AppModalsProps {
 const AppModals: React.FC<AppModalsProps> = ({
     isProfileModalOpen, setIsProfileModalOpen, user, userProfile, handleUpdateProfile, topics,
     isHistoryPanelOpen, setIsHistoryPanelOpen, chatHistories, handleLoadHistory, handleDeleteHistory, handleViewKnowledge, handleViewDocuments,
-    isQuickActionsModalOpen, setIsQuickActionsModalOpen, handleSelectQuickAction,
+    isQuickActionsModalOpen, setIsQuickActionsModalOpen, handleSelectQuickAction, handleRemoveQuickAction,
     isWelcomeModalOpen, setIsWelcomeModalOpen, handleCaseAnalysis, isLoading, welcomeModalInitialViewMode,
     isKnowledgeModalOpen, setIsKnowledgeModalOpen, knowledgeModalChatId,
     isDocumentsModalOpen, setIsDocumentsModalOpen, documentsModalChatId,
@@ -113,6 +114,7 @@ const AppModals: React.FC<AppModalsProps> = ({
                 isOpen={isQuickActionsModalOpen}
                 onClose={() => setIsQuickActionsModalOpen(false)}
                 onSelect={handleSelectQuickAction}
+                onRemove={handleRemoveQuickAction}
                 quickActions={userProfile?.quickActions || []}
             />
 
