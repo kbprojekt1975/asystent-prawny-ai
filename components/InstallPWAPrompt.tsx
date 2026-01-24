@@ -27,7 +27,7 @@ const InstallPWAPrompt: React.FC<InstallPWAPromptProps> = ({ isOpen, onClose, on
 
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-slate-900 border border-slate-700/50 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-300">
+            <div className="bg-slate-900 border border-slate-700/50 rounded-3xl w-full max-w-md shadow-2xl flex flex-col animate-in zoom-in-95 duration-300 relative">
                 {/* Header with Icon background */}
                 <div className="relative p-8 pb-4 text-center">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-xl flex items-center justify-center border-4 border-slate-900">
@@ -82,7 +82,7 @@ const InstallPWAPrompt: React.FC<InstallPWAPromptProps> = ({ isOpen, onClose, on
                 </div>
 
                 {/* Decorative bottom edge */}
-                <div className="h-1.5 w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 opacity-50" />
+                <div className="h-1.5 w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 opacity-50 rounded-b-3xl" />
             </div>
         </div>
     );

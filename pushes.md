@@ -15,10 +15,12 @@
 - **Prompt Instalacji (PWA)**:
     - Dodano mechanizm wykrywania gotowości do instalacji (`beforeinstallprompt`).
     - Nowy komponent `InstallPWAPrompt` – eleganckie okno z pytaniem o instalację aplikacji.
+    - Naprawiono problem obciętego logo na górze okna (usunięcie clippingu).
     - Funkcja „Nie pytaj więcej” – wybór użytkownika jest zapisywany w profilu (Firestore) i trwale respektowany.
     - Automatyczne wyzwalanie promptu z 3-sekundowym opóźnieniem przy pierwszym uruchomieniu po zalogowaniu.
 - **Tłumaczenia**:
     - Pełna polska lokalizacja dla wszystkich komunikatów związanych z instalacją.
+    - Naprawiono literówkę w opisie („ekany” -> „ekranu”).
 
 ### [6ecd228] 2026-01-24 11:50 | style: poprawa UI
 **Zadania:**
