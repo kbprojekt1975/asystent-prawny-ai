@@ -6,7 +6,7 @@ import { getStorage, connectStorageEmulator } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCu_1o6I_hyV21Xk2m-TfWJ9kwPjX0wCf8",
-  authDomain: "low-assit.firebaseapp.com",
+  authDomain: "asystent-prawny.pro",
   projectId: "low-assit",
   storageBucket: "low-assit.firebasestorage.app",
   messagingSenderId: "1092592744132",
