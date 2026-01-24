@@ -10,7 +10,7 @@
 ---
 ---
 
-### [temp-hash] 2026-01-24 14:45 | feat: implementacja proaktywnego zapytania o instalację PWA
+### [5480d0d] 2026-01-24 14:45 | feat: implementacja proaktywnego zapytania o instalację PWA
 **Zadania:**
 - **Prompt Instalacji (PWA)**:
     - Dodano mechanizm wykrywania gotowości do instalacji (`beforeinstallprompt`).
