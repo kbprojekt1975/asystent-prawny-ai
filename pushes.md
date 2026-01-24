@@ -10,7 +10,7 @@
 ---
 ---
 
-### [temp-hash] 2026-01-24 11:50 | style: poprawa UI
+### [6ecd228] 2026-01-24 11:50 | style: poprawa UI
 **Zadania:**
 - **Ikona Andromeda (Header)**:
     - Naprawiono problem z „rozciąganiem” i rozmyciem ikony na urządzeniach mobilnych.
