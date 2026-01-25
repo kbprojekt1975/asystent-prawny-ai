@@ -10,6 +10,24 @@
 ---
 ---
 
+### [pending-hash] 2026-01-25 12:30 | feat: AI Tools UX improvements & bug fixes
+**Zadania:**
+- **Narzędzia AI - Wybór Tematu**:
+    - **Historia Pełna**: Przycisk "Wybierz temat sprawy" otwiera teraz panel historii ze WSZYSTKIMI sprawami (wszystkie dziedziny prawa).
+    - **Kontekst Sprawy**: Asystent automatycznie zapoznaje się z historią sprawy po wybraniu narzędzia AI i informuje użytkownika.
+    - **Deduplikacja**: Naprawiono parsowanie tematów - każdy temat pojawia się raz w historii z pod-punktami dla różnych trybów.
+- **UI/UX Poprawki**:
+    - **Context Selector**: Poprawiono stylowanie panelu wyboru kontekstu (Current/Select/New) - większe obramowania, lepsze odstępy.
+    - **Quick Actions**: Naprawiono błędy w nazwach klas CSS (`bg-slate-900` zamiast `bg - slate - 900`).
+    - **Modal Z-Index**: Zwiększono `z-index` ConfirmationModal do `z-[110]` - modal usuwania tematu wyświetla się teraz nad panelem historii.
+- **Lokalizacja**:
+    - **Placeholdery Andromedy**: Przykładowe pytania w czacie są teraz tłumaczone (PL/EN/ES).
+    - **Przycisk Zgody**: "WYRAŻ ZGODĘ" używa teraz tłumaczeń.
+    - **GDPR Badge**: Spójny, stylowany komponent ostrzeżenia RODO w profilu i nagłówku.
+- **Analiza Kodu**:
+    - Utworzono raport analizy kodu identyfikujący problematyczne pliki.
+    - Krytyczne: `functions/src/index.ts` (2,729 linii) wymaga refaktoryzacji.
+
 ### [pending-hash] 2026-01-24 21:40 | feat: GDPR warning localization & Stripe Sandbox
 **Zadania:**
 - **-------STRIPE SAND BOX--------**:

@@ -13,11 +13,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
   if (!isOpen) return null;
 
   return (
-    <div 
-        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 transition-opacity"
-        aria-labelledby="modal-title"
-        role="dialog"
-        aria-modal="true"
+    <div
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[110] transition-opacity"
+      aria-labelledby="modal-title"
+      role="dialog"
+      aria-modal="true"
     >
       <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6 w-full max-w-md mx-4 transform transition-all">
         <div className="sm:flex sm:items-start">

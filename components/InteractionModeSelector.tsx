@@ -51,23 +51,23 @@ const InteractionModeSelector: React.FC<InteractionModeSelectorProps> = ({
       </div>
 
       {/* Case Context Selector */}
-      <div className="w-full max-w-2xl bg-slate-800/60 p-1 rounded-2xl border border-slate-700/50 shadow-2xl mb-8 flex flex-col md:flex-row gap-1">
+      <div className="w-full max-w-2xl bg-slate-900/80 p-2 rounded-2xl border-2 border-slate-700 shadow-2xl mb-8 flex flex-col md:flex-row gap-2">
         <button
           onClick={() => setActiveContext('current')}
           disabled={!selectedTopic}
-          className={`flex-1 flex items-center justify-start md:justify-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all duration-300 ${activeContext === 'current'
-            ? 'bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 shadow-lg shadow-cyan-900/10'
-            : 'bg-transparent text-slate-500 hover:text-slate-400 border border-transparent'
+          className={`flex-1 flex items-center justify-start md:justify-center gap-2 md:gap-3 px-4 md:px-5 py-3 md:py-4 rounded-xl transition-all duration-300 ${activeContext === 'current'
+            ? 'bg-cyan-600/20 text-cyan-400 border-2 border-cyan-500/40 shadow-lg shadow-cyan-900/20'
+            : 'bg-slate-800/50 text-slate-400 hover:text-slate-300 hover:bg-slate-800/70 border-2 border-slate-700/50'
             } ${!selectedTopic ? 'opacity-30 cursor-not-allowed' : ''}`}
         >
-          <div className={`p-1 md:p-1.5 rounded-lg flex-shrink-0 ${activeContext === 'current' ? 'bg-cyan-500/20' : 'bg-slate-700/30'}`}>
-            <BriefcaseIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+          <div className={`p-1.5 md:p-2 rounded-lg flex-shrink-0 ${activeContext === 'current' ? 'bg-cyan-500/20' : 'bg-slate-700/40'}`}>
+            <BriefcaseIcon className="w-4 h-4 md:w-5 md:h-5" />
           </div>
           <div className="text-left overflow-hidden">
-            <span className="block text-[8px] md:text-[10px] uppercase tracking-wider font-bold opacity-70 leading-none mb-0.5 md:mb-1">
+            <span className="block text-[9px] md:text-[11px] uppercase tracking-wider font-bold opacity-70 leading-none mb-1">
               {t('interaction.options.current_case_prefix')}
             </span>
-            <span className="block text-[10px] md:text-xs font-semibold truncate max-w-[120px] md:max-w-[150px]">
+            <span className="block text-[11px] md:text-sm font-semibold truncate max-w-[120px] md:max-w-[150px]">
               {selectedTopic || t('interaction.options.no_open_case')}
             </span>
           </div>
@@ -75,28 +75,28 @@ const InteractionModeSelector: React.FC<InteractionModeSelectorProps> = ({
 
         <button
           onClick={() => setActiveContext('select')}
-          className={`flex-1 flex items-center justify-start md:justify-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all duration-300 ${activeContext === 'select'
-            ? 'bg-slate-700/80 text-white border border-slate-600 shadow-xl'
-            : 'bg-transparent text-slate-400 hover:bg-slate-700/30 hover:text-slate-200 border border-transparent'
+          className={`flex-1 flex items-center justify-start md:justify-center gap-2 md:gap-3 px-4 md:px-5 py-3 md:py-4 rounded-xl transition-all duration-300 ${activeContext === 'select'
+            ? 'bg-slate-700/90 text-white border-2 border-slate-600 shadow-xl'
+            : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 border-2 border-slate-700/50'
             }`}
         >
-          <div className={`p-1 md:p-1.5 rounded-lg flex-shrink-0 ${activeContext === 'select' ? 'bg-slate-700/50' : 'bg-slate-700/30'}`}>
-            <ArchiveIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+          <div className={`p-1.5 md:p-2 rounded-lg flex-shrink-0 ${activeContext === 'select' ? 'bg-slate-600/50' : 'bg-slate-700/40'}`}>
+            <ArchiveIcon className="w-4 h-4 md:w-5 md:h-5" />
           </div>
-          <span className="text-[10px] md:text-xs font-semibold">{t('interaction.options.select_topic')}</span>
+          <span className="text-[11px] md:text-sm font-semibold">{t('interaction.options.select_topic')}</span>
         </button>
 
         <button
           onClick={() => setActiveContext('new')}
-          className={`flex-1 flex items-center justify-start md:justify-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all duration-300 ${activeContext === 'new'
-            ? 'bg-slate-700/80 text-white border border-slate-600 shadow-xl'
-            : 'bg-transparent text-slate-400 hover:bg-slate-700/30 hover:text-slate-200 border border-transparent'
+          className={`flex-1 flex items-center justify-start md:justify-center gap-2 md:gap-3 px-4 md:px-5 py-3 md:py-4 rounded-xl transition-all duration-300 ${activeContext === 'new'
+            ? 'bg-slate-700/90 text-white border-2 border-slate-600 shadow-xl'
+            : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 border-2 border-slate-700/50'
             }`}
         >
-          <div className={`p-1 md:p-1.5 rounded-lg flex-shrink-0 ${activeContext === 'new' ? 'bg-slate-700/50' : 'bg-slate-700/30'}`}>
-            <PlusCircleIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+          <div className={`p-1.5 md:p-2 rounded-lg flex-shrink-0 ${activeContext === 'new' ? 'bg-slate-600/50' : 'bg-slate-700/40'}`}>
+            <PlusCircleIcon className="w-4 h-4 md:w-5 md:h-5" />
           </div>
-          <span className="text-[10px] md:text-xs font-semibold">{t('interaction.options.start_clean')}</span>
+          <span className="text-[11px] md:text-sm font-semibold">{t('interaction.options.start_clean')}</span>
         </button>
       </div>
 

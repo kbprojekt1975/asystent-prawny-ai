@@ -454,7 +454,7 @@ const App: React.FC = () => {
     if (context === 'select') {
       setServicePath(newServicePath);
       setInteractionMode(mode);
-      setSelectedTopic(null); // Direct user to topic list
+      setIsHistoryPanelOpen(true); // Open history panel to show all topics across all law areas
       return;
     }
 
@@ -630,6 +630,24 @@ const App: React.FC = () => {
           SKUP SIĘ WYŁĄCZNIE NA OBECNYM TRYBIE.Nie sugeruj innych asystentów ani zmiany trybu.Pisz proaktywnie.`;
 
           await handleSendMessage(modeChangeMessage, savedHistory, {
+            lawArea: lawArea,
+            topic: topic,
+            interactionMode: mode,
+            servicePath: path || savedServicePath || undefined
+          });
+        } else if (savedHistory.length > 0 && mode && (mode === savedInteractionMode || !savedInteractionMode)) {
+          // AI Tool selected for existing case - Inform user that assistant has reviewed the case
+          const reviewMessage = `[SYSTEM: NARZĘDZIE AI - ${mode}]
+          Użytkownik wybrał narzędzie AI dla istniejącej sprawy.
+          TWOJE ZADANIE:
+1. Potwierdź, że zapoznałeś się z dotychczasową historią sprawy: ${topic}.
+2. Krótko podsumuj kluczowe fakty i ustalenia (2-3 zdania).
+3. Wyjaśnij, jak wybrany tryb pracy (${mode}) pomoże w dalszym prowadzeniu tej sprawy.
+4. Zaproponuj konkretne pierwsze kroki w ramach tego narzędzia.
+
+          WAŻNE: Pisz w pierwszej osobie, jakbyś właśnie przejrzał całą dokumentację. Bądź konkretny i proaktywny.`;
+
+          await handleSendMessage(reviewMessage, savedHistory, {
             lawArea: lawArea,
             topic: topic,
             interactionMode: mode,
@@ -1348,14 +1366,14 @@ const App: React.FC = () => {
         />
 
         {selectedTopic && interactionMode && servicePath !== 'pro' && (
-          <footer className={`bg - slate - 900 transition - all duration - 200 ${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow && !isFullScreen) ? 'py-0.5 px-2 md:p-4' : 'p-2 md:p-4'} `}>
+          <footer className={`bg-slate-900 transition-all duration-200 ${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow && !isFullScreen) ? 'py-0.5 px-2 md:p-4' : 'p-2 md:p-4'}`}>
             <div className="max-w-4xl mx-auto">
               {showQuickActions && !isFullScreen && (
                 <div className={`${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow) ? 'hidden md:block' : 'block'} `}>
                   <QuickActions interactionMode={interactionMode} onActionClick={handleQuickActionClick} />
                 </div>
               )}
-              <div className={`flex flex - col gap - 2 md: gap - 3 ${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow) ? 'mt-0 md:mt-3' : 'mt-1 md:mt-3'} `}>
+              <div className={`flex flex-col gap-2 md:gap-3 ${(!isMobileToolbarOpen && !mobileToolbarAlwaysShow) ? 'mt-0 md:mt-3' : 'mt-1 md:mt-3'}`}>
                 {!isFullScreen && (
                   <>
                     {/* Mobile Collapse Toggle: Visible ONLY on mobile + collapsed + NOT always show */}

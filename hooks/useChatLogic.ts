@@ -353,7 +353,29 @@ export const useChatLogic = ({
                 const parts = chatDoc.id.split('_');
                 if (parts.length >= 2) {
                     const lawArea = (data.lawArea || parts[0]) as LawArea;
-                    const topic = data.topic || parts.slice(1).join('_'); // Prefer data.topic which is the original title
+
+                    // Extract topic: prefer data.topic (original title), otherwise parse from chatId
+                    let topic: string;
+                    if (data.topic) {
+                        topic = data.topic;
+                    } else {
+                        // Parse chatId: format is lawArea_topic or lawArea_topic_mode
+                        // Remove lawArea (first part) and mode (last part if it's a known InteractionMode)
+                        const topicParts = parts.slice(1); // Remove lawArea
+                        const lastPart = topicParts[topicParts.length - 1];
+
+                        // Check if last part is a mode slug (sanitized InteractionMode)
+                        const isModeSuffix = Object.values(InteractionMode).some(mode =>
+                            mode.replace(/[^a-z0-9]/gi, '_').toLowerCase() === lastPart
+                        );
+
+                        if (isModeSuffix && topicParts.length > 1) {
+                            // Remove mode suffix
+                            topic = topicParts.slice(0, -1).join('_');
+                        } else {
+                            topic = topicParts.join('_');
+                        }
+                    }
 
                     // Fetch document count
                     let docCount = 0;
