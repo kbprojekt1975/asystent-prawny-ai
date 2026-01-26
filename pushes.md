@@ -10,7 +10,28 @@
 ---
 ---
 
-### [pending-hash] 2026-01-25 12:30 | feat: AI Tools UX improvements & bug fixes
+### [3e5cba5] 2026-01-26 21:15 | refactor: major codebase modularization & backend restructuring
+**Zadania:**
+- **Refaktoryzacja Frontendu**:
+    - **Nowa Architektura Komponentów**: Rozbito monolityczne komponenty na mniejsze, wyspecjalizowane jednostki w katalogach `components/chat/`, `components/pro/`, `components/profile/`, `components/alimony/` oraz `components/andromeda/`.
+    - **MainNavigator**: Uproszczono `App.tsx` poprzez wprowadzenie centralnego nawigatora zarządzającego widokami.
+    - **Nowe Widoki**: Dodano `ChatView.tsx`, `ChatFooter.tsx` oraz ulepszony system ładowania `FullScreenLoader.tsx`.
+- **Zarządzanie Stanem (Context API)**:
+    - **UIContext**: Centralizacja stanu interfejsu (modale, sidebar, loading).
+    - **ChatContext**: Wydzielenie logiki sesji czatu i historii do dedykowanego kontekstu.
+- **Modularyzacja Hooków**:
+    - Rozbito `useChatLogic.ts` na mniejsze hooki: `useChatActions`, `useChatModes`, `useChatPersistence`, `useChatBubble`.
+    - Dodano `useAppNavigation` dla spójnej nawigacji w aplikacji.
+- **Modernizacja Backendu (Cloud Functions)**:
+    - **Restrukturyzacja functions/src/index.ts**: Rozbito plik (>2700 linii) na modułowe handlery w `functions/src/handlers/`.
+    - **Organizacja Prompts & Services**: Wydzielone promptów systemowych i serwisów zewnętrznych do dedykowanych folderów.
+- **UX/UI**:
+    - Wprowadzono ekran `AwaitingActivation.tsx` dla użytkowników oczekujących na aktywację planu.
+    - Poprawiono płynność przejść między narzędzia AI a głównym czatem.
+
+---
+
+### [e5d62ad] 2026-01-25 12:30 | feat: AI Tools UX improvements & bug fixes
 **Zadania:**
 - **Narzędzia AI - Wybór Tematu**:
     - **Historia Pełna**: Przycisk "Wybierz temat sprawy" otwiera teraz panel historii ze WSZYSTKIMI sprawami (wszystkie dziedziny prawa).
@@ -28,7 +49,7 @@
     - Utworzono raport analizy kodu identyfikujący problematyczne pliki.
     - Krytyczne: `functions/src/index.ts` (2,729 linii) wymaga refaktoryzacji.
 
-### [pending-hash] 2026-01-24 21:40 | feat: GDPR warning localization & Stripe Sandbox
+### [fd00a8b] 2026-01-24 21:40 | feat: GDPR warning localization & Stripe Sandbox
 **Zadania:**
 - **-------STRIPE SAND BOX--------**:
     - **UWAGA**: Konfiguracja Stripe działa w trybie testowym (Sandbox). Nie wdrażać na produkcję bez weryfikacji kluczy!
