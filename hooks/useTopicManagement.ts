@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { doc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { InteractionMode, LawArea, getChatId } from '../types';
@@ -6,30 +6,15 @@ import { User } from 'firebase/auth';
 
 export const useTopicManagement = (
     user: User | null,
-    initialTopics: Record<LawArea, string[]>,
+    topics: Record<LawArea, string[]>,
+    setTopics: React.Dispatch<React.SetStateAction<Record<LawArea, string[]>>>,
     selectedLawArea: LawArea | null,
     setInteractionMode: (mode: InteractionMode) => void,
     setSelectedTopic: (topic: string | null) => void,
     isLocalOnly: boolean = false
 ) => {
-    const [topics, setTopics] = useState<Record<LawArea, string[]>>(initialTopics);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [topicToDelete, setTopicToDelete] = useState<{ lawArea: LawArea, topic: string } | null>(null);
-
-    // Sync topics from Firestore
-    useEffect(() => {
-        if (!user || isLocalOnly) return;
-        const userDocRef = doc(db, 'users', user.uid);
-        const unsubscribe = onSnapshot(userDocRef, (userDoc) => {
-            if (userDoc.exists()) {
-                const data = userDoc.data();
-                if (data.topics && JSON.stringify(data.topics) !== JSON.stringify(topics)) {
-                    setTopics(data.topics);
-                }
-            }
-        });
-        return () => unsubscribe();
-    }, [user, topics, isLocalOnly]); // Added isLocalOnly to dependency array
 
 
 

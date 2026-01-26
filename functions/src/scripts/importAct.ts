@@ -1,6 +1,6 @@
 
 import * as admin from 'firebase-admin';
-import { getFullActContent, searchLegalActs } from '../isapService';
+import { getFullActContent, searchLegalActs } from '../services/isapService';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
@@ -59,7 +59,7 @@ async function importToVector(publisher: string, year: number, pos: number, manu
             console.log("1. Pobieram metadane...");
             try {
                 const searchResults = await searchLegalActs({ year, publisher: publisher as any });
-                const actInfo = searchResults.find(a => a.pos === pos);
+                const actInfo = searchResults.find((a: any) => a.pos === pos);
                 if (actInfo) title = actInfo.title;
             } catch (err) {
                 console.warn("   [WARN] Nie udało się pobrać metadanych (tytułu). Używam domyślnego.", err);

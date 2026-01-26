@@ -5,10 +5,11 @@ import { SparklesIcon, XIcon, CreditCardIcon, TimeIcon } from './Icons';
 import { SubscriptionStatus, SubscriptionInfo } from '../types';
 import { InfoIcon } from './InfoIcon';
 import HelpModal from './HelpModal';
+import { PRICE_IDS } from '../services/stripeService';
 
 interface PlanSelectionModalProps {
     isOpen: boolean;
-    onSelectPlan: () => Promise<void>;
+    onSelectPlan: (planId: string) => Promise<void>;
     subscription?: SubscriptionInfo;
     isLoading: boolean;
 }
@@ -61,7 +62,7 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                     </div>
 
                     <button
-                        onClick={onSelectPlan}
+                        onClick={() => onSelectPlan(PRICE_IDS.STARTER_10PLN)}
                         disabled={isLoading}
                         className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-cyan-900/20 disabled:opacity-50"
                     >

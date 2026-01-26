@@ -1,8 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { XIcon, CalculatorIcon, RefreshIcon, CoinsIcon, HomeIcon, HeartPulseIcon, GraduationCapIcon, TrophyIcon, PalmtreeIcon, UserGroupIcon, ScaleIcon, BotIcon, SendIcon } from './Icons';
-import { InfoIcon } from './InfoIcon';
+import { XIcon, CalculatorIcon, BotIcon } from './Icons';
 import { LawArea } from '../types';
+import { useAlimonyCalculator } from '../hooks/useAlimonyCalculator';
+
+// Sub-components
+import AlimonyCostsSection from './alimony/AlimonyCostsSection';
+import AlimonyFinanceSection from './alimony/AlimonyFinanceSection';
+import AlimonyCareSection from './alimony/AlimonyCareSection';
+import AlimonyResult from './alimony/AlimonyResult';
+import AlimonyChat from './alimony/AlimonyChat';
 
 interface AlimonyCalculatorProps {
     isOpen: boolean;
@@ -10,51 +17,25 @@ interface AlimonyCalculatorProps {
     lawArea: LawArea | null;
 }
 
-// Interfaces for structured state
-interface ChildCosts {
-    food: number | '';
-    housing: number | '';
-    health: number | '';
-    education: number | '';
-    development: number | '';
-    fun: number | '';
-}
-
-interface ParentParams {
-    income: number | '';
-    potential: number | ''; // Earning potential
-    livingCosts: number | ''; // Own maintenance
-    education: string; // Text field for "Education/Experience"
-}
-
 const AlimonyCalculator: React.FC<AlimonyCalculatorProps> = ({ isOpen, onClose, lawArea }) => {
-    const { t, i18n } = useTranslation();
-    // --- State ---
-    const [activeTab, setActiveTab] = useState<'costs' | 'finance' | 'care'>('costs');
+    const { t } = useTranslation();
+    const logic = useAlimonyCalculator();
 
-    // 1. Costs
-    const [costs, setCosts] = useState<ChildCosts>({
-        food: '', housing: '', health: '', education: '', development: '', fun: ''
-    });
-
-    // 2. Parents' Situation
-    const [parentMe, setParentMe] = useState<ParentParams>({ income: '', potential: '', livingCosts: '', education: '' });
-    const [parentOther, setParentOther] = useState<ParentParams>({ income: '', potential: '', livingCosts: '', education: '' });
-
-    // 3. Care & Extras
-    const [daysWithOther, setDaysWithOther] = useState<number>(0); // Days/month with the other parent (obligor)
-    const [isSharedCustody, setIsSharedCustody] = useState(false);
-    const [otherDependents, setOtherDependents] = useState<number>(0);
-    const [result, setResult] = useState<{ totalNeeds: number, shareMe: number, shareOther: number, suggestedAlimony: number } | null>(null);
-
-    // --- Chat State ---
-    const [showChat, setShowChat] = useState(false);
-    const [chatInput, setChatInput] = useState('');
-    const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'model', content: string }[]>([
-        { role: 'model', content: t('alimonyCalculator.chat.welcome') }
-    ]);
-    const [isTyping, setIsTyping] = useState(false);
-    const [calcSessionId] = useState(`alimony-calc-${Date.now()}`);
+    const {
+        activeTab, setActiveTab,
+        costs,
+        parentMe,
+        parentOther,
+        daysWithOther, setDaysWithOther,
+        isSharedCustody, setIsSharedCustody,
+        otherDependents, setOtherDependents,
+        result, calculate,
+        showChat, setShowChat,
+        chatInput, setChatInput,
+        chatHistory, isTyping,
+        resetChat, handleSendChat,
+        handleCostChange, handleParentChange
+    } = logic;
 
     // Safety check
     useEffect(() => {
@@ -62,221 +43,6 @@ const AlimonyCalculator: React.FC<AlimonyCalculatorProps> = ({ isOpen, onClose, 
             onClose();
         }
     }, [lawArea, isOpen, onClose]);
-
-    // Handlers
-    const handleCostChange = (field: keyof ChildCosts, value: string) => {
-        setCosts(prev => ({ ...prev, [field]: value === '' ? '' : Number(value) }));
-    };
-
-    const handleParentChange = (who: 'me' | 'other', field: keyof ParentParams, value: string) => {
-        const updater = who === 'me' ? setParentMe : setParentOther;
-        updater(prev => ({ ...prev, [field]: field === 'education' ? value : (value === '' ? '' : Number(value)) }));
-    };
-
-    const calculate = () => {
-        // 1. Total Child Needs
-        const totalNeeds = (Number(costs.food) || 0) + (Number(costs.housing) || 0) +
-            (Number(costs.health) || 0) + (Number(costs.education) || 0) +
-            (Number(costs.development) || 0) + (Number(costs.fun) || 0);
-
-        if (totalNeeds === 0) {
-            setResult(null);
-            return;
-        }
-
-        // 2. Financial Capacity
-        // Use Potential if strictly higher than Income (common court logic: "możliwości zarobkowe"), 
-        // but for safety in this calc we'll use Max(Income, Potential) or just Income if Potential not set.
-        const capMeRaw = Math.max(Number(parentMe.income) || 0, Number(parentMe.potential) || 0);
-        const capOtherRaw = Math.max(Number(parentOther.income) || 0, Number(parentOther.potential) || 0);
-
-        // Adjust capacity for own living costs & other dependents
-        // Simple heuristic: Capacity = (Income - LivingCosts) / (1 + 0.3 * OtherDependents)
-        // Note: Courts calculate this more holistically, but this is an MVP heuristic.
-        const livingMe = Number(parentMe.livingCosts) || 0;
-        const livingOther = Number(parentOther.livingCosts) || 0;
-
-        let capMe = Math.max(0, capMeRaw - livingMe);
-        let capOther = Math.max(0, capOtherRaw - livingOther);
-
-        // Other dependents adjustment (reduces capacity)
-        if (otherDependents > 0) {
-            capOther = capOther * (1 - (0.15 * otherDependents)); // Reduces capacity by ~15% per extra child
-        }
-
-        const totalCapacity = capMe + capOther;
-
-        let shareMePct = 0.5;
-        let shareOtherPct = 0.5;
-
-        if (totalCapacity > 0) {
-            shareMePct = capMe / totalCapacity;
-            shareOtherPct = capOther / totalCapacity;
-        }
-
-        // 3. Care Scope Adjustment
-        // Logic: Total Alimony = (TotalNeeds * ShareOtherPct) - (DirectCareCost during contact)
-        // If shared custody (approx 15 days), alimony might be minimal or 0.
-
-        let suggestedAlimony = totalNeeds * shareOtherPct;
-
-        if (isSharedCustody) {
-            // In pure shared custody, often no alimony if incomes similar.
-            // If incomes differ, richer parent pays difference.
-            // Simplification:
-            suggestedAlimony = (totalNeeds * shareOtherPct) - (totalNeeds * 0.5);
-            // If Other earns 70%, they pay (70% needs) - (50% needs covered directly because 50% time) = 20% needs transfer.
-        } else {
-            // Standard deduction for days spent
-            // We assume ~40% of costs are variable (food, fun) and scale with days. 
-            // Fixed costs (housing, school) generally stay with primary parent.
-            const variablePortion = totalNeeds * 0.4;
-            const dailyVariable = variablePortion / 30;
-            const directCareCredit = dailyVariable * daysWithOther;
-
-            suggestedAlimony -= directCareCredit;
-        }
-
-        // Cap alimony at Other's capacity (cannot exceed 60% of their net disposable typically)
-        const absoluteMax = (Number(parentOther.income) || 0) * 0.6;
-        if (suggestedAlimony > absoluteMax) suggestedAlimony = absoluteMax;
-        if (suggestedAlimony < 0) suggestedAlimony = 0;
-
-        setResult({
-            totalNeeds,
-            shareMe: shareMePct * 100,
-            shareOther: shareOtherPct * 100,
-            suggestedAlimony
-        });
-    };
-
-
-
-    const resetChat = () => {
-        setChatHistory([
-            { role: 'model', content: t('alimonyCalculator.chat.welcome') }
-        ]);
-        setChatInput('');
-        setIsTyping(false);
-    };
-
-    // --- Chat Logic ---
-    const handleSendChat = async () => {
-        if (!chatInput.trim()) return;
-
-        const userMsg = chatInput.trim();
-        setChatInput('');
-        setChatHistory(prev => [...prev, { role: 'user', content: userMsg }]);
-        setIsTyping(true);
-
-        try {
-            const { getLegalAdvice } = await import('../services/geminiService');
-            const { InteractionMode, LawArea } = await import('../types');
-
-            const currentFormState = JSON.stringify({
-                costs,
-                parentMe,
-                parentOther,
-                care: { daysWithOther, isSharedCustody, otherDependents }
-            }, null, 2);
-
-            const systemPrompt = `
-Jesteś inteligentnym asystentem pomagającym wypełnić Kalkulator Alimentów.
-Twoim zadaniem jest rozmowa z użytkownikiem, dopytanie o szczegóły finansowe i życiowe, a następnie zwrócenie danych w formacie JSON, który automatycznie uzupełni formularz.
-
-AKTUALNIE WYPEŁNIONE DANE W FORMULARZU:
-\`\`\`json
-${currentFormState}
-\`\`\`
-
-Oto struktura danych, którą możesz zwrócić (JSON):
-\`\`\`json
-{
-  "costs": {
-    "food": number (wyżywienie),
-    "housing": number (mieszkanie),
-    "health": number (zdrowie),
-    "education": number (edukacja),
-    "development": number (rozwój/hobby),
-    "fun": number (rozrywka)
-  },
-  "parentMe": {
-    "income": number (dochód netto),
-    "potential": number (możliwości zarobkowe),
-    "livingCosts": number (koszty własne rodzica)
-  },
-  "parentOther": {
-    "income": number,
-    "potential": number,
-    "livingCosts": number
-  },
-  "care": {
-    "daysWithOther": number (dni w miesiącu u drugiego rodzica),
-    "isSharedCustody": boolean,
-    "otherDependents": number (inne dzieci)
-  }
-}
-\`\`\`
-
-ZASADY:
-1. Bądź empatyczny i profesjonalny.
-2. Jeśli użytkownik poda kwotę ogólną (np. "wydaję 3000 na dziecko"), dopytaj o szczegóły lub spróbuj oszacować podział, ale oznacz to w rozmowie.
-3. Jeśli uzyskasz jakiekolwiek konkretne liczby, ZAWSZE dołącz blok JSON z tymi danymi do swojej odpowiedzi.
-4. Możesz zwracać częściowy JSON (tylko to, co wiesz).
-5. Nie nadpisuj pól, o których nie rozmawialiście (ale frontend to obsłuży).
-6. Jeśli aktualne dane są już wypełnione, odnoś się do nich (np. "Widzę, że wyżywienie to już 500 zł. Czy to się zmieniło?").
-`;
-
-            const apiHistory: any[] = [
-                { role: 'user', content: systemPrompt },
-                ...chatHistory.map(m => ({ role: m.role, content: m.content })),
-                { role: 'user', content: userMsg }
-            ];
-
-            const response = await getLegalAdvice(
-                apiHistory,
-                LawArea.Family,
-                InteractionMode.Advice,
-                "Kalkulator Alimentów - Asystent",
-                false,
-                undefined,
-                calcSessionId,
-                i18n.language
-            );
-
-            const aiText = response.text;
-
-            const jsonMatch = aiText.match(/```json\s*([\s\S]*?)\s*```/);
-            if (jsonMatch && jsonMatch[1]) {
-                try {
-                    const data = JSON.parse(jsonMatch[1]);
-
-                    if (data.costs) setCosts(prev => ({ ...prev, ...data.costs }));
-                    if (data.parentMe) setParentMe(prev => ({ ...prev, ...data.parentMe }));
-                    if (data.parentOther) setParentOther(prev => ({ ...prev, ...data.parentOther }));
-                    if (data.care) {
-                        if (data.care.daysWithOther !== undefined) setDaysWithOther(data.care.daysWithOther);
-                        if (data.care.isSharedCustody !== undefined) setIsSharedCustody(data.care.isSharedCustody);
-                        if (data.care.otherDependents !== undefined) setOtherDependents(data.care.otherDependents);
-                    }
-
-                    const cleanText = aiText.replace(/```json[\s\S]*?```/, '').trim();
-                    setChatHistory(prev => [...prev, { role: 'model', content: cleanText || t('alimonyCalculator.chat.updated') }]);
-                } catch (e) {
-                    console.error("Failed to parse AI JSON", e);
-                    setChatHistory(prev => [...prev, { role: 'model', content: aiText }]);
-                }
-            } else {
-                setChatHistory(prev => [...prev, { role: 'model', content: aiText }]);
-            }
-
-        } catch (error) {
-            console.error(error);
-            setChatHistory(prev => [...prev, { role: 'model', content: t('alimonyCalculator.chat.error') }]);
-        } finally {
-            setIsTyping(false);
-        }
-    };
 
     if (!isOpen) return null;
 
@@ -337,358 +103,55 @@ ZASADY:
 
                         {/* Scrollable Content */}
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-
-                            {/* SECTION 1: COSTS */}
                             {activeTab === 'costs' && (
-                                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
-                                        <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                                            <CoinsIcon className="w-5 h-5 text-yellow-400" />
-                                            {t('alimonyCalculator.costs.title')}
-                                        </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <CostInput
-                                                label={t('alimonyCalculator.costs.food')}
-                                                sublabel={t('alimonyCalculator.costs.foodDesc')}
-                                                value={costs.food}
-                                                onChange={(v) => handleCostChange('food', v)}
-                                                icon={<HeartPulseIcon className="w-4 h-4" />}
-                                            />
-                                            <CostInput
-                                                label={t('alimonyCalculator.costs.housing')}
-                                                sublabel={t('alimonyCalculator.costs.housingDesc')}
-                                                value={costs.housing}
-                                                onChange={(v) => handleCostChange('housing', v)}
-                                                icon={<HomeIcon className="w-4 h-4" />}
-                                            />
-                                            <CostInput
-                                                label={t('alimonyCalculator.costs.health')}
-                                                sublabel={t('alimonyCalculator.costs.healthDesc')}
-                                                value={costs.health}
-                                                onChange={(v) => handleCostChange('health', v)}
-                                                icon={<HeartPulseIcon className="w-4 h-4 text-red-400" />}
-                                            />
-                                            <CostInput
-                                                label={t('alimonyCalculator.costs.education')}
-                                                sublabel={t('alimonyCalculator.costs.educationDesc')}
-                                                value={costs.education}
-                                                onChange={(v) => handleCostChange('education', v)}
-                                                icon={<GraduationCapIcon className="w-4 h-4" />}
-                                            />
-                                            <CostInput
-                                                label={t('alimonyCalculator.costs.development')}
-                                                sublabel={t('alimonyCalculator.costs.developmentDesc')}
-                                                value={costs.development}
-                                                onChange={(v) => handleCostChange('development', v)}
-                                                icon={<TrophyIcon className="w-4 h-4" />}
-                                            />
-                                            <CostInput
-                                                label={t('alimonyCalculator.costs.fun')}
-                                                sublabel={t('alimonyCalculator.costs.funDesc')}
-                                                value={costs.fun}
-                                                onChange={(v) => handleCostChange('fun', v)}
-                                                icon={<PalmtreeIcon className="w-4 h-4" />}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="flex justify-end">
-                                        <button
-                                            onClick={() => setActiveTab('finance')}
-                                            className="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-colors"
-                                        >
-                                            {t('alimonyCalculator.nav.nextFinance')} &rarr;
-                                        </button>
-                                    </div>
-                                </div>
+                                <AlimonyCostsSection
+                                    costs={costs}
+                                    handleCostChange={handleCostChange}
+                                    onNext={() => setActiveTab('finance')}
+                                />
                             )}
 
-                            {/* SECTION 2: PARENTS */}
                             {activeTab === 'finance' && (
-                                <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {/* Parent Me */}
-                                        <ParentSection
-                                            title={t('alimonyCalculator.parents.me')}
-                                            vals={parentMe}
-                                            onChange={(f, v) => handleParentChange('me', f, v)}
-                                            color="text-emerald-400"
-                                        />
-                                        {/* Parent Other */}
-                                        <ParentSection
-                                            title={t('alimonyCalculator.parents.other')}
-                                            vals={parentOther}
-                                            onChange={(f, v) => handleParentChange('other', f, v)}
-                                            color="text-blue-400"
-                                            isOther
-                                        />
-                                    </div>
-                                    <div className="flex justify-end gap-3">
-                                        <button
-                                            onClick={() => setActiveTab('costs')}
-                                            className="px-6 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 font-medium transition-colors"
-                                        >
-                                            &larr; {t('alimonyCalculator.nav.back')}
-                                        </button>
-                                        <button
-                                            onClick={() => setActiveTab('care')}
-                                            className="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-colors"
-                                        >
-                                            {t('alimonyCalculator.nav.nextCare')} &rarr;
-                                        </button>
-                                    </div>
-                                </div>
+                                <AlimonyFinanceSection
+                                    parentMe={parentMe}
+                                    parentOther={parentOther}
+                                    handleParentChange={handleParentChange}
+                                    onBack={() => setActiveTab('costs')}
+                                    onNext={() => setActiveTab('care')}
+                                />
                             )}
 
-                            {/* SECTION 3: CARE & EXTRAS */}
                             {activeTab === 'care' && (
-                                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                                    <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700/50 space-y-6">
-                                        <h3 className="font-bold text-white flex items-center gap-2">
-                                            <UserGroupIcon className="w-5 h-5 text-indigo-400" />
-                                            {t('alimonyCalculator.care.title')}
-                                        </h3>
-
-                                        <div className="space-y-4">
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isSharedCustody}
-                                                    onChange={(e) => setIsSharedCustody(e.target.checked)}
-                                                    className="w-5 h-5 rounded border-slate-600 bg-slate-800 text-pink-600 focus:ring-pink-500"
-                                                />
-                                                <div>
-                                                    <span className="text-white font-medium">{t('alimonyCalculator.care.sharedCustody')}</span>
-                                                    <p className="text-xs text-slate-500">{t('alimonyCalculator.care.sharedCustodyDesc')}</p>
-                                                </div>
-                                            </div>
-
-                                            {!isSharedCustody && (
-                                                <div className="pl-8">
-                                                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                                                        {t('alimonyCalculator.care.daysWithOther')}
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        min="0" max="30"
-                                                        value={daysWithOther}
-                                                        onChange={(e) => setDaysWithOther(Number(e.target.value))}
-                                                        className="w-32 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                    />
-                                                    <p className="text-xs text-slate-500 mt-1">{t('alimonyCalculator.care.daysWithOtherDesc')}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700/50 space-y-4">
-                                        <h3 className="font-bold text-white flex items-center gap-2">
-                                            <ScaleIcon className="w-5 h-5 text-orange-400" />
-                                            {t('alimonyCalculator.care.extraTitle')}
-                                        </h3>
-
-                                        <div className="grid grid-cols-1 gap-6">
-                                            <div className="flex items-start gap-3 bg-slate-700/30 p-3 rounded-lg">
-                                                <InfoIcon className="w-5 h-5 text-blue-400 mt-0.5" />
-                                                <div>
-                                                    <span className="text-sm font-bold text-white">{t('alimonyCalculator.care.800plus')}</span>
-                                                    <p className="text-xs text-slate-400 mt-1" dangerouslySetInnerHTML={{ __html: t('alimonyCalculator.care.800plusDesc') }}></p>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-300 mb-2">
-                                                    {t('alimonyCalculator.care.otherDependents')}
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={otherDependents}
-                                                    onChange={(e) => setOtherDependents(Number(e.target.value))}
-                                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none"
-                                                    placeholder={t('alimonyCalculator.care.otherDependentsPlaceholder')}
-                                                />
-                                                <p className="text-xs text-slate-500 mt-1">{t('alimonyCalculator.care.otherDependentsDesc')}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={calculate}
-                                        className="w-full py-4 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-bold rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                                    >
-                                        <CalculatorIcon className="w-5 h-5" />
-                                        {t('alimonyCalculator.care.calculateBtn')}
-                                    </button>
-                                </div>
+                                <AlimonyCareSection
+                                    isSharedCustody={isSharedCustody}
+                                    setIsSharedCustody={setIsSharedCustody}
+                                    daysWithOther={daysWithOther}
+                                    setDaysWithOther={setDaysWithOther}
+                                    otherDependents={otherDependents}
+                                    setOtherDependents={setOtherDependents}
+                                    calculate={calculate}
+                                />
                             )}
 
-                            {/* RESULTS AREA */}
-                            {result && (
-                                <div className="mt-8 p-6 bg-slate-800 border border-violet-500/30 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-500">
-                                    <h3 className="text-lg font-bold text-white mb-6 text-center border-b border-slate-700 pb-4">{t('alimonyCalculator.results.title')}</h3>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 text-center">
-                                        <div>
-                                            <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">{t('alimonyCalculator.results.needs')}</div>
-                                            <div className="text-2xl font-black text-white">{Math.round(result.totalNeeds)} PLN</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">{t('alimonyCalculator.results.financialShare')}</div>
-                                            <div className="font-bold text-emerald-400">{Math.round(result.shareMe)}% {t('alimonyCalculator.results.you')}</div>
-                                            <div className="font-bold text-blue-400">{Math.round(result.shareOther)}% {t('alimonyCalculator.results.otherSide')}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">{t('alimonyCalculator.results.suggested')}</div>
-                                            <div className="text-3xl font-black text-pink-500">{Math.round(result.suggestedAlimony)} PLN</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="text-xs text-slate-500 italic text-center bg-slate-900/50 p-3 rounded-lg">
-                                        {t('alimonyCalculator.results.disclaimer')}
-                                    </div>
-                                </div>
-                            )}
+                            <AlimonyResult result={result} />
                         </div>
                     </div>
 
                     {/* Chat Panel */}
                     {showChat && (
-                        <div className="flex-[0.6] md:flex-1 bg-slate-950/50 flex flex-col border-t md:border-t-0 md:border-l border-slate-700 animate-in slide-in-from-bottom md:slide-in-from-right duration-300">
-                            <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between">
-                                <span className="text-sm font-bold text-violet-400 uppercase tracking-wider">{t('alimonyCalculator.chat.title')}</span>
-                                <button
-                                    onClick={resetChat}
-                                    className="p-1.5 text-slate-500 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-                                    title={t('alimonyCalculator.chat.clearHistory')}
-                                >
-                                    <RefreshIcon className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-                                {chatHistory.map((msg, idx) => (
-                                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-violet-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700'}`}>
-                                            {msg.content}
-                                        </div>
-                                    </div>
-                                ))}
-                                {isTyping && (
-                                    <div className="flex justify-start">
-                                        <div className="bg-slate-800 p-3 rounded-2xl rounded-tl-none border border-slate-700">
-                                            <div className="flex gap-1">
-                                                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce"></div>
-                                                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce delay-100"></div>
-                                                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce delay-200"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="p-4 bg-slate-900/50 border-t border-slate-800">
-                                <form
-                                    onSubmit={(e) => { e.preventDefault(); handleSendChat(); }}
-                                    className="relative"
-                                >
-                                    <input
-                                        type="text"
-                                        value={chatInput}
-                                        onChange={(e) => setChatInput(e.target.value)}
-                                        placeholder={t('alimonyCalculator.chat.inputPlaceholder')}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-4 pr-12 text-sm text-white focus:border-violet-500 outline-none"
-                                    />
-                                    <button
-                                        type="submit"
-                                        disabled={!chatInput.trim() || isTyping}
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 rounded-lg transition-colors text-white"
-                                    >
-                                        <SendIcon className="w-4 h-4" />
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                        <AlimonyChat
+                            chatHistory={chatHistory}
+                            isTyping={isTyping}
+                            chatInput={chatInput}
+                            setChatInput={setChatInput}
+                            handleSendChat={handleSendChat}
+                            resetChat={resetChat}
+                        />
                     )}
                 </div>
             </div>
         </div>
     );
-};
-
-// --- Subcomponents for cleaner code ---
-
-const CostInput = ({ label, sublabel, value, onChange, icon }: { label: string, sublabel?: string, value: number | '', onChange: (v: string) => void, icon?: React.ReactNode }) => (
-    <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/30 hover:border-slate-600 transition-colors group">
-        <label className="block text-sm font-medium text-slate-200 mb-1 flex items-center gap-2">
-            {icon && <span className="opacity-70 group-hover:opacity-100 transition-opacity">{icon}</span>}
-            {label}
-        </label>
-        <input
-            type="number"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-pink-500 focus:border-pink-500 transition-all outline-none"
-            placeholder="0 PLN"
-        />
-        {sublabel && <p className="text-[10px] text-slate-500 mt-1.5 leading-tight">{sublabel}</p>}
-    </div>
-);
-
-const ParentSection = ({ title, vals, onChange, color, isOther }: { title: string, vals: ParentParams, onChange: (f: keyof ParentParams, v: string) => void, color: string, isOther?: boolean }) => {
-    const { t } = useTranslation();
-    return (
-        <div className="space-y-4">
-            <h3 className={`font-bold ${color} text-lg border-b border-slate-700/50 pb-2`}>{title}</h3>
-
-            <div>
-                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('alimonyCalculator.parents.income')}</label>
-                <input
-                    type="number"
-                    value={vals.income}
-                    onChange={(e) => onChange('income', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-pink-500 outline-none"
-                    placeholder={t('alimonyCalculator.parents.incomePlaceholder')}
-                />
-            </div>
-
-            <div>
-                <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-bold uppercase text-slate-500">{t('alimonyCalculator.parents.potential')}</label>
-                    <span className="text-[10px] text-slate-400 italic">{t('alimonyCalculator.parents.potentialDesc')}</span>
-                </div>
-                <input
-                    type="number"
-                    value={vals.potential}
-                    onChange={(e) => onChange('potential', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-pink-500 outline-none"
-                    placeholder={t('alimonyCalculator.parents.potentialPlaceholder')}
-                />
-            </div>
-
-            <div>
-                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('alimonyCalculator.parents.education')}</label>
-                <textarea
-                    value={vals.education}
-                    onChange={(e) => onChange('education', e.target.value)}
-                    rows={2}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-pink-500 outline-none resize-none"
-                    placeholder={t('alimonyCalculator.parents.educationPlaceholder')}
-                />
-            </div>
-
-            <div>
-                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('alimonyCalculator.parents.livingCosts')}</label>
-                <input
-                    type="number"
-                    value={vals.livingCosts}
-                    onChange={(e) => onChange('livingCosts', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-pink-500 outline-none"
-                    placeholder={t('alimonyCalculator.parents.livingCostsPlaceholder')}
-                />
-            </div>
-        </div>
-    )
 };
 
 export default AlimonyCalculator;

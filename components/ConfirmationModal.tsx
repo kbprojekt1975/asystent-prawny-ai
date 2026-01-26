@@ -14,7 +14,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[110] transition-opacity"
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[9999] transition-opacity"
       aria-labelledby="modal-title"
       role="dialog"
       aria-modal="true"

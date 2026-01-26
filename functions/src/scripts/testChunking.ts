@@ -1,4 +1,4 @@
-import { getFullActContent } from '../isapService';
+import { getFullActContent } from '../services/isapService';
 
 async function test() {
     const content = await getFullActContent('DU', 2023, 2809);

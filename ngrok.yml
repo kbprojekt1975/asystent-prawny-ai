@@ -7,7 +7,7 @@ version: "2"
 tunnels:
   frontend:
     proto: http
-    addr: 5173
+    addr: 3000
     # hostname: optional-custom-domain.ngrok.io # Requires paid plan
   auth:
     proto: http

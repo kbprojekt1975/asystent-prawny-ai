@@ -10,6 +10,7 @@ const initialTopics: Record<LawArea, string[]> = {
     [LawArea.RealEstate]: [],
     [LawArea.Tax]: [],
     [LawArea.Administrative]: [],
+    [LawArea.Universal]: [],
 };
 
 const NAV_STORAGE_KEY = 'legal_app_navigation';
@@ -26,7 +27,6 @@ export const useAppNavigation = () => {
     const [interactionMode, setInteractionMode] = useState<InteractionMode | null>(savedNav?.interactionMode || null);
     const [courtRole, setCourtRole] = useState<CourtRole | null>(savedNav?.courtRole || null);
     const [servicePath, setServicePath] = useState<'pro' | 'hub' | null>(savedNav?.servicePath || null);
-    const [topics, setTopics] = useState<Record<LawArea, string[]>>(initialTopics);
 
     const [isAnalysisMode, setIsAnalysisMode] = useState<boolean>(savedNav?.isAnalysisMode || false);
     const [isFullScreen, setIsFullScreen] = useState<boolean>(savedNav?.isFullScreen || false);
@@ -61,7 +61,6 @@ export const useAppNavigation = () => {
         setServicePath(null);
         setIsAnalysisMode(false);
         setIsFullScreen(false);
-        setIsWelcomeModalOpen(false);
     };
 
     const backToTopic = () => {
@@ -79,7 +78,6 @@ export const useAppNavigation = () => {
         setServicePath(null);
         setIsAnalysisMode(false);
         setIsFullScreen(false);
-        setIsWelcomeModalOpen(false);
     };
 
     return {
@@ -88,10 +86,8 @@ export const useAppNavigation = () => {
         interactionMode, setInteractionMode,
         courtRole, setCourtRole,
         servicePath, setServicePath,
-        topics, setTopics,
         isAnalysisMode, setIsAnalysisMode,
         isFullScreen, setIsFullScreen,
-        isWelcomeModalOpen, setIsWelcomeModalOpen,
         currentChatId,
         resetNavigation,
         backToTopic,

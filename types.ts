@@ -181,6 +181,13 @@ export interface EvidenceSuggestion {
   status: 'missing' | 'collected';
 }
 
+export interface AndromedaChat {
+  id: string;
+  title: string;
+  lastUpdated: any;
+  messages: ChatMessage[];
+}
+
 /**
  * Generates a unified chat ID for Firestore storage.
  * Handles specialized mode isolation.

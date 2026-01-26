@@ -15,6 +15,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
     const [authLoading, setAuthLoading] = useState(true);
     const [profileLoading, setProfileLoading] = useState(true); // Moved up
     const [userProfile, setUserProfile] = useState<UserProfile>(initialProfile);
+    const [topics, setTopics] = useState<Record<LawArea, string[]>>(initialTopics);
     const [totalCost, setTotalCost] = useState<number>(0);
     const [isLocalOnly, setIsLocalOnly] = useState<boolean>(false);
     const [subsLoading, setSubsLoading] = useState(true);
@@ -26,6 +27,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
                 setProfileLoading(true);
+                setSubsLoading(true);
             }
             setUser(currentUser);
             setAuthLoading(false);
@@ -61,7 +63,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                         profile: {
                             ...initialProfile,
                             displayName: finalDisplayName,
-                            isActive: true,
+                            isActive: false,
                             dataProcessingConsent: isConsentDefaulted,
                             consentDate: isConsentDefaulted ? serverTimestamp() : null,
                             hasSeenWelcomeAssistant: false
@@ -168,6 +170,10 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                     }
                 }
 
+                if (data.topics && JSON.stringify(data.topics) !== JSON.stringify(topics)) {
+                    setTopics(data.topics);
+                }
+
                 setUserProfile(profile);
             } catch (e) {
                 console.error("Error handling user profile snapshot:", e);
@@ -177,11 +183,14 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
         });
 
         return () => unsubscribe();
-    }, [user]);
+    }, [user, topics]);
 
     // Sync Stripe Subscriptions
     useEffect(() => {
-        if (!user) return;
+        if (!user) {
+            setSubsLoading(false);
+            return;
+        };
 
         const subsRef = collection(db, 'customers', user.uid, 'subscriptions');
         const unsubscribe = onSnapshot(subsRef, (snapshot) => {
@@ -248,6 +257,8 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
         subsLoading,
         userProfile,
         setUserProfile,
+        topics,
+        setTopics,
         totalCost,
         setTotalCost,
         handleUpdateProfile,
