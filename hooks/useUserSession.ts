@@ -174,7 +174,14 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                     setTopics(data.topics);
                 }
 
-                setUserProfile(profile);
+                // Unified Stripe Migration: We strip legacy subscription data from the users doc listener
+                // to ensure the customers collection listener is the 'Single Source of Truth'.
+                const { subscription, ...profileWithoutLegacySub } = profile;
+
+                setUserProfile(prev => ({
+                    ...profileWithoutLegacySub,
+                    subscription: prev.subscription // Preserve whatever Stripe listener set
+                }));
             } catch (e) {
                 console.error("Error handling user profile snapshot:", e);
             } finally {

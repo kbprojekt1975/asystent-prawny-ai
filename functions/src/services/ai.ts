@@ -7,10 +7,10 @@ export const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 // --- LOGIKA CENOWA ---
 // Ceny bazowe (koszt wewnętrzny) w USD za 1 mln tokenów
 export const PRICING = {
+    'gemini-2.0-flash': { input: 0.10, output: 0.40 }, // Stable Flash pricing (standard estimate)
     'gemini-2.0-flash-exp': { input: 0.25, output: 1.0 },
-    'gemini-2.0-flash-thinking-exp': { input: 4.2, output: 16.7 },
-    'gemini-1.5-flash': { input: 0.25, output: 1.0 },
-    'gemini-1.5-pro': { input: 4.2, output: 16.7 },
+    'gemini-1.5-flash': { input: 0.075, output: 0.30 },
+    'gemini-1.5-pro': { input: 1.25, output: 5.0 },
 };
 
 // Marża: 80% zysku z tego co wpłaca user.

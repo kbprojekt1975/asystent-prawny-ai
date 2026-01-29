@@ -20,17 +20,23 @@ export const analyzeLegalCase = onCall({
     const { description, language = 'pl' } = request.data;
     const uid = request.auth.uid;
 
-    // --- SUBSCRIPTION CHECK ---
-    const userDoc = await db.collection('users').doc(uid).get();
-    const userData = userDoc.data();
-    const subscription = userData?.profile?.subscription;
+    // --- SUBSCRIPTION CHECK (from Stripe Extension collection) ---
+    const subsRef = db.collection('customers').doc(uid).collection('subscriptions');
+    const snapshot = await subsRef.where('status', 'in', ['active', 'trialing']).get();
 
-    if (!subscription || subscription.status !== 'active' || !subscription.isPaid) {
-        throw new HttpsError('permission-denied', "Brak aktywnego lub opłaconego planu.");
+    if (snapshot.empty) {
+        throw new HttpsError('permission-denied', "Brak aktywnego lub opłaconego planu. Wykup dostęp lub poczekaj na aktywację.");
     }
 
+    const userDoc = await db.collection('users').doc(uid).get();
+    const userData = userDoc.data();
+
+    // isActive is now an optional master-switch; Stripe subscription is primary access key.
     if (userData?.isActive === false) {
-        throw new HttpsError('permission-denied', "Twoje konto oczekuje na aktywację.");
+        logger.warn(`User ${uid} has isActive=false, but checking for active Stripe subscription...`);
+        // If they got here, they have an active sub (checked above), but let's allow explicit manual block.
+        // We'll keep it as a master-block if specifically set to false.
+        throw new HttpsError('permission-denied', "Twoje konto zostało zawieszone. Skontaktuj się z administratorem.");
     }
 
     try {
@@ -51,7 +57,7 @@ export const analyzeLegalCase = onCall({
             Opis sprawy: "${description}"
         `;
 
-        const modelName = 'gemini-2.0-flash-exp';
+        const modelName = 'gemini-2.0-flash';
         const model = genAI.getGenerativeModel({
             model: modelName,
             generationConfig: {

@@ -53,7 +53,7 @@ export const askAndromeda = onCall({
     }];
 
     const model = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash-exp',
+        model: 'gemini-2.0-flash',
         systemInstruction,
         tools: tools as any
     }, { apiVersion: 'v1beta' });

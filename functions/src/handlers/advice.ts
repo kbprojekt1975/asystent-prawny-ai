@@ -24,16 +24,22 @@ export const getLegalAdvice = onCall({
     const { history, lawArea, interactionMode, topic, articles, chatId, language = 'pl' } = request.data;
     const uid = request.auth.uid;
 
+    logger.info(`Request parameters: LawArea="${lawArea}", InteractionMode="${interactionMode}", Topic="${topic}"`);
+
     if (!chatId || !history) throw new HttpsError('invalid-argument', "Missing chatId or history.");
 
     const userRef = db.collection('users').doc(uid);
-    const userDoc = await userRef.get();
-    const userData = userDoc.data();
-    const subscription = userData?.profile?.subscription;
 
-    if (!subscription || subscription.status !== 'active' || !subscription.isPaid) {
-        throw new HttpsError('permission-denied', "Brak aktywnego planu.");
+    // --- SUBSCRIPTION CHECK (from Stripe Extension collection) ---
+    const subsRef = db.collection('customers').doc(uid).collection('subscriptions');
+    const snapshot = await subsRef.where('status', 'in', ['active', 'trialing']).get();
+
+    if (snapshot.empty) {
+        logger.error("!!! SUBSCRIPTION CHECK FAILED: No active or trialing subscription found in customers collection !!!");
+        throw new HttpsError('permission-denied', "Brak aktywnego planu. Wykup dostęp lub poczekaj na aktywację.");
     }
+
+    logger.info("✓ Subscription check passed (Stripe collection)");
 
     // --- FETCH KNOWLEDGE ---
     let existingKnowledgeContext = "BRAK";
@@ -118,7 +124,7 @@ export const getLegalAdvice = onCall({
         ]
     }];
 
-    const modelName = 'gemini-2.0-flash-exp';
+    const modelName = 'gemini-2.0-flash';
     const model = genAI.getGenerativeModel({ model: modelName, systemInstruction: instruction, tools: tools as any }, { apiVersion: 'v1beta' });
     const chat = model.startChat({ history: contents.slice(0, -1) });
     let result = await chat.sendMessage(contents[contents.length - 1].parts);
