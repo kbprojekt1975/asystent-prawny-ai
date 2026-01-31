@@ -350,7 +350,7 @@ const App: React.FC = () => {
   const isLimitReached = (userProfile?.subscription?.spentAmount || 0) >= (userProfile?.subscription?.creditLimit || 0) && hasActiveStripeSub;
   const hasActiveAccess = hasActiveStripeSub && !isLimitReached && !isExpired;
 
-  const isAwaitingActivation = userProfile?.subscription && userProfile.subscription.isPaid === false && !hasActiveStripeSub;
+  const isAwaitingActivation = userProfile?.subscription?.status === SubscriptionStatus.Pending;
   const showActivation = isSplashDismissed && user && isAwaitingActivation;
 
   // Force Andromeda on successful activation

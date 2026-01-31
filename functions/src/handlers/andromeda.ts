@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { SchemaType } from "@google/generative-ai";
-import { db, FieldValue, Timestamp } from "../services/db";
+import { db, FieldValue } from "../services/db";
 import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, getSystemPrompts, GEMINI_API_KEY } from "../services/ai";
 import { searchLegalActs } from "../services/isapService";
 import { searchJudgments } from "../services/saosService";
@@ -19,14 +19,13 @@ export const askAndromeda = onCall({
     const uid = request.auth?.uid;
     if (!uid) throw new HttpsError('unauthenticated', 'User not authenticated.');
 
-    // --- SUBSCRIPTION CHECK (from Stripe Extension collection) ---
+    // --- SUBSCRIPTION CHECK (Simplified to avoid composite index) ---
     const subsRef = db.collection('customers').doc(uid).collection('subscriptions');
     const snapshot = await subsRef
         .where('status', 'in', ['active', 'trialing'])
-        .where('current_period_end', '>', Timestamp.now())
         .get();
 
-    // Re-check snapshot with date filter if where filter is not supported by standard indexes or simple enough
+    // Manual filter for expiry to avoid composite index requirement
     const validSubs = snapshot.docs.filter(doc => {
         const data = doc.data();
         return data.current_period_end && data.current_period_end.toMillis() > Date.now();
