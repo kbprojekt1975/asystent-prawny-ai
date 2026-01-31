@@ -8,7 +8,8 @@ const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "p
 // Price IDs from environment variables
 // Falls back to test price for local development if not set
 export const PRICE_IDS = {
-    STARTER_10PLN: import.meta.env.VITE_STRIPE_PRICE_STARTER || "price_1StBSvDXnXONl2svkF51zTnl"
+    STARTER_10PLN: import.meta.env.VITE_STRIPE_PRICE_STARTER || "price_1StBSvDXnXONl2svkF51zTnl",
+    PRO_50PLN: import.meta.env.VITE_STRIPE_PRICE_PRO || "price_pro_placeholder"
 };
 
 export const getStripe = async () => {

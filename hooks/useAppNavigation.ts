@@ -11,6 +11,7 @@ const initialTopics: Record<LawArea, string[]> = {
     [LawArea.Tax]: [],
     [LawArea.Administrative]: [],
     [LawArea.Universal]: [],
+    [LawArea.Custom]: [],
 };
 
 const NAV_STORAGE_KEY = 'legal_app_navigation';

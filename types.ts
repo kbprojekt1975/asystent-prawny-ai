@@ -7,7 +7,8 @@ export enum LawArea {
   RealEstate = 'Prawo Nieruchomości',
   Tax = 'Prawo Podatkowe',
   Administrative = 'Prawo Administracyjne',
-  Universal = 'Asystent Prawny'
+  Universal = 'Asystent Prawny',
+  Custom = 'Własny Agent'
 }
 
 export enum InteractionMode {
@@ -55,6 +56,16 @@ export interface SubscriptionInfo {
   spentAmount: number;
   tokenLimit: number;
   tokensUsed: number;
+  packageType?: 'starter' | 'pro';
+}
+
+export interface CustomAgent {
+  id: string;
+  name: string;
+  persona: string;
+  instructions: string;
+  focusAreas?: string[];
+  createdAt: any;
 }
 
 export interface ChatMessage {

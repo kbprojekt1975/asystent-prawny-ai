@@ -37,7 +37,7 @@ import PlanSelectionModal from './components/PlanSelectionModal';
 import DocumentPreviewModal from './components/DocumentPreviewModal';
 import LegalFAQ from './components/LegalFAQ';
 import { generateDocument } from './services/documentService';
-import { createCheckoutSession } from './services/stripeService';
+import { createCheckoutSession, PRICE_IDS } from './services/stripeService';
 import AppModals from './components/AppModals';
 import SplashScreen from './components/SplashScreen';
 import RemindersWidget from './components/RemindersWidget';
@@ -54,6 +54,7 @@ import AwaitingActivation from './components/AwaitingActivation';
 import MainNavigator from './components/MainNavigator';
 import ChatFooter from './components/ChatFooter';
 import { useAppContext, useChatContext, useUIContext } from './context';
+import CustomAgentCreator from './components/CustomAgentCreator';
 
 const GlobalAdminNotes = React.lazy(() => import('./components/GlobalAdminNotes'));
 import FullScreenLoader from './components/FullScreenLoader';
@@ -63,6 +64,16 @@ const USE_EMULATORS = import.meta.env.VITE_USE_EMULATORS === 'true' || localStor
 
 const App: React.FC = () => {
   const { t, i18n } = useTranslation();
+
+  const [previewContent, setPreviewContent] = useState('');
+  const [previewTitle, setPreviewTitle] = useState('');
+  const [knowledgeModalChatId, setKnowledgeModalChatId] = useState<string | null>(null);
+  const [documentsModalChatId, setDocumentsModalChatId] = useState<string | null>(null);
+  const [isSplashDismissed, setIsSplashDismissed] = useState(false);
+  const [isRecharging, setIsRecharging] = useState(() => sessionStorage.getItem('recharge_in_progress') === 'true');
+  const [isShowAndromeda, setIsShowAndromeda] = useState(false);
+  const [hasDismissedAssistantSession, setHasDismissedAssistantSession] = useState(false);
+  const [isCustomAgentCreatorOpen, setIsCustomAgentCreatorOpen] = useState(false);
 
   const {
     user,
@@ -88,7 +99,68 @@ const App: React.FC = () => {
     backToLawArea,
     isLocalOnly,
     topics,
+    customAgents,
+    isPro,
   } = useAppContext();
+
+  const { allEvents } = useUserCalendar(user, isLocalOnly);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const activeRemindersCount = useMemo(() =>
+    allEvents.filter(e => !e.completed && e.date === todayStr).length,
+    [allEvents, todayStr]);
+
+  const isAdmin = useMemo(() => {
+    if (!user) return false;
+    const ADMIN_UIDS = ["Yb23rXe0JdOvieB3grdaN0Brmkjh"];
+    const ADMIN_EMAILS = ["kbprojekt1975@gmail.com", "konrad@example.com", "wielki@electronik.com"];
+    return ADMIN_UIDS.includes(user.uid) || (user.email && ADMIN_EMAILS.some(email => user.email?.includes(email)));
+  }, [user]);
+
+  const handleDeleteCustomAgent = async (agent: any) => {
+    if (!user) return;
+    try {
+      const { doc, deleteDoc, collection, getDocs, writeBatch } = await import('firebase/firestore');
+
+      // 1. Delete the agent document
+      await deleteDoc(doc(db, 'users', user.uid, 'custom_agents', agent.id));
+
+      // 2. Delete chat history for this agent
+      const historyRef = collection(db, 'users', user.uid, 'topics', LawArea.Custom, 'chats', agent.id, 'messages');
+      const messages = await getDocs(historyRef);
+
+      if (!messages.empty) {
+        const batch = writeBatch(db);
+        messages.forEach((doc) => batch.delete(doc.ref));
+
+        // Also delete the chat metadata doc
+        batch.delete(doc(db, 'users', user.uid, 'topics', LawArea.Custom, 'chats', agent.id));
+
+        await batch.commit();
+      } else {
+        // Try to delete the chat metadata doc anyway in case it exists without messages
+        try {
+          await deleteDoc(doc(db, 'users', user.uid, 'topics', LawArea.Custom, 'chats', agent.id));
+        } catch (metadataErr) {
+          console.warn("Could not delete metadata doc (maybe not exists):", metadataErr);
+        }
+      }
+
+      console.log(`Agent ${agent.name} and history deleted.`);
+    } catch (e) {
+      console.error("Failed to delete custom agent:", e);
+      alert("Wystąpił błąd podczas usuwania agenta.");
+    }
+  };
+
+  useEffect(() => {
+    (window as any).showCustomAgentCreator = () => setIsCustomAgentCreatorOpen(true);
+    (window as any).deleteCustomAgent = (agent: any) => handleDeleteCustomAgent(agent);
+    return () => {
+      delete (window as any).showCustomAgentCreator;
+      delete (window as any).deleteCustomAgent;
+    };
+  }, []);
+
 
   const {
     chatHistory,
@@ -135,27 +207,7 @@ const App: React.FC = () => {
     deferredPrompt,
   } = useUIContext();
 
-  const [previewContent, setPreviewContent] = useState('');
-  const [previewTitle, setPreviewTitle] = useState('');
-  const [knowledgeModalChatId, setKnowledgeModalChatId] = useState<string | null>(null);
-  const [documentsModalChatId, setDocumentsModalChatId] = useState<string | null>(null);
-  const [isSplashDismissed, setIsSplashDismissed] = useState(false);
-  const [isRecharging, setIsRecharging] = useState(() => sessionStorage.getItem('recharge_in_progress') === 'true');
-  const [isShowAndromeda, setIsShowAndromeda] = useState(false);
-  const [hasDismissedAssistantSession, setHasDismissedAssistantSession] = useState(false);
 
-  const { allEvents } = useUserCalendar(user, isLocalOnly);
-  const todayStr = new Date().toISOString().split('T')[0];
-  const activeRemindersCount = useMemo(() =>
-    allEvents.filter(e => !e.completed && e.date === todayStr).length,
-    [allEvents, todayStr]);
-
-  const isAdmin = useMemo(() => {
-    if (!user) return false;
-    const ADMIN_UIDS = ["Yb23rXe0JdOvieB3grdaN0Brmkjh"];
-    const ADMIN_EMAILS = ["kbprojekt1975@gmail.com", "konrad@example.com", "wielki@electronik.com"];
-    return ADMIN_UIDS.includes(user.uid) || (user.email && ADMIN_EMAILS.some(email => user.email?.includes(email)));
-  }, [user]);
 
   // Auto-trigger Onboarding Flow when subscription is detected
   useEffect(() => {
@@ -312,7 +364,7 @@ const App: React.FC = () => {
           "profile.dataProcessingConsent": false,
           "profile.isActive": true, // Ensure profile is active
           "profile.subscription.spentAmount": 0, // Reset spent amount on recharge
-          "profile.subscription.creditLimit": 10 // Ensure credit limit is refreshed
+          "profile.subscription.creditLimit": planId === PRICE_IDS.PRO_50PLN ? 50 : 10 // Ensure credit limit is refreshed
         });
 
         // CLEAR LOCAL CACHE FOR COOKIE CONSENT
@@ -336,6 +388,22 @@ const App: React.FC = () => {
       alert(t('plan.paymentError') || "Payment initialization failed. Please try again.");
     }
   };
+
+  const handleSaveCustomAgent = async (agent: any) => {
+    if (!user) return;
+    try {
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      await addDoc(collection(db, 'users', user.uid, 'custom_agents'), {
+        ...agent,
+        createdAt: serverTimestamp()
+      });
+      setIsCustomAgentCreatorOpen(false);
+    } catch (e) {
+      console.error("Failed to save custom agent:", e);
+      throw e;
+    }
+  };
+
 
   // Blocking states logic
   const showSplash = !isSplashDismissed;
@@ -470,6 +538,12 @@ const App: React.FC = () => {
             isLoading={isLoading}
           />
 
+          <CustomAgentCreator
+            isOpen={isCustomAgentCreatorOpen}
+            onClose={() => setIsCustomAgentCreatorOpen(false)}
+            onSave={handleSaveCustomAgent}
+          />
+
           <GlobalAnnouncement />
 
           <div className="flex flex-col h-[100dvh] bg-slate-800 relative">
@@ -500,7 +574,7 @@ const App: React.FC = () => {
             )}
             {!isFullScreen && (
               <AppHeader
-                title={selectedTopic || t('breadcrumbs.home')}
+                title={selectedLawArea === LawArea.Custom ? (customAgents.find(a => a.id === selectedTopic)?.name || selectedTopic) : (selectedTopic || t('breadcrumbs.home'))}
                 onProfileClick={() => setIsProfileModalOpen(true)}
                 onHelpClick={() => setIsAppHelpSidebarOpen(true)}
                 onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}

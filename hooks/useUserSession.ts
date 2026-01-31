@@ -28,6 +28,8 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
     const [totalCost, setTotalCost] = useState<number>(0);
     const [isLocalOnly, setIsLocalOnly] = useState<boolean>(true);
     const [subsLoading, setSubsLoading] = useState(true);
+    const [customAgents, setCustomAgents] = useState<any[]>([]);
+    const [isPro, setIsPro] = useState(false);
 
     // Auth Listener
     const welcomeTriggered = useRef<string | null>(null);
@@ -212,6 +214,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
     useEffect(() => {
         if (!user) {
             setSubsLoading(false);
+            setIsPro(false);
             return;
         };
 
@@ -228,6 +231,13 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                 });
 
                 if (activeSub) {
+                    const priceId = activeSub.items?.[0]?.price?.id;
+                    const STARTER_ID = import.meta.env.VITE_STRIPE_PRICE_STARTER || "price_1StBSvDXnXONl2svkF51zTnl";
+                    const PRO_ID = import.meta.env.VITE_STRIPE_PRICE_PRO || "price_pro_placeholder";
+
+                    const isSubPro = priceId === PRO_ID;
+                    setIsPro(isSubPro);
+
                     setUserProfile(prev => ({
                         ...prev,
                         subscription: {
@@ -235,13 +245,14 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                             isPaid: activeSub.status === 'active',
                             activatedAt: activeSub.created,
                             expiresAt: activeSub.current_period_end,
-                            priceId: activeSub.items?.[0]?.price?.id,
-                            creditLimit: 10.00,
-                            spentAmount: prev.subscription?.spentAmount || 0
+                            priceId: priceId,
+                            creditLimit: isSubPro ? 50.00 : 10.00,
+                            spentAmount: prev.subscription?.spentAmount || 0,
+                            packageType: isSubPro ? 'pro' : 'starter'
                         }
                     }));
                 } else {
-                    // Explicitly set None if no active sub found to trigger PlanSelection
+                    setIsPro(false);
                     setUserProfile(prev => ({
                         ...prev,
                         subscription: {
@@ -264,6 +275,25 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
 
         return () => unsubscribe();
     }, [user, isLocalOnly]);
+
+    // Sync Custom Agents
+    useEffect(() => {
+        if (!user) {
+            setCustomAgents([]);
+            return;
+        }
+
+        const agentsRef = collection(db, 'users', user.uid, 'custom_agents');
+        const unsubscribe = onSnapshot(agentsRef, (snapshot) => {
+            const agents = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setCustomAgents(agents);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
 
     const handleUpdateProfile = useCallback(async (newProfile: UserProfile, isSessionOnly: boolean = false) => {
         setUserProfile(newProfile);
@@ -336,6 +366,8 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
         setTotalCost,
         handleUpdateProfile,
         isLocalOnly,
-        setIsLocalOnly
+        setIsLocalOnly,
+        customAgents,
+        isPro
     };
 };

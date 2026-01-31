@@ -24,7 +24,9 @@ const MainNavigator: React.FC = () => {
         isLocalOnly,
         setIsLocalOnly,
         handleUpdateProfile,
-        topics
+        topics,
+        customAgents,
+        isPro
     } = useAppContext();
 
     const {
@@ -104,6 +106,16 @@ const MainNavigator: React.FC = () => {
                             setInteractionMode(data.interactionMode);
                         });
                     }}
+                    isPro={isPro}
+                    customAgents={customAgents}
+                    onCustomAgentSelect={(agent) => {
+                        setSelectedLawArea(LawArea.Custom);
+                        setSelectedTopic(agent.id);
+                        setInteractionMode(InteractionMode.Advice);
+                        handleLoadHistory(LawArea.Custom, agent.id);
+                    }}
+                    onDeleteCustomAgent={(agent) => (window as any).deleteCustomAgent?.(agent)}
+                    onCreateCustomAgent={() => (window as any).showCustomAgentCreator?.()}
                 />
             ) : !servicePath ? (
                 <ServiceTypeSelector

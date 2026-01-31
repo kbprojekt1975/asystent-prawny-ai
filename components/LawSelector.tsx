@@ -2,7 +2,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LawArea } from '../types';
-import { GavelIcon, FamilyIcon, ScalesIcon, BuildingIcon, MagicWandIcon, BriefcaseIcon, HomeIcon, CoinsIcon, FlagIcon } from './Icons';
+import { GavelIcon, FamilyIcon, ScalesIcon, BuildingIcon, MagicWandIcon, BriefcaseIcon, HomeIcon, CoinsIcon, FlagIcon, TrashIcon } from './Icons';
 import HelpModal from './HelpModal';
 import { InfoIcon } from './InfoIcon';
 import { useState } from 'react';
@@ -14,11 +14,28 @@ interface LawSelectorProps {
   setIsLocalOnly: (val: boolean) => void;
   hasConsent?: boolean;
   onImport?: (file: File) => void;
+  isPro?: boolean;
+  customAgents?: any[];
+  onCustomAgentSelect: (agent: any) => void;
+  onDeleteCustomAgent: (agent: any) => void;
+  onCreateCustomAgent: () => void;
 }
 
 // Options will be mapped inside component to access t() function
 
-const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isLocalOnly, setIsLocalOnly, onImport, hasConsent = false }) => {
+const LawSelector: React.FC<LawSelectorProps> = ({
+  onSelect,
+  onAnalyzeClick,
+  isLocalOnly,
+  setIsLocalOnly,
+  onImport,
+  hasConsent = false,
+  isPro = false,
+  customAgents = [],
+  onCustomAgentSelect,
+  onDeleteCustomAgent,
+  onCreateCustomAgent
+}) => {
   const { t } = useTranslation();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
@@ -33,13 +50,20 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isL
     { area: LawArea.Administrative, name: t('law.areas.prawo administracyjne'), icon: <FlagIcon />, description: t('law.areas.prawo administracyjne_desc') },
   ];
 
+  const customAgentOption = {
+    area: LawArea.Custom,
+    name: "MOI AGENCI",
+    icon: <MagicWandIcon className="text-cyan-400" />,
+    description: "Stwórz własnego asystenta z dowolną osobowością."
+  };
+
   return (
     <div className="flex flex-col items-center min-h-full p-4 w-full">
       <div className="text-center mb-10 flex items-center justify-center gap-2 my-auto md:mt-0 pt-8 md:pt-0">
         <p className="text-lg text-slate-400">{t('law.header')}</p>
         <InfoIcon onClick={() => setIsHelpOpen(true)} />
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 w-full max-w-6xl mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 w-full max-w-6xl mb-8">
         {lawOptions.map((option) => (
           <button
             key={option.area}
@@ -53,6 +77,59 @@ const LawSelector: React.FC<LawSelectorProps> = ({ onSelect, onAnalyzeClick, isL
             <p className="text-xs md:text-base text-slate-400 line-clamp-2">{option.description}</p>
           </button>
         ))}
+
+        {/* CUSTOM AGENTS SECTION */}
+        <div className="md:col-span-full border-t border-slate-700/50 pt-8 mt-4">
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-6 text-center">Sekcja Personalizacji</h3>
+
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+            {/* Create New Agent Tile */}
+            <button
+              onClick={() => isPro ? onCreateCustomAgent() : alert("Funkcja Własnych Agentów dostępna tylko w pakiecie PRO.")}
+              className={`group relative overflow-hidden bg-slate-900 border-2 border-dashed ${isPro ? 'border-cyan-500/30 hover:border-cyan-500 hover:bg-slate-800' : 'border-slate-700 opacity-70'} rounded-xl p-6 text-left transition-all duration-300`}
+            >
+              {!isPro && (
+                <div className="absolute top-2 right-2 px-2 py-0.5 bg-cyan-500 text-slate-950 text-[10px] font-black rounded-full shadow-lg">
+                  PRO ONLY
+                </div>
+              )}
+              <div className="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <MagicWandIcon className="w-6 h-6 text-cyan-400" />
+              </div>
+              <h2 className="text-lg font-bold text-white mb-1">STWÓRZ AGENTA</h2>
+              <p className="text-xs text-slate-400">Zdefiniuj własną osobowość AI</p>
+            </button>
+
+            {/* List Custom Agents */}
+            {customAgents.map(agent => (
+              <div key={agent.id} className="relative group">
+                <button
+                  onClick={() => onCustomAgentSelect(agent)}
+                  className="w-full h-full bg-slate-800/40 border border-slate-700 rounded-xl p-6 text-left hover:bg-slate-700/70 hover:border-cyan-500 transition-all duration-300"
+                >
+                  <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-violet-500/20 transition-colors">
+                    <div className="text-xl font-black text-violet-400 uppercase">{agent.name.substring(0, 1)}</div>
+                  </div>
+                  <h2 className="text-lg font-bold text-white mb-1 line-clamp-1">{agent.name}</h2>
+                  <p className="text-xs text-slate-400 line-clamp-1">{agent.persona}</p>
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm(`Czy na pewno chcesz usunąć agenta "${agent.name}" wraz z całą historią?`)) {
+                      onDeleteCustomAgent(agent);
+                    }
+                  }}
+                  className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                  title="Usuń agenta"
+                >
+                  <TrashIcon className="w-5 h-5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="w-full max-w-6xl mb-8">

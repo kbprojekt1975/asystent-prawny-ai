@@ -35,6 +35,8 @@ interface AppContextType {
     backToLawArea: () => void;
     topics: Record<LawArea, string[]>;
     setTopics: React.Dispatch<React.SetStateAction<Record<LawArea, string[]>>>;
+    customAgents: any[];
+    isPro: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);

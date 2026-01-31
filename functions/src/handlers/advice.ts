@@ -22,14 +22,45 @@ export const getLegalAdvice = onCall({
         if (!genAI) throw new HttpsError('failed-precondition', 'AI Client not initialized.');
         if (!request.auth) throw new HttpsError('unauthenticated', 'User not authenticated.');
 
-        const { history, lawArea, interactionMode, topic, articles, chatId, language = 'pl', isLocalOnly = false } = request.data;
+        const {
+            history,
+            lawArea,
+            interactionMode,
+            topic,
+            articles,
+            chatId,
+            language = 'pl',
+            isLocalOnly = false,
+            agentId
+        } = request.data;
         const uid = request.auth.uid;
 
-        logger.info(`Request parameters: LawArea="${lawArea}", InteractionMode="${interactionMode}", Topic="${topic}", LocalOnly=${isLocalOnly}`);
+        logger.info(`Request parameters: LawArea="${lawArea}", InteractionMode="${interactionMode}", Topic="${topic}", LocalOnly=${isLocalOnly}, AgentId=${agentId}`);
 
         if (!chatId || !history) throw new HttpsError('invalid-argument', "Missing chatId or history.");
 
         const userRef = db.collection('users').doc(uid);
+
+        // --- FETCH CUSTOM AGENT (if applicable) ---
+        let customAgentInstructions = "";
+        if (lawArea === "Własny Agent" || lawArea === "Custom" || agentId) {
+            const targetAgentId = agentId || topic; // Fallback to topic if agentId not explicit
+            try {
+                const agentDoc = await userRef.collection('custom_agents').doc(targetAgentId).get();
+                if (agentDoc.exists) {
+                    const agentData = agentDoc.data();
+                    customAgentInstructions = `
+                        # CUSTOM PERSONA: ${agentData?.name || 'Custom Agent'}
+                        # IDENTITY/ROLE: ${agentData?.persona || 'Specialized Assistant'}
+                        # SPECIFIC INSTRUCTIONS:
+                        ${agentData?.instructions || 'Follow user preferences.'}
+                    `;
+                    logger.info(`✅ Custom agent "${agentData?.name}" instructions loaded.`);
+                }
+            } catch (e) {
+                logger.error("Error fetching custom agent", e);
+            }
+        }
 
         // --- SUBSCRIPTION CHECK (Simplified to avoid composite index) ---
         const subsRef = db.collection('customers').doc(uid).collection('subscriptions');
@@ -97,6 +128,8 @@ export const getLegalAdvice = onCall({
             instrMapDefault[areaKey]?.[interactionMode] || "";
 
         const instruction = `
+            ${customAgentInstructions}
+
             # ROLE: LEGAL EXPERT (${lawArea || areaKey})
             # TOPIC: ${topic || 'General Query'}
             
