@@ -320,9 +320,11 @@ const App: React.FC = () => {
     return <FullScreenLoader />;
   }
 
-  // Unified Stripe Migration: Access is granted if Stripe sub is active/trialing.
+  // Unified Stripe Migration: Access is granted if Stripe sub is active/trialing AND credit limit not reached.
   // We use this for primary blocking screens.
   const hasActiveStripeSub = ['active', 'trialing'].includes(userProfile?.subscription?.status || '');
+  const isLimitReached = (userProfile?.subscription?.spentAmount || 0) >= (userProfile?.subscription?.creditLimit || 0) && hasActiveStripeSub;
+  const hasActiveAccess = hasActiveStripeSub && !isLimitReached;
 
   const isAwaitingActivation = userProfile?.subscription && userProfile.subscription.isPaid === false && !hasActiveStripeSub;
   if (isAwaitingActivation) {
@@ -403,7 +405,7 @@ const App: React.FC = () => {
 
 
       <PlanSelectionModal
-        isOpen={!authLoading && !profileLoading && !subsLoading && !hasActiveStripeSub}
+        isOpen={!authLoading && !profileLoading && !subsLoading && !hasActiveAccess}
         onSelectPlan={handleSelectPlan}
         subscription={userProfile?.subscription}
         isLoading={isLoading}

@@ -94,7 +94,7 @@
     "plan": {
         "starter": {
             "title": "Pakiet Startowy AI",
-            "desc": "Uzyskaj pełny dostęp do asystenta prawnego na tydzień. Wykorzystaj 10 PLN kredytu na zaawansowane analizy Gemini 1.5 Pro/Flash.",
+            "desc": "Uzyskaj pełny dostęp do asystenta prawnego na tydzień. Wykorzystaj 10 PLN kredytu na zaawansowane analizy Gemini 2.0 Flash.",
             "creditLabel": "Kredyt",
             "validityLabel": "Ważność",
             "validityValue": "7 Dni",
@@ -110,6 +110,11 @@
             "title": "Plan Wygasł",
             "desc": "Twój kredyt się wyczerpał lub termin ważności minął. Wybierz plan ponownie, aby kontynuować.",
             "renewButton": "Odnów dostęp - 10 PLN"
+        },
+        "limitReached": {
+            "title": "Limit Środków Wyczerpany",
+            "desc": "Twoje środki się skończyły. Aby kontynuować korzystanie z asystenta, doładuj konto wybierając pakiet startowy.",
+            "selectButton": "Doładuj 10 PLN"
         },
         "help": {
             "title": "Pakiet Startowy - Szczegóły",

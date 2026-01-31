@@ -23,26 +23,44 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
         if (isOpen) {
             setIsVisible(true);
         } else {
-            setTimeout(() => setIsVisible(false), 300);
+            const timer = setTimeout(() => setIsVisible(false), 300);
+            return () => clearTimeout(timer);
         }
     }, [isOpen]);
 
     if (!isVisible && !isOpen) return null;
 
     const getStatusDisplay = () => {
-        if (!subscription || subscription.status === SubscriptionStatus.None) {
+        const isLimitReached = subscription && subscription.spentAmount >= subscription.creditLimit && (subscription.status === SubscriptionStatus.Active || subscription.status === SubscriptionStatus.Trialing);
+
+        if (!subscription || subscription.status === SubscriptionStatus.None || isLimitReached) {
             return (
                 <div className="flex flex-col items-center text-center p-6 bg-slate-700/30 border border-slate-600 rounded-2xl">
                     <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 flex items-center justify-center mb-6 ring-1 ring-cyan-500/50 relative">
-                        <SparklesIcon className="w-8 h-8 text-cyan-400" />
+                        {isLimitReached ? (
+                            <CreditCardIcon className="w-8 h-8 text-orange-400" />
+                        ) : (
+                            <SparklesIcon className="w-8 h-8 text-cyan-400" />
+                        )}
                         <div className="absolute -right-12 -top-2">
                             <InfoIcon onClick={() => setIsHelpOpen(true)} />
                         </div>
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">{t('plan.starter.title')}</h3>
-                    <p className="text-slate-400 mb-8 max-w-sm">
-                        {t('plan.starter.desc')}
-                    </p>
+                    {isLimitReached ? (
+                        <>
+                            <h3 className="text-2xl font-bold text-white mb-2">{t('plan.limitReached.title') || "Limit Środków Wyczerpany"}</h3>
+                            <p className="text-slate-400 mb-8 max-w-sm">
+                                {t('plan.limitReached.desc') || "Twoje środki się skończyły. Aby kontynuować korzystanie z asystenta, doładuj konto wybierając pakiet startowy."}
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <h3 className="text-2xl font-bold text-white mb-2">{t('plan.starter.title')}</h3>
+                            <p className="text-slate-400 mb-8 max-w-sm">
+                                {t('plan.starter.desc')}
+                            </p>
+                        </>
+                    )}
 
                     <div className="grid grid-cols-2 gap-4 w-full mb-8">
                         <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700 text-left">
@@ -66,7 +84,7 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                         disabled={isLoading}
                         className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-cyan-900/20 disabled:opacity-50"
                     >
-                        {isLoading ? t('auth.processing') : t('plan.starter.selectButton')}
+                        {isLoading ? t('auth.processing') : (isLimitReached ? (t('plan.limitReached.selectButton') || "Doładuj 10 PLN") : t('plan.starter.selectButton'))}
                     </button>
                     <p className="mt-4 text-[10px] text-slate-500 uppercase tracking-widest">
                         {t('plan.starter.manualActivation')}
@@ -103,7 +121,7 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                         {t('plan.expired.desc')}
                     </p>
                     <button
-                        onClick={onSelectPlan}
+                        onClick={() => onSelectPlan(PRICE_IDS.STARTER_10PLN)}
                         disabled={isLoading}
                         className="w-full py-4 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-all border border-slate-600"
                     >
