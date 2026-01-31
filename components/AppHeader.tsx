@@ -31,7 +31,8 @@ interface AppHeaderProps {
   onImportChat?: (file: File) => void;
   onInstallApp?: () => void;
   onHelpClick?: () => void;
-  onAndromedaClick?: () => void;
+  onHomeGridClick?: () => void;
+  isCrossedOut?: boolean;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({
@@ -57,7 +58,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   onImportChat,
   onInstallApp,
   onHelpClick,
-  onAndromedaClick
+  onHomeGridClick,
+  isCrossedOut
 }) => {
   const { t, i18n } = useTranslation();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -202,21 +204,23 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             <SparklesIcon className="h-6 w-6" />
           </button>
         )}
-        {onAndromedaClick && (
+        {onHomeGridClick && (
           <button
-            onClick={onAndromedaClick}
+            onClick={onHomeGridClick}
             className="p-2 text-slate-300 hover:text-cyan-400 hover:bg-slate-700/50 rounded-full transition-all"
-            title="Powrót do Andromeda"
+            title={isCrossedOut ? (t('app.openAndromeda') || "Otwórz Andromeda") : (t('app.homeGrid') || "Powrót do menu głównego")}
           >
             <div className="relative flex items-center justify-center p-1 w-8 h-8">
               <div className="grid grid-cols-3 gap-[2px]">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="w-[6px] h-[6px] bg-current rounded-full" />
+                  <div key={i} className={`w-[6px] h-[6px] bg-current rounded-full ${isCrossedOut ? 'bg-slate-400' : 'bg-current'}`} />
                 ))}
               </div>
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-6 h-[1.5px] bg-red-500/90 -rotate-45 rounded-full" />
-              </div>
+              {isCrossedOut && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-6 h-[1.5px] bg-red-500/90 -rotate-45 rounded-full" />
+                </div>
+              )}
             </div>
           </button>
         )}

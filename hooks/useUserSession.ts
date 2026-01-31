@@ -7,7 +7,16 @@ import { UserProfile, LawArea, SubscriptionStatus } from '../types';
 const initialProfile: UserProfile = {
     quickActions: [],
     totalCost: 0,
-    isActive: false
+    isActive: false,
+    hasSeenWelcomeAssistant: false,
+    subscription: {
+        status: 'active' as SubscriptionStatus,
+        isPaid: true,
+        creditLimit: 10,
+        tokenLimit: 1000000,
+        spentAmount: 0,
+        tokensUsed: 0
+    }
 };
 
 export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
@@ -104,6 +113,12 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                         // Prevent downgrade: if it was true, keep it true unless we want an explicit way to withdraw (not implemented here)
                         const finalConsent = previousConsent || newConsent;
 
+                        console.log("[useUserSession] initializeUser: Updating existing user.", {
+                            needsUpdate,
+                            pendingConsentValue,
+                            finalConsent
+                        });
+
                         await updateDoc(userDocRef, {
                             email: user.email,
                             displayName: finalDisplayName || user.displayName,
@@ -150,7 +165,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                 const backendCost = data.totalCost ?? 0;
                 setTotalCost(backendCost);
 
-                let profile = data.profile || initialProfile;
+                let profile = { ...initialProfile, ...(data.profile || {}) };
 
                 // Derive Local Only state from consent OR manual preference
                 // FORCE Local Only if no consent. Allow preference if consent granted.
@@ -174,13 +189,16 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                     setTopics(data.topics);
                 }
 
-                // Unified Stripe Migration: We strip legacy subscription data from the users doc listener
-                // to ensure the customers collection listener is the 'Single Source of Truth'.
-                const { subscription, ...profileWithoutLegacySub } = profile;
+                // Unified Stripe Migration
+                const { subscription: firestoreSub, ...profileWithoutLegacySub } = profile;
 
                 setUserProfile(prev => ({
                     ...profileWithoutLegacySub,
-                    subscription: prev.subscription // Preserve whatever Stripe listener set
+                    subscription: {
+                        ...(prev.subscription || {}),
+                        // Merge the spentAmount from Firestore (User Doc) with the Status/Limit from Stripe (prev state)
+                        spentAmount: firestoreSub?.spentAmount ?? prev.subscription?.spentAmount ?? 0,
+                    } as any
                 }));
             } catch (e) {
                 console.error("Error handling user profile snapshot:", e);
@@ -206,6 +224,11 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                     .map(doc => ({ id: doc.id, ...doc.data() } as any))
                     .find(sub => ['active', 'trialing'].includes(sub.status));
 
+                console.log("[useUserSession] Subscription snapshot updated", {
+                    foundActive: !!activeSub,
+                    status: activeSub?.status || 'none'
+                });
+
                 if (activeSub) {
                     setUserProfile(prev => ({
                         ...prev,
@@ -214,8 +237,19 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                             isPaid: activeSub.status === 'active',
                             activatedAt: activeSub.created,
                             expiresAt: activeSub.current_period_end,
-                            priceId: activeSub.items?.[0]?.price?.id, // Useful for multi-plan
-                            creditLimit: 10.00, // Hardcoded for now per user req
+                            priceId: activeSub.items?.[0]?.price?.id,
+                            creditLimit: 10.00,
+                            spentAmount: prev.subscription?.spentAmount || 0
+                        }
+                    }));
+                } else {
+                    // Explicitly set None if no active sub found to trigger PlanSelection
+                    setUserProfile(prev => ({
+                        ...prev,
+                        subscription: {
+                            status: SubscriptionStatus.None,
+                            isPaid: false,
+                            creditLimit: 0,
                             spentAmount: prev.subscription?.spentAmount || 0
                         }
                     }));
@@ -245,17 +279,51 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
             sessionStorage.removeItem('personalData');
         }
 
-        // BLOCK if no consent.
-        if (!user || !newProfile.dataProcessingConsent) return;
+        // BLOCK if no consent, UNLESS we are updating functional UI flags.
+        // Functional flags like hasSeenWelcomeAssistant are necessary for UI stability.
+        // If they haven't given consent yet, we allow the update but only if they haven't tried to add personal data.
+        const prevConsent = userProfile.dataProcessingConsent;
+        const newConsent = newProfile.dataProcessingConsent;
+
+        if (!user) return;
+
+        let profileToSave = { ...newProfile };
+
+        // If they haven't given consent yet, we allow the technical update but we STRIP personal data.
+        if (!newConsent && !prevConsent) {
+            if (profileToSave.personalData && Object.keys(profileToSave.personalData).length > 0) {
+                console.warn("[useUserSession] Consent not granted. Stripping personal data from Firestore update.");
+                const { personalData, ...rest } = profileToSave;
+                profileToSave = rest;
+            }
+        }
 
         try {
-            await setDoc(doc(db, 'users', user.uid), { profile: newProfile }, { merge: true });
+            // Firestore throws if any field is undefined. We must sanitize.
+            const sanitize = (obj: any): any => {
+                const newObj: any = {};
+                Object.keys(obj).forEach(key => {
+                    const value = obj[key];
+                    if (value !== undefined) {
+                        if (value && typeof value === 'object' && !Array.isArray(value)) {
+                            newObj[key] = sanitize(value);
+                        } else {
+                            newObj[key] = value;
+                        }
+                    }
+                });
+                return newObj;
+            };
+
+            const dataToSave = sanitize(profileToSave);
+
+            await setDoc(doc(db, 'users', user.uid), { profile: dataToSave }, { merge: true });
             // Update effective state immediately for snappy UI
-            setIsLocalOnly(newProfile.manualLocalMode === true);
+            setIsLocalOnly(profileToSave.manualLocalMode === true);
         } catch (e) {
             console.error("Error saving profile:", e);
         }
-    }, [user]);
+    }, [user, userProfile]);
 
     return {
         user,

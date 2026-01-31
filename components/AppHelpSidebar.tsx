@@ -18,16 +18,8 @@ const AppHelpSidebar: React.FC<AppHelpSidebarProps> = ({ isOpen, onClose, userId
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (isOpen && messages.length === 0) {
-            setMessages([
-                {
-                    role: 'model',
-                    content: t('help_sidebar.welcome')
-                }
-            ]);
-        }
-    }, [isOpen, messages.length, t]);
+    // Remove the useEffect that was adding a 'model' message to the state
+    // This ensures the messages array starts empty and only contains user/model interactions
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -88,6 +80,13 @@ const AppHelpSidebar: React.FC<AppHelpSidebarProps> = ({ isOpen, onClose, userId
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                    {messages.length === 0 && (
+                        <div className="flex justify-start">
+                            <div className="max-w-[85%] p-3 rounded-2xl text-sm bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none">
+                                {t('help_sidebar.welcome')}
+                            </div>
+                        </div>
+                    )}
                     {messages.map((msg, idx) => (
                         <div
                             key={idx}

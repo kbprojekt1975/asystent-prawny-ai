@@ -58,6 +58,9 @@ import { useAppContext, useChatContext, useUIContext } from './context';
 const GlobalAdminNotes = React.lazy(() => import('./components/GlobalAdminNotes'));
 import FullScreenLoader from './components/FullScreenLoader';
 
+// Emulator Check
+const USE_EMULATORS = import.meta.env.VITE_USE_EMULATORS === 'true' || localStorage.getItem('useEmulators') === 'true';
+
 const App: React.FC = () => {
   const { t, i18n } = useTranslation();
 
@@ -137,6 +140,7 @@ const App: React.FC = () => {
   const [documentsModalChatId, setDocumentsModalChatId] = useState<string | null>(null);
   const [isSplashDismissed, setIsSplashDismissed] = useState(false);
   const [isShowAndromeda, setIsShowAndromeda] = useState(false);
+  const [hasDismissedAssistantSession, setHasDismissedAssistantSession] = useState(false);
 
   const { allEvents } = useUserCalendar(user);
   const todayStr = new Date().toISOString().split('T')[0];
@@ -150,6 +154,18 @@ const App: React.FC = () => {
     const ADMIN_EMAILS = ["kbprojekt1975@gmail.com", "konrad@example.com", "wielki@electronik.com"];
     return ADMIN_UIDS.includes(user.uid) || (user.email && ADMIN_EMAILS.some(email => user.email?.includes(email)));
   }, [user]);
+
+  // Auto-trigger Onboarding Flow when subscription is detected
+  useEffect(() => {
+    if (!authLoading && !profileLoading && !subsLoading && userProfile) {
+      const hasActiveSub = ['active', 'trialing'].includes(userProfile.subscription?.status || '');
+
+      // If user is PAID but hasn't seen the welcome assistant yet AND hasn't dismissed it this session, show it.
+      if (hasActiveSub && !userProfile.hasSeenWelcomeAssistant && !hasDismissedAssistantSession) {
+        setIsWelcomeAssistantOpen(true);
+      }
+    }
+  }, [authLoading, profileLoading, subsLoading, userProfile?.subscription?.status, userProfile?.hasSeenWelcomeAssistant, setIsWelcomeAssistantOpen, hasDismissedAssistantSession]);
 
   const handlePreviewDocument = (rawContent: string) => {
     if (!userProfile?.personalData) {
@@ -226,6 +242,51 @@ const App: React.FC = () => {
 
   const handleSelectPlan = async (planId: string) => {
     if (!user) return;
+
+    // LOCAL DEVELOPMENT BYPASS
+    // On emulators, we don't have Stripe Extension running by default.
+    // We allow developers to "self-activate" by writing directly to the customers collection.
+    if (import.meta.env.VITE_USE_EMULATORS === 'true') {
+      console.warn("DEVELOPER MODE: Bypassing Stripe and auto-activating subscription locally.");
+      try {
+        const { setDoc, doc, serverTimestamp, updateDoc } = await import('firebase/firestore');
+        const { db } = await import('./services/firebase');
+
+        console.log("Mocking subscription for UID:", user.uid);
+
+        // Mock a successful Stripe subscription
+        await setDoc(doc(db, 'customers', user.uid, 'subscriptions', 'local_dev_sub'), {
+          status: 'active',
+          role: 'premium',
+          items: [{ price: { id: planId } }],
+          created: serverTimestamp(),
+          current_period_start: serverTimestamp(),
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // +30 days
+        });
+
+        console.log("Subscription doc created. Resetting onboarding...");
+
+        // RESET ONBOARDING FLAGS FOR TESTING
+        await updateDoc(doc(db, 'users', user.uid), {
+          "profile.hasSeenWelcomeAssistant": false,
+          "profile.cookieConsent": false,
+          "profile.dataProcessingConsent": false,
+          "profile.isActive": true // Ensure profile is active
+        });
+
+        // CLEAR LOCAL CACHE FOR COOKIE CONSENT
+        localStorage.removeItem('cookieConsent');
+
+        console.log("Local activation complete! Reloading...");
+        alert("Developer: Subscription activated & Onboarding reset! Restarting session...");
+        window.location.reload();
+        return;
+      } catch (err) {
+        console.error("Local activation error:", err);
+        alert("Local activation failed: " + (err as any).message);
+      }
+    }
+
     try {
       const url = await createCheckoutSession(user.uid, planId);
       window.location.href = url;
@@ -252,7 +313,10 @@ const App: React.FC = () => {
   }
 
   // Blocking Loader for Logged-In Users awaiting data
-  if (authLoading || profileLoading || subsLoading) {
+  // Transitional loading state to avoid UI flashing during major navigations or analysis
+  const isNavigating = isLoading && (!selectedTopic || (chatHistory && chatHistory.length === 0));
+
+  if (authLoading || profileLoading || subsLoading || (isNavigating && !isShowAndromeda)) {
     return <FullScreenLoader />;
   }
 
@@ -269,7 +333,10 @@ const App: React.FC = () => {
     <>
       {isShowAndromeda && (
         <AndromedaAssistant
-          onProceed={() => setIsShowAndromeda(false)}
+          onProceed={() => {
+            setIsShowAndromeda(false);
+            resetNavigation();
+          }}
           onProfileClick={() => setIsProfileModalOpen(true)}
           language={i18n.language}
         />
@@ -325,11 +392,15 @@ const App: React.FC = () => {
         }}
         isLocalOnly={isLocalOnly}
         isWelcomeAssistantOpen={isWelcomeAssistantOpen}
-        setIsWelcomeAssistantOpen={setIsWelcomeAssistantOpen}
+        setIsWelcomeAssistantOpen={(open) => {
+          setIsWelcomeAssistantOpen(open);
+          if (!open) setHasDismissedAssistantSession(true);
+        }}
         isInstallPromptOpen={isInstallPromptOpen}
         setIsInstallPromptOpen={setIsInstallPromptOpen}
         onInstall={handleInstallApp}
       />
+
 
       <PlanSelectionModal
         isOpen={!authLoading && !profileLoading && !subsLoading && !hasActiveStripeSub}
@@ -392,7 +463,8 @@ const App: React.FC = () => {
                 setInteractionMode(data.interactionMode);
               });
             } : undefined}
-            onAndromedaClick={() => setIsShowAndromeda(true)}
+            onHomeGridClick={!selectedLawArea ? () => setIsShowAndromeda(true) : resetNavigation}
+            isCrossedOut={!selectedLawArea}
           />
         )}
 
@@ -401,13 +473,7 @@ const App: React.FC = () => {
         </main>
 
         <RemindersWidget user={user} />
-        {!profileLoading && (
-          <CookieConsent
-            userProfile={userProfile}
-            onUpdateProfile={handleUpdateProfile}
-            isLoading={profileLoading}
-          />
-        )}
+
         <AppHelpSidebar
           isOpen={isAppHelpSidebarOpen}
           onClose={() => setIsAppHelpSidebarOpen(false)}

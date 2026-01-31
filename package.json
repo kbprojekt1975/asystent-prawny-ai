@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "emulators": "firebase emulators:start --import=./emulator_data",
+    "emulators:clean": "firebase emulators:start",
+    "build:functions": "npm --prefix functions run build && node functions/seed_config.cjs",
+    "watch:functions": "npm --prefix functions run build:watch"
   },
   "dependencies": {
     "firebase": "^12.6.0",

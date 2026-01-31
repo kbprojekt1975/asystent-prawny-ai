@@ -5,27 +5,62 @@ import * as logger from "firebase-functions/logger";
 export const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 
 // --- LOGIKA CENOWA ---
-// Ceny bazowe (koszt wewnętrzny) w USD za 1 mln tokenów
-export const PRICING = {
-    'gemini-2.0-flash': { input: 0.10, output: 0.40 }, // Stable Flash pricing (standard estimate)
-    'gemini-2.0-flash-exp': { input: 0.25, output: 1.0 },
-    'gemini-1.5-flash': { input: 0.075, output: 0.30 },
-    'gemini-1.5-pro': { input: 1.25, output: 5.0 },
+export const getPricingConfig = async (db: any) => {
+    try {
+        const doc = await db.collection('config').doc('pricing').get();
+        if (doc.exists) {
+            const data = doc.data();
+            logger.info("✅ Pricing config fetched:", data);
+            return data;
+        } else {
+            logger.warn("⚠️ config/pricing document does not exist in Firestore.");
+        }
+    } catch (e) {
+        logger.error("❌ Error fetching pricing config", e);
+    }
+    // Fallback defaults
+    logger.warn("⚠️ Using fallback pricing config");
+    return {
+        profit_margin_multiplier: 500,
+        rates: {
+            'gemini-2.0-flash': { input: 0.25, output: 1.0 },
+            'gemini-1.5-flash': { input: 0.25, output: 1.0 },
+            'gemini-1.5-pro': { input: 1.5, output: 4.5 },
+            'gemini-1.5-pro-latest': { input: 1.5, output: 4.5 },
+        }
+    };
 };
 
-// Marża: 80% zysku z tego co wpłaca user.
-// Jeśli Profit = 0.8 * Price, to Price - Cost = 0.8 * Price => 0.2 * Price = Cost => Price = 5 * Cost.
-const PROFIT_MARGIN_MULTIPLIER = 5;
+export const calculateCost = (model: string, usage: { promptTokenCount?: number, candidatesTokenCount?: number }, config: any): number => {
+    // Normalize model name (remove version suffixes if needed, though usually exact match is best)
+    // The config keys in user screenshot are 'gemini-1.5-flash', etc.
+    const prices = config.rates?.[model];
 
-export const calculateCost = (model: string, usage: { promptTokenCount?: number, candidatesTokenCount?: number }): number => {
-    const prices = PRICING[model as keyof typeof PRICING];
-    if (!prices || !usage) return 0;
+    if (!prices || !usage) {
+        logger.warn(`⚠️ calculateCost: Missing prices or usage for model ${model}. Prices found: ${!!prices}, Usage found: ${!!usage}`);
+        return 0;
+    }
 
     const inputCost = (usage.promptTokenCount || 0) / 1_000_000 * prices.input;
     const outputCost = (usage.candidatesTokenCount || 0) / 1_000_000 * prices.output;
 
     const internalCost = inputCost + outputCost;
-    return internalCost * PROFIT_MARGIN_MULTIPLIER;
+    const multiplier = config.profit_margin_multiplier || 8;
+
+    const finalCost = internalCost * multiplier;
+    logger.info(`💰 Cost calculated: Model=${model}, In=${usage.promptTokenCount}, Out=${usage.candidatesTokenCount}, Base=${internalCost.toFixed(6)}, Multiplier=${multiplier}, Final=${finalCost.toFixed(6)}`);
+
+    return finalCost;
+};
+
+export const calculateAppTokens = (usage: { promptTokenCount?: number, candidatesTokenCount?: number }): number => {
+    // Standardized 'App Token' = 1 Gemini 1.5 Pro Input Token
+    // Output tokens are 4x more expensive ($5.00 vs $1.25)
+
+    const input = usage.promptTokenCount || 0;
+    const output = usage.candidatesTokenCount || 0;
+
+    return input + (output * 4);
 };
 
 let aiClient: GoogleGenerativeAI | null = null;

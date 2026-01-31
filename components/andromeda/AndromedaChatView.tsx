@@ -52,7 +52,7 @@ const AndromedaChatView: React.FC<AndromedaChatViewProps> = ({
                 <button
                     onClick={onProceed}
                     className="group relative p-3 bg-slate-800/40 hover:bg-slate-700/60 rounded-xl transition-all border border-slate-700/50 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-900/20"
-                    title="Przejdź do Narzędzi Specjalistycznych"
+                    title={t('app.homeGrid') || "Powrót do wyboru dziedziny"}
                 >
                     <div className="grid grid-cols-3 gap-1 animate-attention-blink">
                         {[...Array(6)].map((_, i) => (

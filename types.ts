@@ -53,6 +53,8 @@ export interface SubscriptionInfo {
   priceId?: string;
   creditLimit: number;
   spentAmount: number;
+  tokenLimit: number;
+  tokensUsed: number;
 }
 
 export interface ChatMessage {

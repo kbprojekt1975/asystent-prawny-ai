@@ -2,7 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { SchemaType } from "@google/generative-ai";
 import { db, Timestamp, FieldValue, storage } from "../services/db";
-import { getAiClient, calculateCost, GEMINI_API_KEY } from "../services/ai";
+import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, GEMINI_API_KEY } from "../services/ai";
 import { LawAreaType } from "../types";
 import {
     CORE_RULES_PL, CORE_RULES_EN, CORE_RULES_ES,
@@ -40,6 +40,18 @@ export const getLegalAdvice = onCall({
     }
 
     logger.info("✓ Subscription check passed (Stripe collection)");
+
+    // --- CHECK CREDIT LIMIT ---
+    const userDoc = await userRef.get();
+    const userData = userDoc.data();
+    const subscription = userData?.profile?.subscription || {};
+    const creditLimit = subscription.creditLimit || 0;
+    const spentAmount = subscription.spentAmount || 0;
+
+    if (spentAmount >= creditLimit) {
+        logger.warn(`⛔ User ${uid} exceeded limit. Spent: ${spentAmount}/${creditLimit}`);
+        throw new HttpsError('resource-exhausted', `Limit środków wyczerpany (${spentAmount.toFixed(2)}/${creditLimit.toFixed(2)} PLN).`);
+    }
 
     // --- FETCH KNOWLEDGE ---
     let existingKnowledgeContext = "BRAK";
@@ -87,10 +99,21 @@ export const getLegalAdvice = onCall({
     `;
 
     // --- PREPARE CONTENT ---
-    const contents = (history as any[]).map((msg: any) => ({
+    let contents = (history as any[]).map((msg: any) => ({
         role: msg.role === 'model' ? 'model' : 'user',
         parts: [{ text: msg.content || "..." }]
     }));
+
+    // CRITICAL: Gemini requires the first message to be from 'user'.
+    // If the history starts with a 'model' message (e.g. from UI welcome msg), we strip it.
+    while (contents.length > 0 && contents[0].role !== 'user') {
+        logger.info("Skipping leading non-user message in history for Gemini compatibility");
+        contents.shift();
+    }
+
+    if (contents.length === 0) {
+        throw new HttpsError('invalid-argument', "Chat history must contain at least one user message.");
+    }
 
     const docsSnap = await userRef.collection('chats').doc(chatId).collection('documents').get();
     if (!docsSnap.empty) {
@@ -147,7 +170,20 @@ export const getLegalAdvice = onCall({
 
     const text = result.response.text();
     const usage = result.response.usageMetadata;
-    const cost = usage ? calculateCost(modelName, usage) : 0;
+
+    // Fetch dynamic pricing config
+    const pricingConfig = await getPricingConfig(db);
+    logger.info(`🔍 Pricing Config loaded. Multiplier: ${pricingConfig.profit_margin_multiplier}`);
+
+    let cost = 0;
+    let tokensUsed = 0;
+    if (usage) {
+        cost = calculateCost(modelName, usage, pricingConfig);
+        tokensUsed = calculateAppTokens(usage);
+        logger.info(`📊 Usage metadata found. Tokens: ${usage.totalTokenCount}. Calculated Cost: ${cost}. AppTokens: ${tokensUsed}`);
+    } else {
+        logger.warn("⚠️ No usage metadata returned from Gemini.");
+    }
 
     const chatRef = userRef.collection('chats').doc(chatId);
     await chatRef.set({
@@ -155,7 +191,36 @@ export const getLegalAdvice = onCall({
         lastUpdated: Timestamp.now()
     }, { merge: true });
 
-    if (cost > 0) await userRef.set({ totalCost: FieldValue.increment(cost) }, { merge: true });
+    if (cost > 0) {
+        logger.info(`💾 Updating user cost in Firestore: +${cost}, +${tokensUsed} tokens`);
+        logger.info(`📦 Update payload:`, {
+            totalCost: `increment(${cost})`,
+            "profile.subscription.spentAmount": `increment(${cost})`,
+            "profile.subscription.tokensUsed": `increment(${tokensUsed})`
+        });
+
+        try {
+            await userRef.set({
+                totalCost: FieldValue.increment(cost),
+                profile: {
+                    subscription: {
+                        spentAmount: FieldValue.increment(cost),
+                        tokensUsed: FieldValue.increment(tokensUsed)
+                    }
+                }
+            }, { merge: true });
+            logger.info("✅ User cost updated successfully");
+
+            // Verify update
+            const verifyDoc = await userRef.get();
+            const verifyData = verifyDoc.data();
+            logger.info(`🔍 After update - tokensUsed: ${verifyData?.profile?.subscription?.tokensUsed}, spentAmount: ${verifyData?.profile?.subscription?.spentAmount}`);
+        } catch (e) {
+            logger.error("❌ Failed to update user cost", e);
+        }
+    } else {
+        logger.warn("⚠️ Cost is 0, skipping Firestore update");
+    }
 
     return { text, usage };
 });

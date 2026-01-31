@@ -284,7 +284,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             alert("Wystąpił nieoczekiwany błąd podczas analizy sprawy.");
         } finally {
             setIsLoading(false);
-            // Optional: setIsWelcomeModalOpen(false) here if we want to force close even on failure
+            setIsWelcomeModalOpen(false);
         }
     }, [user, i18n.language, topics, handleAddTopic, handleLoadHistory, handleAddCost, setIsLoading]);
 

@@ -2,7 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { SchemaType } from "@google/generative-ai";
 import { db, Timestamp, FieldValue } from "../services/db";
-import { getAiClient, calculateCost, GEMINI_API_KEY } from "../services/ai";
+import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, GEMINI_API_KEY } from "../services/ai";
 import { LawArea, InteractionMode } from "../types";
 
 export const analyzeLegalCase = onCall({
@@ -37,6 +37,15 @@ export const analyzeLegalCase = onCall({
         // If they got here, they have an active sub (checked above), but let's allow explicit manual block.
         // We'll keep it as a master-block if specifically set to false.
         throw new HttpsError('permission-denied', "Twoje konto zostało zawieszone. Skontaktuj się z administratorem.");
+    }
+
+    const subscription = userData?.profile?.subscription || {};
+    const creditLimit = subscription.creditLimit || 0;
+    const spentAmount = subscription.spentAmount || 0;
+
+    if (spentAmount >= creditLimit) {
+        logger.warn(`⛔ User ${uid} exceeded limit in Analysis. Spent: ${spentAmount}/${creditLimit}`);
+        throw new HttpsError('resource-exhausted', `Limit środków został wyczerpany (${spentAmount.toFixed(2)}/${creditLimit.toFixed(2)} PLN). Doładuj konto.`);
     }
 
     try {
@@ -77,13 +86,16 @@ export const analyzeLegalCase = onCall({
         const resultResponse = await model.generateContent(prompt);
         const responseText = resultResponse.response.text();
 
+        const pricingConfig = await getPricingConfig(db);
+
         let usage = undefined;
         if (resultResponse.response.usageMetadata) {
             usage = {
                 promptTokenCount: resultResponse.response.usageMetadata.promptTokenCount || 0,
                 candidatesTokenCount: resultResponse.response.usageMetadata.candidatesTokenCount || 0,
                 totalTokenCount: resultResponse.response.usageMetadata.totalTokenCount || 0,
-                cost: calculateCost(modelName, resultResponse.response.usageMetadata)
+                cost: calculateCost(modelName, resultResponse.response.usageMetadata, pricingConfig),
+                appTokens: calculateAppTokens(resultResponse.response.usageMetadata)
             };
         }
 
@@ -112,7 +124,12 @@ export const analyzeLegalCase = onCall({
         if (usage) {
             await db.collection('users').doc(uid).set({
                 totalCost: FieldValue.increment(usage.cost),
-                "profile.subscription.spentAmount": FieldValue.increment(usage.cost)
+                profile: {
+                    subscription: {
+                        spentAmount: FieldValue.increment(usage.cost),
+                        tokensUsed: FieldValue.increment(usage.appTokens)
+                    }
+                }
             }, { merge: true });
         }
 

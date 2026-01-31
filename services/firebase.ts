@@ -30,7 +30,7 @@ const isLocalhost = location.hostname === "localhost" || location.hostname === "
 const isNgrok = location.hostname.endsWith(".ngrok-free.app") || location.hostname.endsWith(".ngrok.io");
 const isLocalNetwork = /^192\.168\.|^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(location.hostname);
 
-const USE_EMULATORS = localStorage.getItem('useEmulators') === 'true';
+const USE_EMULATORS = import.meta.env.VITE_USE_EMULATORS === 'true' || localStorage.getItem('useEmulators') === 'true';
 
 if ((isLocalhost || isNgrok || isLocalNetwork) && USE_EMULATORS) {
   const host = isLocalhost ? "127.0.0.1" : location.hostname;
