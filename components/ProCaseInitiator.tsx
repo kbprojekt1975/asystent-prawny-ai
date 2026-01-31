@@ -38,7 +38,7 @@ const ProCaseInitiator: React.FC<ProCaseInitiatorProps> = ({
     return (
         <div className="flex flex-col h-full bg-slate-900 text-white overflow-hidden animate-in fade-in duration-500">
             {/* Header */}
-            <div className="p-4 border-b border-slate-700/50 bg-slate-800/30 backdrop-blur-md flex items-center justify-between">
+            <div className="p-4 bg-slate-900 flex items-center justify-between">
                 <button
                     onClick={onBack}
                     className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"

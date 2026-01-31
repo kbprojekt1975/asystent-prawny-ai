@@ -254,9 +254,14 @@ const Auth: React.FC = () => {
                       {t('auth.privacy.accept')} <button type="button" onClick={() => setIsPrivacyPolicyOpen(true)} className="text-cyan-400 hover:underline">{t('auth.privacy.policy')}</button>{t('auth.privacy.consent')}
                     </span>
                     {!consentChecked && (
-                      <span className="block mt-1 text-amber-500 font-semibold">
-                        {t('auth.privacy.noConsent')}
-                      </span>
+                      <>
+                        <span className="block mt-1 text-amber-500 font-semibold">
+                          {t('auth.privacy.noConsent')}
+                        </span>
+                        <span className="block mt-1 text-amber-500 font-medium">
+                          {t('auth.privacy.warning')}
+                        </span>
+                      </>
                     )}
                   </div>
                 </label>

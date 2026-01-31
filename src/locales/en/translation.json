@@ -69,7 +69,8 @@
             "accept": "I accept ",
             "policy": "Privacy Policy",
             "consent": " and I consent to storing my data in the cloud.",
-            "noConsent": "(No consent = data only in browser memory)"
+            "noConsent": "(No consent = data only in browser memory)",
+            "warning": "Attention! Lack of consent may cause some application functions to be unavailable."
         },
         "errors": {
             "googleLogin": "An error occurred during Google login.",

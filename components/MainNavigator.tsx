@@ -86,7 +86,7 @@ const MainNavigator: React.FC = () => {
     }, [topics, selectedLawArea, chatHistories]);
 
     return (
-        <div key={`${selectedLawArea}-${servicePath}-${interactionMode}-${selectedTopic}`} className="flex-1 flex flex-col animate-fade-in">
+        <div key={`${selectedLawArea}-${servicePath}-${interactionMode}-${selectedTopic}`} className="flex-1 flex flex-col h-full animate-fade-in">
             {!selectedLawArea ? (
                 <LawSelector
                     onSelect={(area) => setSelectedLawArea(area)}

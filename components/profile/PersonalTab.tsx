@@ -38,6 +38,13 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
         });
     };
 
+    const subscription = currentProfile.subscription;
+    const expiresAtDate = subscription?.expiresAt
+        ? (typeof subscription.expiresAt === 'number'
+            ? new Date(subscription.expiresAt)
+            : subscription.expiresAt.toMillis ? new Date(subscription.expiresAt.toMillis()) : null)
+        : null;
+
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-700">
@@ -52,6 +59,44 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
                     >
                         {t('userProfile.personal.logout')}
                     </button>
+                </div>
+            </div>
+
+            {/* Subscription Status Block */}
+            <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-600/50 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-cyan-500/10 transition-all"></div>
+
+                <div className="flex justify-between items-start relative z-10">
+                    <div>
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                            {t('userProfile.personal.subscriptionTitle') || "Status Subskrypcji"}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-2">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold border ${subscription?.status === 'active'
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]'
+                                    : 'bg-slate-700 text-slate-400 border-slate-600'
+                                }`}>
+                                <div className={`w-1.5 h-1.5 rounded-full mr-2 ${subscription?.status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`}></div>
+                                {subscription?.status === 'active'
+                                    ? (t('userProfile.personal.active') || "AKTYWNA")
+                                    : (subscription?.status || "BRAK")}
+                            </span>
+                        </div>
+                    </div>
+
+                    {expiresAtDate && subscription?.status === 'active' && (
+                        <div className="text-right">
+                            <span className="block text-[10px] text-slate-500 uppercase font-semibold mb-1">
+                                {t('userProfile.personal.expires') || "Wygasa"}
+                            </span>
+                            <div className="font-mono text-sm text-slate-200 bg-slate-900/50 px-2 py-1 rounded border border-slate-700/50">
+                                {expiresAtDate.toLocaleDateString()}
+                                <span className="text-slate-500 ml-1.5 text-xs">
+                                    {expiresAtDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

@@ -65,7 +65,8 @@
             "accept": "Acepto la ",
             "policy": "Política de Privacidad",
             "consent": " y doy mi consentimiento para almacenar mis datos en la nube.",
-            "noConsent": "(Sin consentimiento = datos solo en la memoria del navegador)"
+            "noConsent": "(Sin consentimiento = datos solo en la memoria del navegador)",
+            "warning": "¡Atención! La falta de consentimiento puede hacer que algunas funciones de la aplicación no estén disponibles."
         },
         "errors": {
             "googleLogin": "Ocurrió un error durante el inicio de sesión con Google.",

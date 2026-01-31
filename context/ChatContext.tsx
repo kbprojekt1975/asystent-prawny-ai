@@ -188,6 +188,13 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setSelectedTopic(topic);
             if (mode) setInteractionMode(mode);
             if (path) setServicePath(path);
+
+            // LOCAL-ONLY SYNC FIX:
+            // Since we can't load history, we treat every navigation as a fresh start (for now).
+            // We ALWAYS trigger the greeting so the user isn't staring at a blank screen.
+            if (user.uid) {
+                await handleInitialGreeting(lawArea, topic, mode || InteractionMode.Advice, initialDescription);
+            }
             return;
         }
 

@@ -114,16 +114,7 @@ const ChatFooter: React.FC = () => {
                                             <span className={`inline-block w-3.5 h-3.5 transform bg-white rounded-full transition-transform ${isDeepThinkingEnabled ? 'translate-x-[22px]' : 'translate-x-1'}`} />
                                         </button>
 
-                                        {selectedTopic && (
-                                            <button
-                                                onClick={handleGenerateKnowledge}
-                                                className="ml-4 p-1.5 text-slate-300 hover:text-green-400 hover:bg-slate-700/50 rounded-lg transition-all border border-slate-700 bg-slate-800/50 group flex items-center gap-2"
-                                                title={t('app.generateKnowledge')}
-                                            >
-                                                <BrainIcon className="h-5 w-5 text-green-400 group-hover:scale-110 transition-transform" />
-                                                <span className="text-[10px] font-bold uppercase tracking-tight hidden sm:inline">{t('app.generateKnowledge')}</span>
-                                            </button>
-                                        )}
+
 
                                         <div className="flex items-center gap-1.5 ml-3 md:hidden border-l border-slate-700 pl-3">
                                             <button
@@ -199,7 +190,7 @@ const ChatFooter: React.FC = () => {
                         </>
                     )}
 
-                    <div className="flex items-end gap-2 bg-slate-800 rounded-xl p-1.5 md:p-2 border border-slate-700/50">
+                    <div className="flex items-end gap-2 bg-slate-900/50 rounded-xl p-1.5 md:p-2 border border-slate-700/50">
                         {isFullScreen && (
                             <button
                                 onClick={() => setIsFullScreen(false)}

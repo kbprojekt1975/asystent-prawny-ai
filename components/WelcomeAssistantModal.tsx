@@ -11,9 +11,10 @@ interface WelcomeAssistantModalProps {
     onClose: () => void;
     userProfile: UserProfile;
     onUpdateProfile: (profile: UserProfile) => void;
+    isLocalOnly?: boolean;
 }
 
-const WelcomeAssistantModal: React.FC<WelcomeAssistantModalProps> = ({ isOpen, onClose, userProfile, onUpdateProfile }) => {
+const WelcomeAssistantModal: React.FC<WelcomeAssistantModalProps> = ({ isOpen, onClose, userProfile, onUpdateProfile, isLocalOnly = false }) => {
     const { t, i18n } = useTranslation();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
@@ -54,7 +55,8 @@ const WelcomeAssistantModal: React.FC<WelcomeAssistantModalProps> = ({ isOpen, o
                 false,
                 undefined,
                 'welcome-assistant',
-                i18n.language
+                i18n.language,
+                isLocalOnly
             );
 
             if (response && response.text) {

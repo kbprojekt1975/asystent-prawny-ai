@@ -90,6 +90,7 @@ const AppModals: React.FC<AppModalsProps> = ({
                 onClose={() => setIsWelcomeAssistantOpen(false)}
                 userProfile={userProfile}
                 onUpdateProfile={handleUpdateProfile}
+                isLocalOnly={isLocalOnly}
             />
             <UserProfileModal
                 isOpen={isProfileModalOpen}

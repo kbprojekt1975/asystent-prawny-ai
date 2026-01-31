@@ -165,13 +165,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                 </span>
                               </button>
                               <div className="flex items-center gap-2">
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); onViewKnowledge(area as LawArea, topic, m.interactionMode); onClose(); }}
-                                  className="p-1 hover:text-cyan-400"
-                                  title="Pokaż bazę wiedzy"
-                                >
-                                  <BookOpenIcon className="w-3.5 h-3.5" />
-                                </button>
+
                                 {m.docCount > 0 && (
                                   <button
                                     onClick={(e) => { e.stopPropagation(); onViewDocuments(area as LawArea, topic, m.interactionMode); onClose(); }}

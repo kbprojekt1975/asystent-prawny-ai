@@ -162,8 +162,17 @@ const App: React.FC = () => {
     if (!authLoading && !profileLoading && !subsLoading && userProfile && !isRecharging) {
       const hasActiveSub = ['active', 'trialing'].includes(userProfile.subscription?.status || '');
 
+      console.log("[App] Checking Welcome Trigger:", {
+        hasActiveSub,
+        hasSeen: userProfile.hasSeenWelcomeAssistant,
+        dismissed: hasDismissedAssistantSession,
+        consent: userProfile.dataProcessingConsent,
+        subStatus: userProfile.subscription?.status
+      });
+
       // If user is PAID but hasn't seen the welcome assistant yet AND hasn't dismissed it this session, show it.
       if (hasActiveSub && !userProfile.hasSeenWelcomeAssistant && !hasDismissedAssistantSession) {
+        console.log("[App] Triggering Welcome Assistant!");
         setIsWelcomeAssistantOpen(true);
       }
     }
@@ -265,16 +274,24 @@ const App: React.FC = () => {
     if (import.meta.env.VITE_USE_EMULATORS === 'true') {
       console.warn("DEVELOPER MODE: Bypassing Stripe and auto-activating subscription locally.");
       try {
-        const { setDoc, doc, serverTimestamp, updateDoc, getDoc } = await import('firebase/firestore');
+        const { setDoc, doc, serverTimestamp, updateDoc, getDoc, collection, getDocs, deleteDoc } = await import('firebase/firestore');
         const { db } = await import('./services/firebase');
 
         console.log("Mocking subscription for UID:", user.uid);
 
         // Fetch validity from config
-        const configDoc = await getDoc(doc(db, 'config', 'pricing'));
+        // Fetch validity from config
+        const configRef = doc(db, 'config', 'pricing');
+        const configDoc = await getDoc(configRef);
+
         const validitySeconds = configDoc.exists() ? (configDoc.data().validity_seconds || 604800) : 604800;
 
         console.log(`Mocking subscription with validity: ${validitySeconds}s`);
+
+        // CLEANUP
+        const subsRef = collection(db, 'customers', user.uid, 'subscriptions');
+        const existingSubs = await getDocs(subsRef);
+        await Promise.all(existingSubs.docs.map(d => deleteDoc(d.ref)));
 
         // Mock a successful Stripe subscription
         await setDoc(doc(db, 'customers', user.uid, 'subscriptions', 'local_dev_sub'), {
@@ -302,7 +319,7 @@ const App: React.FC = () => {
         localStorage.removeItem('cookieConsent');
 
         console.log("Local activation complete! Reloading...");
-        alert("Developer: Subscription activated & Onboarding reset! Restarting session...");
+        alert(`Developer: Valid for ${validitySeconds}s. Restarting session...`);
         window.location.reload();
         return;
       } catch (err) {
@@ -329,6 +346,7 @@ const App: React.FC = () => {
     (typeof userProfile.subscription.expiresAt === 'number' && userProfile.subscription.expiresAt < Date.now()) ||
     (userProfile.subscription.expiresAt.toMillis && userProfile.subscription.expiresAt.toMillis() < Date.now())
   );
+
   const isLimitReached = (userProfile?.subscription?.spentAmount || 0) >= (userProfile?.subscription?.creditLimit || 0) && hasActiveStripeSub;
   const hasActiveAccess = hasActiveStripeSub && !isLimitReached && !isExpired;
 
@@ -349,7 +367,7 @@ const App: React.FC = () => {
   const showLoader = isSplashDismissed && !showAuth && !showSplash && !showActivation && (authLoading || profileLoading || subsLoading || isRecharging || (isNavigating && !isShowAndromeda));
 
   return (
-    <div className="min-h-screen w-full bg-slate-900 animate-fade-in">
+    <div className="min-h-screen w-full bg-slate-900 animate-fade-in relative">
       {/* 1. Splash Screen */}
       {showSplash && (
         <SplashScreen

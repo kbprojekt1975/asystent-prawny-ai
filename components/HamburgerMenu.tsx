@@ -102,25 +102,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                             <span>{t('menu.myProfile')}</span>
                         </button>
 
-                        <button
-                            onClick={() => { onKnowledgeClick(); setIsOpen(false); }}
-                            className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors"
-                            role="menuitem"
-                        >
-                            <BookOpenIcon className="h-5 w-5 text-yellow-500" />
-                            <span>{t('menu.knowledgeBase')}</span>
-                        </button>
 
-                        {onGenerateKnowledgeClick && (
-                            <button
-                                onClick={() => { onGenerateKnowledgeClick(); setIsOpen(false); }}
-                                className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors"
-                                role="menuitem"
-                            >
-                                <BrainIcon className="h-5 w-5 text-green-400" />
-                                <span>{t('app.generateKnowledge')}</span>
-                            </button>
-                        )}
 
                         <button
                             onClick={() => { onHelpClick?.(); setIsOpen(false); }}

@@ -111,7 +111,7 @@ const ProStepInterview: React.FC<ProStepInterviewProps> = ({
                 </div>
             </div>
 
-            <div className="p-4 bg-slate-800/80 border-t border-slate-700">
+            <div className="p-4 bg-slate-900">
                 <div className="flex flex-col gap-3 max-w-4xl mx-auto">
                     {!isFullScreen && (
                         <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -140,6 +140,7 @@ const ProStepInterview: React.FC<ProStepInterviewProps> = ({
                             </div>
                         </div>
                     )}
+
 
                     {!isFullScreen && (
                         <div className="flex items-center gap-2 px-1 py-1 text-[10px] opacity-70">

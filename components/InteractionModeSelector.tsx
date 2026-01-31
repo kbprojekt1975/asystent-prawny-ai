@@ -148,18 +148,7 @@ const InteractionModeSelector: React.FC<InteractionModeSelectorProps> = ({
             </div>
           </button>
 
-          <button
-            onClick={onViewKnowledge}
-            className="flex items-center gap-3 p-4 bg-slate-800/30 border border-slate-700 rounded-lg hover:bg-slate-700/50 hover:border-cyan-500/50 transition-all group"
-          >
-            <div className="p-2 bg-slate-700/50 rounded-lg text-slate-400 group-hover:text-yellow-400 transition-colors">
-              <BookOpenIcon className="h-5 w-5" />
-            </div>
-            <div className="text-left">
-              <span className="block text-sm font-medium text-slate-200">{t('interaction.resources.knowledge')}</span>
-              <span className="block text-xs text-slate-500">{t('interaction.resources.knowledge_desc')}</span>
-            </div>
-          </button>
+
         </div>
       </div>
 

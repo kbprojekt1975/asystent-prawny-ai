@@ -68,8 +68,9 @@
         "privacy": {
             "accept": "Akceptuję",
             "policy": "Politykę Prywatności",
-            "consent": "oraz wyrażam zgodę na zapisywanie moich danych w chmurze.",
-            "noConsent": "(Brak zgody = dane tylko w pamięci przeglądarki)"
+            "consent": " oraz wyrażam zgodę na zapisywanie moich danych w chmurze.",
+            "noConsent": "(Brak zgody = dane tylko w pamięci przeglądarki)",
+            "warning": "Uwaga! Brak zgody może spowodować, że niektóre funkcje aplikacji będą niedostępne."
         },
         "errors": {
             "googleLogin": "Wystąpił błąd podczas logowania przez Google.",

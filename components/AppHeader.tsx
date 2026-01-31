@@ -150,16 +150,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
                 <HomeIcon className="h-6 w-6" />
               </button>
             )}
-            {onKnowledgeClick && (
-              <button
-                onClick={onKnowledgeClick}
-                className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden sm:block"
-                aria-label={t('app.knowledgeBase')}
-                title={t('app.knowledgeBase')}
-              >
-                <BookOpenIcon className="h-6 w-6" />
-              </button>
-            )}
+
             {onExportChat && (
               <button
                 onClick={onExportChat}
