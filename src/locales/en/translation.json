@@ -649,7 +649,10 @@
             "deleteAccountNote": "Complete removal of profile and system access.",
             "adminOptions": "ADMINISTRATOR OPTIONS",
             "resetDatabase": "RESET ENTIRE DATABASE",
-            "resetDatabaseNote": "WARNING: Deletes data of ALL system users! Active accounts will be preserved."
+            "resetDatabaseNote": "WARNING: Deletes data of ALL system users! Active accounts will be preserved.",
+            "subscriptionTitle": "Subscription Status",
+            "active": "Active",
+            "expires": "Expires"
         },
         "quickActions": {
             "title": "Quick Actions",

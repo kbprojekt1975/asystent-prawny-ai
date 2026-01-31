@@ -656,7 +656,10 @@
             "deleteAccountNote": "Całkowite usunięcie profilu i dostępu do systemu.",
             "adminOptions": "OPCJE ADMINISTRATORA",
             "resetDatabase": "RESTARTUJ CAŁĄ BAZĘ DANYCH (RESET)",
-            "resetDatabaseNote": "UWAGA: Usuwa dane wszystkich użytkowników! Aktywne konta zostaną zachowane."
+            "resetDatabaseNote": "UWAGA: Usuwa dane wszystkich użytkowników! Aktywne konta zostaną zachowane.",
+            "subscriptionTitle": "Status Subskrypcji",
+            "active": "Aktywna",
+            "expires": "Wygasa"
         },
         "quickActions": {
             "title": "Szybkie Akcje",

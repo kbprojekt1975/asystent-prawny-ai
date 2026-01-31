@@ -640,7 +640,10 @@
             "deleteAccountNote": "Eliminación completa del perfil y del acceso al sistema.",
             "adminOptions": "OPCIONES DE ADMINISTRADOR",
             "resetDatabase": "RESETEAR TODA LA BASE DE DATOS",
-            "resetDatabaseNote": "ADVERTENCIA: ¡Elimina los datos de TODOS los usuarios del sistema! Las cuentas activas se mantendrán."
+            "resetDatabaseNote": "ADVERTENCIA: ¡Elimina los datos de TODOS los usuarios del sistema! Las cuentas activas se mantendrán.",
+            "subscriptionTitle": "Estado de Suscripción",
+            "active": "Activa",
+            "expires": "Expira"
         },
         "quickActions": {
             "title": "Acciones Rápidas",

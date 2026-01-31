@@ -1,13 +1,14 @@
 import { collection, addDoc, onSnapshot, doc } from 'firebase/firestore';
 import { db } from './firebase';
 
-// Replace with your Stripe Publishable Key (found in Developers -> API Keys)
-// You can use a test key for development (starts with pk_test_...)
-const STRIPE_PUBLISHABLE_KEY = "pk_test_51StBKbDXnXONl2svilQpGduggNMqelrS6j6EEiOfTTjHgyLPI1k0KM1nVntIvxW1hHHNti5TycjCk4bc6T4n3B9g00wrV26qnX";
+// Stripe Publishable Key from environment variables
+// Falls back to test key for local development if not set
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "pk_test_51StBKbDXnXONl2svilQpGduggNMqelrS6j6EEiOfTTjHgyLPI1k0KM1nVntIvxW1hHHNti5TycjCk4bc6T4n3B9g00wrV26qnX";
 
-// Global Price IDs - Replace with your actual Price IDs from Stripe Dashboard
+// Price IDs from environment variables
+// Falls back to test price for local development if not set
 export const PRICE_IDS = {
-    STARTER_10PLN: "price_1StBSvDXnXONl2svkF51zTnl"
+    STARTER_10PLN: import.meta.env.VITE_STRIPE_PRICE_STARTER || "price_1StBSvDXnXONl2svkF51zTnl"
 };
 
 export const getStripe = async () => {
