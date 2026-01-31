@@ -320,36 +320,10 @@ const App: React.FC = () => {
     }
   };
 
-  if (!isSplashDismissed) {
-    return (
-      <SplashScreen
-        isReady={!authLoading && !profileLoading && !subsLoading && !isRecharging}
-        onStart={() => {
-          setIsShowAndromeda(true);
-          setIsSplashDismissed(true);
-        }}
-      />
-    );
-  }
+  // Blocking states logic
+  const showSplash = !isSplashDismissed;
+  const showAuth = isSplashDismissed && !user && !authLoading;
 
-  if (isRecharging) {
-    return <FullScreenLoader />;
-  }
-
-  if (!user) {
-    return <Auth />;
-  }
-
-  // Blocking Loader for Logged-In Users awaiting data
-  // Transitional loading state to avoid UI flashing during major navigations or analysis
-  const isNavigating = isLoading && (!selectedTopic || (chatHistory && chatHistory.length === 0));
-
-  if (authLoading || profileLoading || subsLoading || (isNavigating && !isShowAndromeda)) {
-    return <FullScreenLoader />;
-  }
-
-  // Unified Stripe Migration: Access is granted if Stripe sub is active/trialing AND credit limit not reached AND not expired.
-  // We use this for primary blocking screens.
   const hasActiveStripeSub = ['active', 'trialing'].includes(userProfile?.subscription?.status || '');
   const isExpired = userProfile?.subscription?.expiresAt && (
     (typeof userProfile.subscription.expiresAt === 'number' && userProfile.subscription.expiresAt < Date.now()) ||
@@ -359,180 +333,216 @@ const App: React.FC = () => {
   const hasActiveAccess = hasActiveStripeSub && !isLimitReached && !isExpired;
 
   const isAwaitingActivation = userProfile?.subscription && userProfile.subscription.isPaid === false && !hasActiveStripeSub;
-  if (isAwaitingActivation) {
-    return <AwaitingActivation />;
-  }
+  const showActivation = isSplashDismissed && user && isAwaitingActivation;
+
+  // Force Andromeda on successful activation
+  const prevIsAwaitingActivation = useRef(isAwaitingActivation);
+  useEffect(() => {
+    // If transitioning from Awaiting=true to Awaiting=false, and we have a user
+    if (prevIsAwaitingActivation.current && !isAwaitingActivation && user) {
+      setIsShowAndromeda(true);
+    }
+    prevIsAwaitingActivation.current = isAwaitingActivation;
+  }, [isAwaitingActivation, user]);
+
+  const isNavigating = isLoading && (!selectedTopic || (chatHistory && chatHistory.length === 0));
+  const showLoader = isSplashDismissed && !showAuth && !showSplash && !showActivation && (authLoading || profileLoading || subsLoading || isRecharging || (isNavigating && !isShowAndromeda));
 
   return (
-    <>
-      {isShowAndromeda && (
-        <AndromedaAssistant
-          onProceed={() => {
-            setIsShowAndromeda(false);
-            resetNavigation();
+    <div className="min-h-screen w-full bg-slate-900 animate-fade-in">
+      {/* 1. Splash Screen */}
+      {showSplash && (
+        <SplashScreen
+          isReady={!authLoading && !profileLoading && !subsLoading && !isRecharging}
+          onStart={() => {
+            setIsShowAndromeda(true);
+            setIsSplashDismissed(true);
           }}
-          onProfileClick={() => setIsProfileModalOpen(true)}
-          language={i18n.language}
-          onAddCost={handleAddCost}
         />
       )}
-      <PWAUpdateNotification />
-      {isAdmin && (
-        <React.Suspense fallback={null}>
-          <GlobalAdminNotes userEmail={user?.email || null} isAdmin={isAdmin} currentViewId="home" />
-        </React.Suspense>
+
+      {/* 2. Full Screen blocking states */}
+      {showAuth && <Auth />}
+
+      {showActivation && <AwaitingActivation />}
+
+      {showLoader && (
+        <FullScreenLoader transparent={user !== null} />
       )}
-      <AdminBroadcastInput user={user} />
 
-      <AppModals
-        isProfileModalOpen={isProfileModalOpen}
-        setIsProfileModalOpen={setIsProfileModalOpen}
-        user={user}
-        userProfile={userProfile}
-        handleUpdateProfile={handleUpdateProfile}
-        topics={topics}
-        isHistoryPanelOpen={isHistoryPanelOpen}
-        setIsHistoryPanelOpen={setIsHistoryPanelOpen}
-        chatHistories={chatHistories}
-        handleLoadHistory={handleLoadHistory}
-        handleDeleteHistory={requestDeleteTopic}
-        handleViewKnowledge={handleViewKnowledge}
-        handleViewDocuments={handleViewDocuments}
-        isQuickActionsModalOpen={isQuickActionsModalOpen}
-        setIsQuickActionsModalOpen={setIsQuickActionsModalOpen}
-        handleSelectQuickAction={handleSelectQuickAction}
-        handleRemoveQuickAction={handleRemoveQuickAction}
-        isWelcomeModalOpen={isWelcomeModalOpen}
-        setIsWelcomeModalOpen={setIsWelcomeModalOpen}
-        handleCaseAnalysis={handleCaseAnalysis}
-        isLoading={isLoading}
-        welcomeModalInitialViewMode={welcomeModalInitialViewMode}
-        isKnowledgeModalOpen={isKnowledgeModalOpen}
-        setIsKnowledgeModalOpen={setIsKnowledgeModalOpen}
-        knowledgeModalChatId={knowledgeModalChatId}
-        isDocumentsModalOpen={isDocumentsModalOpen}
-        setIsDocumentsModalOpen={setIsDocumentsModalOpen}
-        documentsModalChatId={documentsModalChatId}
-        isDeleteModalOpen={isDeleteModalOpen}
-        cancelDeleteTopic={cancelDeleteTopic}
-        confirmDeleteTopic={onConfirmTopicDeletion}
-        previewContent={previewContent}
-        previewTitle={previewTitle}
-        isCaseManagementModalOpen={isCaseManagementModalOpen}
-        setIsCaseManagementModalOpen={setIsCaseManagementModalOpen}
-        currentChatId={currentChatId}
-        onChangeMode={() => {
-          setInteractionMode(null);
-          setIsCaseManagementModalOpen(false);
-        }}
-        isLocalOnly={isLocalOnly}
-        isWelcomeAssistantOpen={isWelcomeAssistantOpen}
-        setIsWelcomeAssistantOpen={(open) => {
-          setIsWelcomeAssistantOpen(open);
-          if (!open) setHasDismissedAssistantSession(true);
-        }}
-        isInstallPromptOpen={isInstallPromptOpen}
-        setIsInstallPromptOpen={setIsInstallPromptOpen}
-        onInstall={handleInstallApp}
-      />
-
-
-      <PlanSelectionModal
-        isOpen={!authLoading && !profileLoading && !subsLoading && !hasActiveAccess}
-        onSelectPlan={handleSelectPlan}
-        subscription={userProfile?.subscription}
-        isLoading={isLoading}
-      />
-
-      <GlobalAnnouncement />
-
-      <div className="flex flex-col h-[100dvh] bg-slate-800 relative">
-        {selectedLawArea === LawArea.Family && !isLoading && !isWelcomeModalOpen && (
-          <>
-            <DraggableButton
-              id="alimony-calculator-v6"
-              initialBottom={250}
-              initialRight={20}
-              onClick={() => setIsAlimonyModalOpen(true)}
-              className="bg-pink-600 hover:bg-pink-500 text-white p-4 rounded-full shadow-2xl border border-pink-400/50 transition-all group hover:scale-105 active:scale-95"
-              title="Kalkulator Alimentów"
-            >
-              <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-900 shadow-sm">
-                NEW
-              </div>
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            </DraggableButton>
-
-            <AlimonyCalculator
-              isOpen={isAlimonyModalOpen}
-              onClose={() => setIsAlimonyModalOpen(false)}
-              lawArea={selectedLawArea}
+      {/* 3. Main Application UI */}
+      {!showSplash && !showAuth && !showActivation && (
+        <div className="animate-fade-in min-h-screen flex flex-col">
+          {isShowAndromeda && (
+            <AndromedaAssistant
+              onProceed={() => {
+                setIsShowAndromeda(false);
+                resetNavigation();
+              }}
+              onProfileClick={() => setIsProfileModalOpen(true)}
+              language={i18n.language}
+              onAddCost={handleAddCost}
             />
-          </>
-        )}
-        {!isFullScreen && (
-          <AppHeader
-            title={selectedTopic || t('breadcrumbs.home')}
-            onProfileClick={() => setIsProfileModalOpen(true)}
-            onHelpClick={() => setIsAppHelpSidebarOpen(true)}
-            onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}
-            onHistoryClick={() => setIsHistoryPanelOpen(true)}
-            onAiToolsClick={() => setIsAiToolsSidebarOpen(true)}
-            onBackClick={selectedLawArea ? backToLawArea : undefined}
-            onHomeClick={selectedLawArea ? resetNavigation : undefined}
-            totalCost={totalCost}
-            subscription={userProfile?.subscription}
-            onKnowledgeClick={() => handleViewKnowledge()}
-            onGenerateKnowledgeClick={selectedTopic ? handleGenerateKnowledge : undefined}
-            onInstallApp={deferredPrompt ? handleInstallApp : undefined}
-            remindersCount={activeRemindersCount}
+          )}
+          <PWAUpdateNotification />
+          {isAdmin && (
+            <React.Suspense fallback={null}>
+              <GlobalAdminNotes userEmail={user?.email || null} isAdmin={isAdmin} currentViewId="home" />
+            </React.Suspense>
+          )}
+          <AdminBroadcastInput user={user} />
+
+          <AppModals
+            isProfileModalOpen={isProfileModalOpen}
+            setIsProfileModalOpen={setIsProfileModalOpen}
+            user={user}
+            userProfile={userProfile}
+            handleUpdateProfile={handleUpdateProfile}
+            topics={topics}
+            isHistoryPanelOpen={isHistoryPanelOpen}
+            setIsHistoryPanelOpen={setIsHistoryPanelOpen}
+            chatHistories={chatHistories}
+            handleLoadHistory={handleLoadHistory}
+            handleDeleteHistory={requestDeleteTopic}
+            handleViewKnowledge={handleViewKnowledge}
+            handleViewDocuments={handleViewDocuments}
+            isQuickActionsModalOpen={isQuickActionsModalOpen}
+            setIsQuickActionsModalOpen={setIsQuickActionsModalOpen}
+            handleSelectQuickAction={handleSelectQuickAction}
+            handleRemoveQuickAction={handleRemoveQuickAction}
+            isWelcomeModalOpen={isWelcomeModalOpen}
+            setIsWelcomeModalOpen={setIsWelcomeModalOpen}
+            handleCaseAnalysis={handleCaseAnalysis}
+            isLoading={isLoading}
+            welcomeModalInitialViewMode={welcomeModalInitialViewMode}
+            isKnowledgeModalOpen={isKnowledgeModalOpen}
+            setIsKnowledgeModalOpen={setIsKnowledgeModalOpen}
+            knowledgeModalChatId={knowledgeModalChatId}
+            isDocumentsModalOpen={isDocumentsModalOpen}
+            setIsDocumentsModalOpen={setIsDocumentsModalOpen}
+            documentsModalChatId={documentsModalChatId}
+            isDeleteModalOpen={isDeleteModalOpen}
+            cancelDeleteTopic={cancelDeleteTopic}
+            confirmDeleteTopic={onConfirmTopicDeletion}
+            previewContent={previewContent}
+            previewTitle={previewTitle}
+            isCaseManagementModalOpen={isCaseManagementModalOpen}
+            setIsCaseManagementModalOpen={setIsCaseManagementModalOpen}
+            currentChatId={currentChatId}
+            onChangeMode={() => {
+              setInteractionMode(null);
+              setIsCaseManagementModalOpen(false);
+            }}
             isLocalOnly={isLocalOnly}
-            hasConsent={userProfile?.dataProcessingConsent}
-            onExportChat={selectedTopic && interactionMode ? handleExportChat : undefined}
-            onImportChat={selectedTopic && interactionMode ? (file) => {
-              handleImportChat(file, (data) => {
-                setSelectedLawArea(data.lawArea);
-                setSelectedTopic(data.topic);
-                setInteractionMode(data.interactionMode);
-              });
-            } : undefined}
-            onHomeGridClick={() => setIsShowAndromeda(!isShowAndromeda)}
-            isCrossedOut={!isShowAndromeda}
+            isWelcomeAssistantOpen={isWelcomeAssistantOpen}
+            setIsWelcomeAssistantOpen={(open) => {
+              setIsWelcomeAssistantOpen(open);
+              if (!open) setHasDismissedAssistantSession(true);
+            }}
+            isInstallPromptOpen={isInstallPromptOpen}
+            setIsInstallPromptOpen={setIsInstallPromptOpen}
+            onInstall={handleInstallApp}
           />
-        )}
 
-        <main className="flex-1 overflow-y-auto">
-          <MainNavigator />
-        </main>
 
-        <RemindersWidget user={user} />
+          <PlanSelectionModal
+            isOpen={!authLoading && !profileLoading && !subsLoading && !hasActiveAccess}
+            onSelectPlan={handleSelectPlan}
+            subscription={userProfile?.subscription}
+            isLoading={isLoading}
+          />
 
-        <AppHelpSidebar
-          isOpen={isAppHelpSidebarOpen}
-          onClose={() => setIsAppHelpSidebarOpen(false)}
-          userId={user?.uid}
-        />
+          <GlobalAnnouncement />
 
-        <ChatFooter />
-      </div>
+          <div className="flex flex-col h-[100dvh] bg-slate-800 relative">
+            {selectedLawArea === LawArea.Family && !isLoading && !isWelcomeModalOpen && (
+              <>
+                <DraggableButton
+                  id="alimony-calculator-v6"
+                  initialBottom={250}
+                  initialRight={20}
+                  onClick={() => setIsAlimonyModalOpen(true)}
+                  className="bg-pink-600 hover:bg-pink-500 text-white p-4 rounded-full shadow-2xl border border-pink-400/50 transition-all group hover:scale-105 active:scale-95"
+                  title="Kalkulator Alimentów"
+                >
+                  <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-900 shadow-sm">
+                    NEW
+                  </div>
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </DraggableButton>
 
-      <AiToolsSidebar
-        isOpen={isAiToolsSidebarOpen}
-        onClose={() => setIsAiToolsSidebarOpen(false)}
-        lawArea={selectedLawArea || LawArea.Civil}
-        selectedTopic={selectedTopic}
-        onSelectTopic={setSelectedTopic}
-        onSelectMode={(mode, context) => {
-          handleSelectInteractionMode(mode, context);
-          setIsAiToolsSidebarOpen(false);
-        }}
-        onViewDocuments={() => setIsDocumentsModalOpen(true)}
-        onViewHistory={() => setIsHistoryPanelOpen(true)}
-        onViewKnowledge={() => setIsKnowledgeModalOpen(true)}
-      />
-    </>
+                <AlimonyCalculator
+                  isOpen={isAlimonyModalOpen}
+                  onClose={() => setIsAlimonyModalOpen(false)}
+                  lawArea={selectedLawArea}
+                />
+              </>
+            )}
+            {!isFullScreen && (
+              <AppHeader
+                title={selectedTopic || t('breadcrumbs.home')}
+                onProfileClick={() => setIsProfileModalOpen(true)}
+                onHelpClick={() => setIsAppHelpSidebarOpen(true)}
+                onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}
+                onHistoryClick={() => setIsHistoryPanelOpen(true)}
+                onAiToolsClick={() => setIsAiToolsSidebarOpen(true)}
+                onBackClick={selectedLawArea ? backToLawArea : undefined}
+                onHomeClick={selectedLawArea ? resetNavigation : undefined}
+                totalCost={totalCost}
+                subscription={userProfile?.subscription}
+                onKnowledgeClick={() => handleViewKnowledge()}
+                onGenerateKnowledgeClick={selectedTopic ? handleGenerateKnowledge : undefined}
+                onInstallApp={deferredPrompt ? handleInstallApp : undefined}
+                remindersCount={activeRemindersCount}
+                isLocalOnly={isLocalOnly}
+                hasConsent={userProfile?.dataProcessingConsent}
+                onExportChat={selectedTopic && interactionMode ? handleExportChat : undefined}
+                onImportChat={selectedTopic && interactionMode ? (file) => {
+                  handleImportChat(file, (data) => {
+                    setSelectedLawArea(data.lawArea);
+                    setSelectedTopic(data.topic);
+                    setInteractionMode(data.interactionMode);
+                  });
+                } : undefined}
+                onHomeGridClick={() => setIsShowAndromeda(!isShowAndromeda)}
+                isCrossedOut={!isShowAndromeda}
+              />
+            )}
+
+            <main className="flex-1 overflow-y-auto">
+              <MainNavigator />
+            </main>
+
+            <RemindersWidget user={user} />
+
+            <AppHelpSidebar
+              isOpen={isAppHelpSidebarOpen}
+              onClose={() => setIsAppHelpSidebarOpen(false)}
+              userId={user?.uid}
+            />
+
+            <ChatFooter />
+          </div>
+
+          <AiToolsSidebar
+            isOpen={isAiToolsSidebarOpen}
+            onClose={() => setIsAiToolsSidebarOpen(false)}
+            lawArea={selectedLawArea || LawArea.Civil}
+            selectedTopic={selectedTopic}
+            onSelectTopic={setSelectedTopic}
+            onSelectMode={(mode, context) => {
+              handleSelectInteractionMode(mode, context);
+              setIsAiToolsSidebarOpen(false);
+            }}
+            onViewDocuments={() => setIsDocumentsModalOpen(true)}
+            onViewHistory={() => setIsHistoryPanelOpen(true)}
+            onViewKnowledge={() => setIsKnowledgeModalOpen(true)}
+          />
+        </div>
+      )}
+    </div>
   );
 };
 

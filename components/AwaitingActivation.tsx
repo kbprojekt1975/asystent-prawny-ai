@@ -39,8 +39,7 @@ const AwaitingActivation: React.FC = () => {
                 "profile.subscription.status": "active"
             });
 
-            alert("Konto zostało aktywowane pomyślnie! Odświeżam stronę...");
-            window.location.reload();
+            alert("Konto zostało aktywowane pomyślnie! Zaraz zostaniesz przekierowany...");
         } catch (err) {
             console.error("Activation failed:", err);
             alert("Błąd aktywacji: " + (err as any).message);

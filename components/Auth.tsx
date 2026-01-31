@@ -123,54 +123,8 @@ const Auth: React.FC = () => {
         </p>
 
         {isResetPassword ? (
-          <form onSubmit={handleResetPassword} className="space-y-4 mb-6">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t('auth.emailPlaceholder')}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              required
-            />
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-cyan-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? t('auth.sending') : t('auth.sendResetLink')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsResetPassword(false);
-                setError(null);
-                setSuccessMessage(null);
-              }}
-              className="text-slate-400 hover:text-white text-sm"
-            >
-              {t('auth.backToLogin')}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleEmailAuth} className="space-y-4 mb-6">
-            <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-700 mb-2">
-              <button
-                type="button"
-                onClick={() => setAuthMethod('email')}
-                className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${authMethod === 'email' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
-              >
-                {t('auth.email')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setAuthMethod('nickname')}
-                className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${authMethod === 'nickname' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
-              >
-                {t('auth.nickname')}
-              </button>
-            </div>
-
-            {authMethod === 'email' ? (
+          <div key="reset-password" className="animate-fade-in w-full">
+            <form onSubmit={handleResetPassword} className="space-y-4 mb-6">
               <input
                 type="email"
                 value={email}
@@ -179,94 +133,144 @@ const Auth: React.FC = () => {
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 required
               />
-            ) : (
-              <input
-                type="text"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                placeholder={t('auth.nicknamePlaceholder')}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                required
-                pattern="^[a-zA-Z0-9_\-]+$"
-                title={t('auth.errors.nickPattern')}
-              />
-            )}
-
-            {authMethod === 'nickname' && (
-              <div className="bg-amber-900/30 border border-amber-500/50 p-3 rounded-xl text-left animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="flex gap-2">
-                  <div className="p-1 h-fit bg-amber-500/20 rounded-lg text-amber-500">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                  <p className="text-[10px] leading-relaxed text-amber-200/90">
-                    <strong className="text-amber-400 block mb-0.5 uppercase tracking-wide">{t('auth.security.title')}</strong>
-                    {t('auth.security.desc')}
-                  </p>
-                </div>
-              </div>
-            )}
-            <div className="flex flex-col items-end gap-1">
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t('auth.passwordPlaceholder')}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                required
-              />
-              {isLogin && authMethod === 'email' && (
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-cyan-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? t('auth.sending') : t('auth.sendResetLink')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsResetPassword(false);
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
+                className="text-slate-400 hover:text-white text-sm"
+              >
+                {t('auth.backToLogin')}
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div key={isLogin ? 'login' : 'register'} className="animate-fade-in w-full">
+            <form onSubmit={handleEmailAuth} className="space-y-4 mb-6">
+              <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-700 mb-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsResetPassword(true);
-                    setError(null);
-                    setSuccessMessage(null);
-                  }}
-                  className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline mt-1"
+                  onClick={() => setAuthMethod('email')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${authMethod === 'email' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
                 >
-                  {t('auth.forgotPassword')}
+                  {t('auth.email')}
                 </button>
-              )}
-            </div>
-            <div className="flex flex-col gap-3 py-2">
-              <label className="flex items-start gap-3 cursor-pointer group text-left">
-                <div className="flex items-center h-5">
-                  <input
-                    type="checkbox"
-                    checked={consentChecked}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setIsPrivacyPolicyOpen(true);
-                      } else {
-                        setConsentChecked(false);
-                      }
-                    }}
-                    className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-slate-800"
-                  />
-                </div>
-                <div className="text-xs leading-relaxed">
-                  <span className="text-slate-300 group-hover:text-white transition-colors">
-                    {t('auth.privacy.accept')} <button type="button" onClick={() => setIsPrivacyPolicyOpen(true)} className="text-cyan-400 hover:underline">{t('auth.privacy.policy')}</button>{t('auth.privacy.consent')}
-                  </span>
-                  {!consentChecked && (
-                    <span className="block mt-1 text-amber-500 font-semibold">
-                      {t('auth.privacy.noConsent')}
-                    </span>
-                  )}
-                </div>
-              </label>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => setAuthMethod('nickname')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${authMethod === 'nickname' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  {t('auth.nickname')}
+                </button>
+              </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-cyan-500 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? t('auth.processing') : (isLogin ? t('auth.loginButton') : t('auth.registerButton'))}
-            </button>
-          </form>
+              {authMethod === 'email' ? (
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={t('auth.emailPlaceholder')}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  required
+                />
+              ) : (
+                <input
+                  type="text"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder={t('auth.nicknamePlaceholder')}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  required
+                  pattern="^[a-zA-Z0-9_\-]+$"
+                  title={t('auth.errors.nickPattern')}
+                />
+              )}
+
+              {authMethod === 'nickname' && (
+                <div className="bg-amber-900/30 border border-amber-500/50 p-3 rounded-xl text-left animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="flex gap-2">
+                    <div className="p-1 h-fit bg-amber-500/20 rounded-lg text-amber-500">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <p className="text-[10px] leading-relaxed text-amber-200/90">
+                      <strong className="text-amber-400 block mb-0.5 uppercase tracking-wide">{t('auth.security.title')}</strong>
+                      {t('auth.security.desc')}
+                    </p>
+                  </div>
+                </div>
+              )}
+              <div className="flex flex-col items-end gap-1">
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t('auth.passwordPlaceholder')}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  required
+                />
+                {isLogin && authMethod === 'email' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsResetPassword(true);
+                      setError(null);
+                      setSuccessMessage(null);
+                    }}
+                    className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline mt-1"
+                  >
+                    {t('auth.forgotPassword')}
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-col gap-3 py-2">
+                <label className="flex items-start gap-3 cursor-pointer group text-left">
+                  <div className="flex items-center h-5">
+                    <input
+                      type="checkbox"
+                      checked={consentChecked}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setIsPrivacyPolicyOpen(true);
+                        } else {
+                          setConsentChecked(false);
+                        }
+                      }}
+                      className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-slate-800"
+                    />
+                  </div>
+                  <div className="text-xs leading-relaxed">
+                    <span className="text-slate-300 group-hover:text-white transition-colors">
+                      {t('auth.privacy.accept')} <button type="button" onClick={() => setIsPrivacyPolicyOpen(true)} className="text-cyan-400 hover:underline">{t('auth.privacy.policy')}</button>{t('auth.privacy.consent')}
+                    </span>
+                    {!consentChecked && (
+                      <span className="block mt-1 text-amber-500 font-semibold">
+                        {t('auth.privacy.noConsent')}
+                      </span>
+                    )}
+                  </div>
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-cyan-500 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? t('auth.processing') : (isLogin ? t('auth.loginButton') : t('auth.registerButton'))}
+              </button>
+            </form>
+          </div>
         )}
 
         {!isResetPassword && (

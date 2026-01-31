@@ -1,16 +1,23 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-const FullScreenLoader: React.FC = () => {
+interface FullScreenLoaderProps {
+    isOverlay?: boolean;
+    transparent?: boolean;
+}
+
+const FullScreenLoader: React.FC<FullScreenLoaderProps> = ({ isOverlay = false, transparent = false }) => {
     const { t } = useTranslation();
 
     return (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-900 overflow-hidden">
+        <div className={`fixed inset-0 z-[1000] flex flex-col items-center justify-center transition-opacity duration-300 ${transparent ? 'bg-slate-900/50 backdrop-blur-sm' : 'bg-slate-900'} overflow-hidden animate-fade-in`}>
             {/* Background Effects */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
-            </div>
+            {!transparent && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+                </div>
+            )}
 
             <div className="relative flex flex-col items-center max-w-sm px-6 text-center">
                 {/* Spinner */}
