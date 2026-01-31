@@ -7,15 +7,20 @@ import { CheckIcon, TrashIcon, PlusIcon, ListIcon } from './Icons';
 interface ChecklistManagerProps {
     userId: string;
     caseId: string;
+    isLocalOnly?: boolean;
 }
 
-const ChecklistManager: React.FC<ChecklistManagerProps> = ({ userId, caseId }) => {
+const ChecklistManager: React.FC<ChecklistManagerProps> = ({ userId, caseId, isLocalOnly = false }) => {
     const [tasks, setTasks] = useState<ChecklistItem[]>([]);
     const [newTask, setNewTask] = useState('');
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!userId || !caseId) return;
+        if (!userId || !caseId || isLocalOnly) {
+            setTasks([]);
+            setIsLoading(false);
+            return;
+        }
 
         const checklistRef = collection(db, 'users', userId, 'chats', caseId, 'checklist');
         const q = query(checklistRef, orderBy('createdAt', 'asc'));
@@ -30,11 +35,11 @@ const ChecklistManager: React.FC<ChecklistManagerProps> = ({ userId, caseId }) =
         });
 
         return () => unsubscribe();
-    }, [userId, caseId]);
+    }, [userId, caseId, isLocalOnly]);
 
     const handleAddTask = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newTask.trim() || !userId || !caseId) return;
+        if (!newTask.trim() || !userId || !caseId || isLocalOnly) return;
 
         const checklistRef = collection(db, 'users', userId, 'chats', caseId, 'checklist');
         const newItemRef = doc(checklistRef);
@@ -52,6 +57,7 @@ const ChecklistManager: React.FC<ChecklistManagerProps> = ({ userId, caseId }) =
     };
 
     const toggleTask = async (taskId: string, currentStatus: boolean) => {
+        if (isLocalOnly) return;
         try {
             const taskRef = doc(db, 'users', userId, 'chats', caseId, 'checklist', taskId);
             await updateDoc(taskRef, {
@@ -63,6 +69,7 @@ const ChecklistManager: React.FC<ChecklistManagerProps> = ({ userId, caseId }) =
     };
 
     const deleteTask = async (taskId: string) => {
+        if (isLocalOnly) return;
         if (!confirm("Czy na pewno chcesz usunąć to zadanie?")) return;
         try {
             await deleteDoc(doc(db, 'users', userId, 'chats', caseId, 'checklist', taskId));

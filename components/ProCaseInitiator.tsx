@@ -12,6 +12,7 @@ interface ProCaseInitiatorProps {
     onAddTopic: (topic: string) => void;
     onDeleteTopic: (topic: string) => void;
     onBack: () => void;
+    isLocalOnly?: boolean;
 }
 
 const ProCaseInitiator: React.FC<ProCaseInitiatorProps> = ({
@@ -20,8 +21,8 @@ const ProCaseInitiator: React.FC<ProCaseInitiatorProps> = ({
     onSelectTopic,
     onAddTopic,
     onDeleteTopic,
-    onBack
-
+    onBack,
+    isLocalOnly
 }) => {
     const [newTopic, setNewTopic] = useState('');
     const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -93,9 +94,16 @@ const ProCaseInitiator: React.FC<ProCaseInitiatorProps> = ({
 
                     {existingTopics.length > 0 && (
                         <div className="animate-in fade-in slide-in-from-top-4 duration-700 delay-300">
-                            <div className="flex items-center gap-4 mb-8">
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] whitespace-nowrap">{t('pro.initiator.previous_cases')}</span>
-                                <div className="h-px w-full bg-slate-800"></div>
+                            <div className="flex items-center justify-between gap-4 mb-8">
+                                <div className="flex items-center gap-4 flex-1">
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] whitespace-nowrap">{t('pro.initiator.previous_cases')}</span>
+                                    <div className="h-px w-full bg-slate-800"></div>
+                                </div>
+                                {isLocalOnly && (
+                                    <span className="text-[8px] text-amber-500/80 uppercase tracking-widest font-bold whitespace-nowrap bg-amber-500/5 px-2 py-1 rounded border border-amber-500/20">
+                                        {t('topic.noConsentHistoryNotice')}
+                                    </span>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-1 gap-3">

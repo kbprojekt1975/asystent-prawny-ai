@@ -13,6 +13,7 @@ interface CaseDashboardProps {
     caseId: string;
     initialExpanded?: boolean;
     onChangeMode?: () => void;
+    isLocalOnly?: boolean;
 }
 
 export interface CaseDashboardRef {
@@ -20,7 +21,7 @@ export interface CaseDashboardRef {
     setExpanded: (expanded: boolean) => void;
 }
 
-const CaseDashboard = React.forwardRef<CaseDashboardRef, CaseDashboardProps>(({ userId, caseId, initialExpanded = false, onChangeMode }, ref) => {
+const CaseDashboard = React.forwardRef<CaseDashboardRef, CaseDashboardProps>(({ userId, caseId, initialExpanded = false, onChangeMode, isLocalOnly = false }, ref) => {
     const { t } = useTranslation();
     const [isExpanded, setIsExpanded] = useState(initialExpanded);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -61,13 +62,13 @@ const CaseDashboard = React.forwardRef<CaseDashboardRef, CaseDashboardProps>(({ 
 
             {isExpanded && (
                 <div className="p-4 border-t border-slate-700/50 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <Timeline userId={userId} caseId={caseId} />
+                    <Timeline userId={userId} caseId={caseId} isLocalOnly={isLocalOnly} />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <DocumentManager userId={userId} caseId={caseId} />
+                        <DocumentManager userId={userId} caseId={caseId} isLocalOnly={isLocalOnly} />
                         <div className="space-y-4">
-                            <ChecklistManager userId={userId} caseId={caseId} />
+                            <ChecklistManager userId={userId} caseId={caseId} isLocalOnly={isLocalOnly} />
                             <div className="h-80">
-                                <NotesWidget userId={userId} chatId={caseId} />
+                                <NotesWidget userId={userId} chatId={caseId} isLocalOnly={isLocalOnly} />
                             </div>
                             {onChangeMode && (
                                 <button

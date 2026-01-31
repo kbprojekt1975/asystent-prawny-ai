@@ -120,16 +120,16 @@ export const useChatLogic = ({
 
             if (!isLocalOnly) await persistence.saveChatHistory(effectiveChatId, newHistory, metadata);
 
-            const normalizedHistoryForAI = normalizeHistory(newHistory);
             const aiResponse = await getLegalAdvice(
-                normalizedHistoryForAI,
-                effectiveLawArea,
-                effectiveInteractionMode,
-                effectiveTopic,
+                newHistory.map(m => ({ role: m.role, content: m.content })),
+                metadata.lawArea,
+                metadata.interactionMode,
+                metadata.topic,
                 isDeepThinkingEnabled,
                 articlesToPass,
                 effectiveChatId,
-                i18n.language
+                i18n.language,
+                isLocalOnly
             );
 
             const aiMessage: ChatMessage = { role: 'model', content: aiResponse.text };

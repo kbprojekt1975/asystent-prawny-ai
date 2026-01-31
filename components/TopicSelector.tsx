@@ -13,9 +13,10 @@ interface TopicSelectorProps {
   onAddNegotiationTopic: (topic: string) => void;
   onDeleteTopic: (topic: string) => void;
   onChangeMode?: () => void;
+  isLocalOnly?: boolean;
 }
 
-const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelectTopic, onAddTopic, onAddNegotiationTopic, onDeleteTopic, onChangeMode }) => {
+const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelectTopic, onAddTopic, onAddNegotiationTopic, onDeleteTopic, onChangeMode, isLocalOnly }) => {
   const { t } = useTranslation();
   const [newTopic, setNewTopic] = useState('');
   const [newNegotiationTopic, setNewNegotiationTopic] = useState('');
@@ -70,10 +71,18 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
 
         {/* Lista tematów */}
         <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 shadow-xl backdrop-blur-sm">
-          <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-            <CaseIcon className="w-6 h-6 text-cyan-400" />
-            {t('topic.yourCases')}
-          </h2>
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+              <CaseIcon className="w-6 h-6 text-cyan-400" />
+              {t('topic.yourCases')}
+            </h2>
+            {isLocalOnly && (
+              <p className="text-[10px] text-amber-400/80 mt-1 uppercase tracking-tight flex items-center gap-1.5 font-medium ml-1">
+                <span className="w-1 h-1 bg-amber-400 rounded-full animate-pulse"></span>
+                {t('topic.noConsentHistoryNotice')}
+              </p>
+            )}
+          </div>
 
           {/* Sekcja: Sprawy standardowe */}
           <div className="space-y-6">

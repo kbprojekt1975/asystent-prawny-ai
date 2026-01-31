@@ -111,6 +111,11 @@
             "desc": "Your credit has run out or the validity period has expired. Select a plan again to continue.",
             "renewButton": "Renew access - 10 PLN"
         },
+        "limitReached": {
+            "title": "Credit Limit Reached",
+            "desc": "Your funds have run out. To continue using the assistant, top up your account by selecting a starter pack.",
+            "selectButton": "Top up 10 PLN"
+        },
         "help": {
             "title": "Starter Pack - Details",
             "intro": "Using the AI Legal Assistant requires an active package.",
@@ -195,6 +200,7 @@
         "noNegotiations": "No negotiations started yet.",
         "newCase": "New Case",
         "newCasePlaceholder": "E.g., Alimony case, Rental agreement",
+        "noConsentHistoryNotice": "No GDPR consent - no information will be saved in history.",
         "analyze": "Analyze",
         "consultation": "Consultation",
         "newConversation": "New Conversation",

@@ -48,9 +48,9 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                     </div>
                     {isLimitReached ? (
                         <>
-                            <h3 className="text-2xl font-bold text-white mb-2">{t('plan.limitReached.title') || "Limit Środków Wyczerpany"}</h3>
+                            <h3 className="text-2xl font-bold text-white mb-2">{t('plan.limitReached.title', "Limit Środków Wyczerpany")}</h3>
                             <p className="text-slate-400 mb-8 max-w-sm">
-                                {t('plan.limitReached.desc') || "Twoje środki się skończyły. Aby kontynuować korzystanie z asystenta, doładuj konto wybierając pakiet startowy."}
+                                {t('plan.limitReached.desc', "Twoje środki się skończyły. Aby kontynuować korzystanie z asystenta, doładuj konto wybierając pakiet startowy.")}
                             </p>
                         </>
                     ) : (
@@ -84,7 +84,7 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                         disabled={isLoading}
                         className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-cyan-900/20 disabled:opacity-50"
                     >
-                        {isLoading ? t('auth.processing') : (isLimitReached ? (t('plan.limitReached.selectButton') || "Doładuj 10 PLN") : t('plan.starter.selectButton'))}
+                        {isLoading ? t('auth.processing') : (isLimitReached ? t('plan.limitReached.selectButton', "Doładuj 10 PLN") : t('plan.starter.selectButton'))}
                     </button>
                     <p className="mt-4 text-[10px] text-slate-500 uppercase tracking-widest">
                         {t('plan.starter.manualActivation')}

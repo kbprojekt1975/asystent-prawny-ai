@@ -1,8 +1,8 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { SchemaType } from "@google/generative-ai";
-import { db, FieldValue } from "../services/db";
-import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, GEMINI_API_KEY } from "../services/ai";
+import { db, FieldValue, Timestamp } from "../services/db";
+import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, getSystemPrompts, GEMINI_API_KEY } from "../services/ai";
 import { searchLegalActs } from "../services/isapService";
 import { searchJudgments } from "../services/saosService";
 
@@ -15,19 +15,28 @@ export const askAndromeda = onCall({
     const genAI = getAiClient();
     if (!genAI) throw new HttpsError('failed-precondition', 'AI Client not initialized.');
 
-    const { history, language = 'pl', chatId } = request.data;
+    const { history, language = 'pl', chatId, isLocalOnly = false } = request.data;
     const uid = request.auth?.uid;
     if (!uid) throw new HttpsError('unauthenticated', 'User not authenticated.');
 
     // --- SUBSCRIPTION CHECK (from Stripe Extension collection) ---
     const subsRef = db.collection('customers').doc(uid).collection('subscriptions');
-    const snapshot = await subsRef.where('status', 'in', ['active', 'trialing']).get();
+    const snapshot = await subsRef
+        .where('status', 'in', ['active', 'trialing'])
+        .where('current_period_end', '>', Timestamp.now())
+        .get();
 
-    if (snapshot.empty) {
-        logger.error("!!! SUBSCRIPTION CHECK FAILED in Andromeda: No active or trialing subscription found !!!");
-        throw new HttpsError('permission-denied', "Brak aktywnego planu. Wykup dostęp lub poczekaj na aktywację.");
+    // Re-check snapshot with date filter if where filter is not supported by standard indexes or simple enough
+    const validSubs = snapshot.docs.filter(doc => {
+        const data = doc.data();
+        return data.current_period_end && data.current_period_end.toMillis() > Date.now();
+    });
+
+    if (validSubs.length === 0) {
+        logger.error("!!! SUBSCRIPTION CHECK FAILED in Andromeda: No active or valid subscription found !!!");
+        throw new HttpsError('permission-denied', "Brak aktywnego planu lub dostęp wygasł.");
     }
-    logger.info("✓ Andromeda subscription check passed");
+    logger.info(`✓ Andromeda subscription check passed. LocalOnly=${isLocalOnly}`);
 
     // --- CHECK LIMIT ---
     const userDoc = await db.collection('users').doc(uid).get();
@@ -54,7 +63,10 @@ export const askAndromeda = onCall({
         }
     }
 
-    const systemInstruction = `
+    const dynamicPrompts = await getSystemPrompts(db);
+    const dynamicAndromedaPrompt = dynamicPrompts?.instructions?.[language]?.["Andromeda"];
+
+    const systemInstruction = dynamicAndromedaPrompt || `
     # ROLE: ANDROMEDA - GLOBAL LEGAL COMPASS
     ${existingKnowledgeContext}
     
@@ -131,11 +143,16 @@ export const askAndromeda = onCall({
         }
     }
 
+    if (isLocalOnly) {
+        logger.info("🛡️ Andromeda: LocalOnly mode active. Content not persisted.");
+    }
+
     return {
         text: text,
         usage: {
             totalTokenCount: usage?.totalTokenCount || 0,
-            cost: cost
+            cost: cost,
+            appTokens: tokensUsed
         }
     };
 });

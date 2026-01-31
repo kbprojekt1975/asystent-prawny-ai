@@ -13,6 +13,7 @@ const db = admin.firestore();
 // 3. Define the Pricing Config Data (from screenshots)
 const pricingConfig = {
     profit_margin_multiplier: 500,
+    validity_seconds: 600, // Default 7 days in seconds
     rates: {
         "gemini-1.5-flash": {
             input: 0.25,
@@ -33,12 +34,30 @@ const pricingConfig = {
     }
 };
 
+const systemPrompts = {
+    core: {
+        pl: "", // Fill this to override CORE_RULES_PL
+        en: "",
+        es: ""
+    },
+    pillars: {
+        pl: {}, // e.g., "Prawo Rodzinne": "..."
+        en: {},
+        es: {}
+    },
+    instructions: {
+        pl: {}, // e.g., "Porada Prawna": "..."
+        en: {},
+        es: {}
+    }
+};
+
 async function seedConfig() {
-    console.log("🌱 Seeding config/pricing to Firestore Emulator...");
+    console.log("🌱 Seeding config/pricing & config/system to Firestore Emulator...");
     try {
         await db.collection('config').doc('pricing').set(pricingConfig);
-        console.log("✅ Successfully wrote config/pricing!");
-        console.log("Data wrote:", JSON.stringify(pricingConfig, null, 2));
+        await db.collection('config').doc('system').set(systemPrompts);
+        console.log("✅ Successfully wrote config documents!");
     } catch (error) {
         console.error("❌ Error writing document:", error);
     }

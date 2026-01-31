@@ -22,6 +22,7 @@ export const getPricingConfig = async (db: any) => {
     logger.warn("⚠️ Using fallback pricing config");
     return {
         profit_margin_multiplier: 500,
+        validity_seconds: 604800,
         rates: {
             'gemini-2.0-flash': { input: 0.25, output: 1.0 },
             'gemini-1.5-flash': { input: 0.25, output: 1.0 },
@@ -29,6 +30,18 @@ export const getPricingConfig = async (db: any) => {
             'gemini-1.5-pro-latest': { input: 1.5, output: 4.5 },
         }
     };
+};
+
+export const getSystemPrompts = async (db: any) => {
+    try {
+        const doc = await db.collection('config').doc('system').get();
+        if (doc.exists) {
+            return doc.data();
+        }
+    } catch (e) {
+        logger.error("❌ Error fetching system prompts", e);
+    }
+    return null;
 };
 
 export const calculateCost = (model: string, usage: { promptTokenCount?: number, candidatesTokenCount?: number }, config: any): number => {

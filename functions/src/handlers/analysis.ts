@@ -2,7 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { SchemaType } from "@google/generative-ai";
 import { db, Timestamp, FieldValue } from "../services/db";
-import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, GEMINI_API_KEY } from "../services/ai";
+import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, getSystemPrompts, GEMINI_API_KEY } from "../services/ai";
 import { LawArea, InteractionMode } from "../types";
 
 export const analyzeLegalCase = onCall({
@@ -17,15 +17,18 @@ export const analyzeLegalCase = onCall({
         throw new HttpsError('unauthenticated', 'Użytkownik musi być zalogowany.');
     }
 
-    const { description, language = 'pl' } = request.data;
+    const { description, language = 'pl', isLocalOnly = false } = request.data;
     const uid = request.auth.uid;
 
     // --- SUBSCRIPTION CHECK (from Stripe Extension collection) ---
     const subsRef = db.collection('customers').doc(uid).collection('subscriptions');
-    const snapshot = await subsRef.where('status', 'in', ['active', 'trialing']).get();
+    const snapshot = await subsRef
+        .where('status', 'in', ['active', 'trialing'])
+        .where('current_period_end', '>', Timestamp.now())
+        .get();
 
     if (snapshot.empty) {
-        throw new HttpsError('permission-denied', "Brak aktywnego lub opłaconego planu. Wykup dostęp lub poczekaj na aktywację.");
+        throw new HttpsError('permission-denied', "Brak aktywnego planu lub Twój dostęp wygasł.");
     }
 
     const userDoc = await db.collection('users').doc(uid).get();
@@ -34,8 +37,6 @@ export const analyzeLegalCase = onCall({
     // isActive is now an optional master-switch; Stripe subscription is primary access key.
     if (userData?.isActive === false) {
         logger.warn(`User ${uid} has isActive=false, but checking for active Stripe subscription...`);
-        // If they got here, they have an active sub (checked above), but let's allow explicit manual block.
-        // We'll keep it as a master-block if specifically set to false.
         throw new HttpsError('permission-denied', "Twoje konto zostało zawieszone. Skontaktuj się z administratorem.");
     }
 
@@ -49,8 +50,13 @@ export const analyzeLegalCase = onCall({
     }
 
     try {
+        const dynamicPrompts = await getSystemPrompts(db);
         const langName = language === 'es' ? 'hiszpańskim' : language === 'en' ? 'angielskim' : 'polskim';
-        const prompt = `
+
+        // Check for dynamic override (naming convention: analysis_pl, analysis_en, etc.)
+        const dynamicAnalysisPrompt = dynamicPrompts?.instructions?.[language]?.["Analysis"];
+
+        const prompt = dynamicAnalysisPrompt || `
             # ZADANIE: ANALIZA I KLASYFIKACJA SPRAWY
             Jesteś rygorystycznym systemem klasyfikacji prawnej. Twoim zadaniem jest precyzyjna analiza opisu sprawy użytkownika.
 
@@ -107,19 +113,23 @@ export const analyzeLegalCase = onCall({
         const sanitizedTopic = result.topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
         const chatId = `${result.lawArea}_${sanitizedTopic}`;
 
-        const chatRef = db.collection('users').doc(uid).collection('chats').doc(chatId);
-        await chatRef.set({
-            lawArea: result.lawArea,
-            interactionMode: result.interactionMode,
-            topic: result.topic,
-            messages: [{
-                role: 'user',
-                content: description,
-                timestamp: Timestamp.now(),
-                costTokens: usage?.totalTokenCount || 0
-            }],
-            lastUpdated: Timestamp.now(),
-        }, { merge: true });
+        if (!isLocalOnly) {
+            const chatRef = db.collection('users').doc(uid).collection('chats').doc(chatId);
+            await chatRef.set({
+                lawArea: result.lawArea,
+                interactionMode: result.interactionMode,
+                topic: result.topic,
+                messages: [{
+                    role: 'user',
+                    content: description,
+                    timestamp: Timestamp.now(),
+                    costTokens: usage?.totalTokenCount || 0
+                }],
+                lastUpdated: Timestamp.now(),
+            }, { merge: true });
+        } else {
+            logger.info("🛡️ Analysis: LocalOnly mode active. Chat content not persisted.");
+        }
 
         if (usage) {
             await db.collection('users').doc(uid).set({
@@ -131,9 +141,10 @@ export const analyzeLegalCase = onCall({
                     }
                 }
             }, { merge: true });
+            logger.info(`💰 Analysis Cost Updated: ${usage.cost}`);
         }
 
-        return { result, usage, chatId: chatRef.id };
+        return { result, usage, chatId: chatId };
 
     } catch (error) {
         logger.error("Analysis API Error", error);

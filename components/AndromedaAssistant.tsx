@@ -9,9 +9,10 @@ interface AndromedaAssistantProps {
     onProceed: () => void;
     onProfileClick: () => void;
     language: string;
+    onAddCost?: (cost: number) => void;
 }
 
-const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onProfileClick, language }) => {
+const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onProfileClick, language, onAddCost }) => {
     const {
         history,
         isLoading,
@@ -25,7 +26,7 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onPr
         handleDeleteChat,
         handleSend,
         handleFileUpload
-    } = useAndromeda(language);
+    } = useAndromeda(language, onAddCost);
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);

@@ -15,15 +15,16 @@ import {
 import { db } from '../services/firebase';
 import { Reminder } from '../types';
 
-export const useUserCalendar = (user: User | null) => {
+export const useUserCalendar = (user: User | null, isLocalOnly: boolean = false) => {
     const [personalReminders, setPersonalReminders] = useState<Reminder[]>([]);
     const [caseDeadlines, setCaseDeadlines] = useState<Reminder[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // 1. Fetch personal reminders
     useEffect(() => {
-        if (!user) {
+        if (!user || isLocalOnly) {
             setPersonalReminders([]);
+            setIsLoading(false);
             return;
         }
 
@@ -41,11 +42,11 @@ export const useUserCalendar = (user: User | null) => {
         });
 
         return () => unsubscribe();
-    }, [user]);
+    }, [user, isLocalOnly]);
 
     // 2. Fetch all deadlines from all chats
     useEffect(() => {
-        if (!user) {
+        if (!user || isLocalOnly) {
             setCaseDeadlines([]);
             return;
         }
@@ -84,10 +85,10 @@ export const useUserCalendar = (user: User | null) => {
         });
 
         return () => unsubscribe();
-    }, [user]);
+    }, [user, isLocalOnly]);
 
     const addReminder = useCallback(async (date: string, title: string, description?: string) => {
-        if (!user) return;
+        if (!user || isLocalOnly) return;
         const remindersRef = collection(db, 'users', user.uid, 'reminders');
         const newReminderRef = doc(remindersRef);
         await setDoc(newReminderRef, {
@@ -98,18 +99,18 @@ export const useUserCalendar = (user: User | null) => {
             createdAt: serverTimestamp(),
             userId: user.uid
         });
-    }, [user]);
+    }, [user, isLocalOnly]);
 
     const deleteReminder = useCallback(async (id: string) => {
-        if (!user) return;
+        if (!user || isLocalOnly) return;
         await deleteDoc(doc(db, 'users', user.uid, 'reminders', id));
-    }, [user]);
+    }, [user, isLocalOnly]);
 
     const toggleReminder = useCallback(async (id: string, currentStatus: boolean) => {
-        if (!user) return;
+        if (!user || isLocalOnly) return;
         const reminderRef = doc(db, 'users', user.uid, 'reminders', id);
         await setDoc(reminderRef, { completed: !currentStatus }, { merge: true });
-    }, [user]);
+    }, [user, isLocalOnly]);
 
     const allEvents = [...personalReminders, ...caseDeadlines].sort((a, b) => a.date.localeCompare(b.date));
 

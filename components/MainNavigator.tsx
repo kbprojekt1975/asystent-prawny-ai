@@ -156,6 +156,7 @@ const MainNavigator: React.FC = () => {
                 }}
                 onDeleteTopic={(topic) => { /* request delete topic */ }}
                 onBack={() => setServicePath(null)}
+                isLocalOnly={isLocalOnly}
             />
         );
     }
@@ -191,6 +192,7 @@ const MainNavigator: React.FC = () => {
                     setInteractionMode(null);
                     setCourtRole(null);
                 }}
+                isLocalOnly={isLocalOnly}
             />
         );
     }

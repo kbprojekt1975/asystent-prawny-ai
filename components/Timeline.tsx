@@ -7,16 +7,21 @@ import { CalendarIcon, FlagIcon, TrashIcon, ClockIcon } from './Icons';
 interface TimelineProps {
     userId: string;
     caseId: string;
+    isLocalOnly?: boolean;
 }
 
-const Timeline: React.FC<TimelineProps> = ({ userId, caseId }) => {
+const Timeline: React.FC<TimelineProps> = ({ userId, caseId, isLocalOnly = false }) => {
     const [events, setEvents] = useState<TimelineEvent[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (!userId || !caseId) return;
+        if (!userId || !caseId || isLocalOnly) {
+            setEvents([]);
+            setLoading(false);
+            return;
+        }
 
         const timelineRef = collection(db, 'users', userId, 'chats', caseId, 'timeline');
         const q = query(timelineRef, orderBy('date', 'asc'));
@@ -40,10 +45,11 @@ const Timeline: React.FC<TimelineProps> = ({ userId, caseId }) => {
         });
 
         return () => unsubscribe();
-    }, [userId, caseId]);
+    }, [userId, caseId, isLocalOnly]);
 
     const handleDelete = async (e: React.MouseEvent, eventId: string) => {
         e.stopPropagation();
+        if (isLocalOnly) return;
         if (!confirm("Czy na pewno chcesz usunąć to wydarzenie z osi czasu?")) return;
         try {
             await deleteDoc(doc(db, 'users', userId, 'chats', caseId, 'timeline', eventId));

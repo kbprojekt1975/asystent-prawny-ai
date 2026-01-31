@@ -145,7 +145,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } = topicManager;
 
     const handleDeleteHistory = async (lawArea: LawArea, topic: string) => {
-        if (!user) return;
+        if (!user || isLocalOnly) return;
         try {
             const mainChatId = getChatId(lawArea, topic);
             await deleteDoc(doc(db, 'users', user.uid, 'chats', mainChatId));
@@ -179,6 +179,17 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setIsWelcomeModalOpen(false);
         setIsLoading(true);
         setChatHistory([]);
+
+        if (isLocalOnly) {
+            setIsLoading(false);
+            // In local mode, we don't fetch from Firestore. 
+            // We just set the navigation state.
+            setSelectedLawArea(lawArea);
+            setSelectedTopic(topic);
+            if (mode) setInteractionMode(mode);
+            if (path) setServicePath(path);
+            return;
+        }
 
         if (mode) setInteractionMode(mode);
         if (path) setServicePath(path);
@@ -263,7 +274,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (!user) return;
         setIsLoading(true);
         try {
-            const analysisResponse = await analyzeLegalCase(description, i18n.language);
+            const analysisResponse = await analyzeLegalCase(description, i18n.language, isLocalOnly);
             const { result, usage } = analysisResponse;
             if (usage && usage.cost > 0) {
                 handleAddCost(usage.cost);
@@ -349,7 +360,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, [user, currentChatId]);
 
     const handleAddNote = async (content: string, linkedMessage?: string, noteId?: string, linkedRole?: 'user' | 'model' | 'system') => {
-        if (!user || !currentChatId) return;
+        if (!user || !currentChatId || isLocalOnly) return;
         try {
             const notesRef = collection(db, 'users', user.uid, 'chats', currentChatId, 'notes');
             const finalNoteId = noteId || `note_${Date.now()}`;
@@ -367,7 +378,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const deleteNote = async (noteId: string) => {
-        if (!user || !currentChatId) return;
+        if (!user || !currentChatId || isLocalOnly) return;
         try {
             await deleteDoc(doc(db, 'users', user.uid, 'chats', currentChatId, 'notes', noteId));
         } catch (e) {
@@ -376,7 +387,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const handleUpdateNotePosition = async (noteId: string, position: { x: number, y: number } | null) => {
-        if (!user || !currentChatId) return;
+        if (!user || !currentChatId || isLocalOnly) return;
         try {
             const noteRef = doc(db, 'users', user.uid, 'chats', currentChatId, 'notes', noteId);
             await updateDoc(noteRef, {

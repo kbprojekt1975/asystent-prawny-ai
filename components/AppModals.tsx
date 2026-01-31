@@ -136,6 +136,7 @@ const AppModals: React.FC<AppModalsProps> = ({
                 onClose={() => setIsKnowledgeModalOpen(false)}
                 userId={user?.uid}
                 chatId={knowledgeModalChatId}
+                isLocalOnly={isLocalOnly}
             />
 
             <DocumentsRepositoryModal
@@ -143,6 +144,7 @@ const AppModals: React.FC<AppModalsProps> = ({
                 onClose={() => setIsDocumentsModalOpen(false)}
                 userId={user?.uid}
                 chatId={documentsModalChatId}
+                isLocalOnly={isLocalOnly}
             />
 
             <ConfirmationModal
@@ -166,6 +168,7 @@ const AppModals: React.FC<AppModalsProps> = ({
                 userId={user?.uid || ''}
                 caseId={currentChatId || ''}
                 onChangeMode={onChangeMode}
+                isLocalOnly={isLocalOnly}
             />
 
             <InstallPWAPrompt

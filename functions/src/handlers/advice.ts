@@ -2,7 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { SchemaType } from "@google/generative-ai";
 import { db, Timestamp, FieldValue, storage } from "../services/db";
-import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, GEMINI_API_KEY } from "../services/ai";
+import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, getSystemPrompts, GEMINI_API_KEY } from "../services/ai";
 import { LawAreaType } from "../types";
 import {
     CORE_RULES_PL, CORE_RULES_EN, CORE_RULES_ES,
@@ -21,10 +21,10 @@ export const getLegalAdvice = onCall({
     if (!genAI) throw new HttpsError('failed-precondition', 'AI Client not initialized.');
     if (!request.auth) throw new HttpsError('unauthenticated', 'User not authenticated.');
 
-    const { history, lawArea, interactionMode, topic, articles, chatId, language = 'pl' } = request.data;
+    const { history, lawArea, interactionMode, topic, articles, chatId, language = 'pl', isLocalOnly = false } = request.data;
     const uid = request.auth.uid;
 
-    logger.info(`Request parameters: LawArea="${lawArea}", InteractionMode="${interactionMode}", Topic="${topic}"`);
+    logger.info(`Request parameters: LawArea="${lawArea}", InteractionMode="${interactionMode}", Topic="${topic}", LocalOnly=${isLocalOnly}`);
 
     if (!chatId || !history) throw new HttpsError('invalid-argument', "Missing chatId or history.");
 
@@ -32,11 +32,14 @@ export const getLegalAdvice = onCall({
 
     // --- SUBSCRIPTION CHECK (from Stripe Extension collection) ---
     const subsRef = db.collection('customers').doc(uid).collection('subscriptions');
-    const snapshot = await subsRef.where('status', 'in', ['active', 'trialing']).get();
+    const snapshot = await subsRef
+        .where('status', 'in', ['active', 'trialing'])
+        .where('current_period_end', '>', Timestamp.now())
+        .get();
 
     if (snapshot.empty) {
-        logger.error("!!! SUBSCRIPTION CHECK FAILED: No active or trialing subscription found in customers collection !!!");
-        throw new HttpsError('permission-denied', "Brak aktywnego planu. Wykup dostęp lub poczekaj na aktywację.");
+        logger.error("!!! SUBSCRIPTION CHECK FAILED: No active/valid subscription found !!!");
+        throw new HttpsError('permission-denied', "Brak aktywnego planu lub Twój dostęp wygasł. Odnów subskrypcję.");
     }
 
     logger.info("✓ Subscription check passed (Stripe collection)");
@@ -66,15 +69,26 @@ export const getLegalAdvice = onCall({
         }
     } catch (e) { logger.error("Knowledge fetch error", e); }
 
-    // --- PREPARE PROMPT ---
+    // --- PREPARE PROMPT (with dynamic overrides) ---
+    const dynamicPrompts = await getSystemPrompts(db);
     const lawAreaClean = (lawArea || "").trim();
     const areaKey = Object.keys(systemInstructions).find(k => k.toLowerCase() === lawAreaClean.toLowerCase()) as LawAreaType;
-    const coreRules = (language === 'en' ? CORE_RULES_EN : language === 'es' ? CORE_RULES_ES : CORE_RULES_PL);
-    const pillarRulesMap = (language === 'en' ? PILLAR_RULES_EN : language === 'es' ? PILLAR_RULES_ES : PILLAR_RULES_PL);
-    const pillarRules = pillarRulesMap[lawAreaClean] || pillarRulesMap[areaKey] || "";
 
-    const instrMap = (language === 'en' ? systemInstructionsEn : language === 'es' ? systemInstructionsEs : systemInstructions);
-    const modeInstructions = instrMap[areaKey]?.[interactionMode] || "";
+    // 1. CORE RULES
+    const coreRulesDefault = (language === 'en' ? CORE_RULES_EN : language === 'es' ? CORE_RULES_ES : CORE_RULES_PL);
+    const coreRules = dynamicPrompts?.core?.[language] || coreRulesDefault;
+
+    // 2. PILLAR RULES
+    const pillarRulesMapDefault = (language === 'en' ? PILLAR_RULES_EN : language === 'es' ? PILLAR_RULES_ES : PILLAR_RULES_PL);
+    const pillarRules = dynamicPrompts?.pillars?.[language]?.[lawAreaClean] ||
+        dynamicPrompts?.pillars?.[language]?.[areaKey] ||
+        pillarRulesMapDefault[lawAreaClean] ||
+        pillarRulesMapDefault[areaKey] || "";
+
+    // 3. MODE SPECIFIC INSTRUCTIONS
+    const instrMapDefault = (language === 'en' ? systemInstructionsEn : language === 'es' ? systemInstructionsEs : systemInstructions);
+    const modeInstructions = dynamicPrompts?.instructions?.[language]?.[interactionMode] ||
+        instrMapDefault[areaKey]?.[interactionMode] || "";
 
     const instruction = `
         # ROLE: LEGAL EXPERT (${lawArea || areaKey})
@@ -185,20 +199,19 @@ export const getLegalAdvice = onCall({
         logger.warn("⚠️ No usage metadata returned from Gemini.");
     }
 
-    const chatRef = userRef.collection('chats').doc(chatId);
-    await chatRef.set({
-        messages: FieldValue.arrayUnion({ role: 'model', content: text, timestamp: Timestamp.now() }),
-        lastUpdated: Timestamp.now()
-    }, { merge: true });
+    // PERSISTENCE BLOCK
+    if (!isLocalOnly) {
+        const chatRef = userRef.collection('chats').doc(chatId);
+        await chatRef.set({
+            messages: FieldValue.arrayUnion({ role: 'model', content: text, timestamp: Timestamp.now() }),
+            lastUpdated: Timestamp.now()
+        }, { merge: true });
+    } else {
+        logger.info("🛡️ LocalOnly mode active. Skipping chat history persistence.");
+    }
 
     if (cost > 0) {
-        logger.info(`💾 Updating user cost in Firestore: +${cost}, +${tokensUsed} tokens`);
-        logger.info(`📦 Update payload:`, {
-            totalCost: `increment(${cost})`,
-            "profile.subscription.spentAmount": `increment(${cost})`,
-            "profile.subscription.tokensUsed": `increment(${tokensUsed})`
-        });
-
+        logger.info(`💰 Updating user cost in Firestore: +${cost}, +${tokensUsed} tokens`);
         try {
             await userRef.set({
                 totalCost: FieldValue.increment(cost),
@@ -209,18 +222,17 @@ export const getLegalAdvice = onCall({
                     }
                 }
             }, { merge: true });
-            logger.info("✅ User cost updated successfully");
-
-            // Verify update
-            const verifyDoc = await userRef.get();
-            const verifyData = verifyDoc.data();
-            logger.info(`🔍 After update - tokensUsed: ${verifyData?.profile?.subscription?.tokensUsed}, spentAmount: ${verifyData?.profile?.subscription?.spentAmount}`);
         } catch (e) {
             logger.error("❌ Failed to update user cost", e);
         }
-    } else {
-        logger.warn("⚠️ Cost is 0, skipping Firestore update");
     }
 
-    return { text, usage };
+    return {
+        text,
+        usage: {
+            ...usage,
+            cost,
+            appTokens: tokensUsed
+        }
+    };
 });

@@ -10,15 +10,20 @@ interface DocumentsRepositoryModalProps {
     onClose: () => void;
     userId: string;
     chatId?: string | null;
+    isLocalOnly?: boolean;
 }
 
-const DocumentsRepositoryModal: React.FC<DocumentsRepositoryModalProps> = ({ isOpen, onClose, userId, chatId }) => {
+const DocumentsRepositoryModal: React.FC<DocumentsRepositoryModalProps> = ({ isOpen, onClose, userId, chatId, isLocalOnly = false }) => {
     const [documents, setDocuments] = useState<CaseDocument[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!isOpen || !userId) return;
+        if (!isOpen || !userId || isLocalOnly) {
+            setDocuments([]);
+            setIsLoading(false);
+            return;
+        }
 
         setIsLoading(true);
 
@@ -52,7 +57,7 @@ const DocumentsRepositoryModal: React.FC<DocumentsRepositoryModalProps> = ({ isO
         });
 
         return () => unsubscribe();
-    }, [isOpen, userId, chatId]);
+    }, [isOpen, userId, chatId, isLocalOnly]);
 
     const filteredDocs = documents.filter(doc =>
         doc.name.toLowerCase().includes(searchTerm.toLowerCase())

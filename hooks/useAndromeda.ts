@@ -5,7 +5,7 @@ import { db } from '../services/firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { useAppContext } from '../context/AppContext';
 
-export const useAndromeda = (language: string) => {
+export const useAndromeda = (language: string, onAddCost?: (cost: number) => void) => {
     const { user, userProfile, isLocalOnly } = useAppContext();
     const [history, setHistory] = useState<ChatMessage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -88,7 +88,12 @@ export const useAndromeda = (language: string) => {
         setIsLoading(true);
 
         try {
-            const response = await askAndromeda(newHistory, language, currentChatId);
+            const response = await askAndromeda(newHistory, language, currentChatId, isLocalOnly);
+
+            if (response.usage && response.usage.cost > 0) {
+                onAddCost?.(response.usage.cost);
+            }
+
             const assistantMessage: ChatMessage = { role: 'model', content: response.text };
             const finalHistory = [...newHistory, assistantMessage];
             setHistory(finalHistory);
@@ -134,7 +139,7 @@ export const useAndromeda = (language: string) => {
         } finally {
             setIsLoading(false);
         }
-    }, [user, history, isLoading, language, currentChatId, isLocalOnly, localChats, saveLocalChats]);
+    }, [user, history, isLoading, language, currentChatId, isLocalOnly, localChats, saveLocalChats, onAddCost]);
 
     const handleFileUpload = useCallback(async (file: File) => {
         if (!file || !user) return;
@@ -151,7 +156,12 @@ export const useAndromeda = (language: string) => {
                 const systemPrompt = `\nSYSTEM: Użytkownik przesłał plik "${file.name}". Treść:\n---\n${textContent.substring(0, 25000)}\n---\nPrzeanalizuj ten dokument i zapisz kluczowe fakty używając narzędzia 'add_to_chat_knowledge'.`;
                 const backendHistory = [...newHistory, { role: 'user', content: systemPrompt }];
 
-                const response = await askAndromeda(backendHistory, language, currentChatId);
+                const response = await askAndromeda(backendHistory, language, currentChatId, isLocalOnly);
+
+                if (response.usage && response.usage.cost > 0) {
+                    onAddCost?.(response.usage.cost);
+                }
+
                 const assistantMessage: ChatMessage = { role: 'model', content: response.text };
                 const finalHistory = [...newHistory, assistantMessage];
                 setHistory(finalHistory);
@@ -180,7 +190,7 @@ export const useAndromeda = (language: string) => {
         } finally {
             setIsLoading(false);
         }
-    }, [user, history, language, currentChatId, isLocalOnly]);
+    }, [user, history, language, currentChatId, isLocalOnly, onAddCost]);
 
     return {
         history,

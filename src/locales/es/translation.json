@@ -107,6 +107,11 @@
             "desc": "Tu crédito se ha agotado o el periodo de validez ha expirado. Selecciona un plan nuevamente para continuar.",
             "renewButton": "Renovar acceso - 10 PLN"
         },
+        "limitReached": {
+            "title": "Límite de Fondos Agotado",
+            "desc": "Tus fondos se han agotado. Para continuar usando el asistente, recarga tu cuenta seleccionando un pack inicial.",
+            "selectButton": "Recargar 10 PLN"
+        },
         "help": {
             "title": "Pack Inicial - Detalles",
             "intro": "El uso del Asistente Legal IA requiere un paquete activo.",

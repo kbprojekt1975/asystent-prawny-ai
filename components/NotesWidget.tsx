@@ -8,9 +8,10 @@ import { TrashIcon, PlusIcon, DocumentDuplicateIcon, CheckIcon } from './Icons';
 interface NotesWidgetProps {
     userId: string;
     chatId: string;
+    isLocalOnly?: boolean;
 }
 
-const NotesWidget: React.FC<NotesWidgetProps> = ({ userId, chatId }) => {
+const NotesWidget: React.FC<NotesWidgetProps> = ({ userId, chatId, isLocalOnly = false }) => {
     const { t, i18n } = useTranslation();
     const [notes, setNotes] = useState<CaseNote[]>([]);
     const [newNote, setNewNote] = useState('');
@@ -19,7 +20,11 @@ const NotesWidget: React.FC<NotesWidgetProps> = ({ userId, chatId }) => {
     const [copyId, setCopyId] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!userId || !chatId) return;
+        if (!userId || !chatId || isLocalOnly) {
+            setNotes([]);
+            setIsLoading(false);
+            return;
+        }
 
         const q = query(
             collection(db, 'users', userId, 'chats', chatId, 'notes'),
@@ -39,10 +44,10 @@ const NotesWidget: React.FC<NotesWidgetProps> = ({ userId, chatId }) => {
         });
 
         return () => unsubscribe();
-    }, [userId, chatId]);
+    }, [userId, chatId, isLocalOnly]);
 
     const handleAddNote = async () => {
-        if (!newNote.trim() || !userId || !chatId) return;
+        if (!newNote.trim() || !userId || !chatId || isLocalOnly) return;
 
         try {
             const noteId = `note_${Date.now()}`;
@@ -58,6 +63,7 @@ const NotesWidget: React.FC<NotesWidgetProps> = ({ userId, chatId }) => {
     };
 
     const handleDeleteNote = async (noteId: string) => {
+        if (isLocalOnly) return;
         try {
             await deleteDoc(doc(db, 'users', userId, 'chats', chatId, 'notes', noteId));
         } catch (error) {

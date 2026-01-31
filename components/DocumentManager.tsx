@@ -7,16 +7,22 @@ interface DocumentManagerProps {
     userId: string;
     caseId: string;
     onDocumentsChange?: (docs: CaseDocument[]) => void;
+    isLocalOnly?: boolean;
 }
 
-const DocumentManager: React.FC<DocumentManagerProps> = ({ userId, caseId, onDocumentsChange }) => {
+const DocumentManager: React.FC<DocumentManagerProps> = ({ userId, caseId, onDocumentsChange, isLocalOnly = false }) => {
     const [documents, setDocuments] = useState<CaseDocument[]>([]);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        loadDocuments();
-    }, [userId, caseId]);
+        if (!isLocalOnly) {
+            loadDocuments();
+        } else {
+            setDocuments([]);
+            onDocumentsChange?.([]);
+        }
+    }, [userId, caseId, isLocalOnly]);
 
     const loadDocuments = async () => {
         try {
@@ -30,7 +36,7 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({ userId, caseId, onDoc
 
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (!file) return;
+        if (!file || isLocalOnly) return;
 
         if (file.size > 5 * 1024 * 1024) { // 5MB limit
             alert("Maksymalny rozmiar pliku to 5MB.");
@@ -53,6 +59,7 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({ userId, caseId, onDoc
     };
 
     const handleDelete = async (doc: CaseDocument) => {
+        if (isLocalOnly) return;
         if (!confirm(`Czy na pewno chcesz usunąć dokument "${doc.name}"?`)) return;
 
         try {

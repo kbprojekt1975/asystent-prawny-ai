@@ -112,7 +112,8 @@ const App: React.FC = () => {
     cancelDeleteTopic,
     confirmDeleteTopic,
     requestDeleteTopic,
-    handleSelectInteractionMode
+    handleSelectInteractionMode,
+    handleAddCost
   } = useChatContext();
 
   const {
@@ -139,10 +140,11 @@ const App: React.FC = () => {
   const [knowledgeModalChatId, setKnowledgeModalChatId] = useState<string | null>(null);
   const [documentsModalChatId, setDocumentsModalChatId] = useState<string | null>(null);
   const [isSplashDismissed, setIsSplashDismissed] = useState(false);
+  const [isRecharging, setIsRecharging] = useState(() => sessionStorage.getItem('recharge_in_progress') === 'true');
   const [isShowAndromeda, setIsShowAndromeda] = useState(false);
   const [hasDismissedAssistantSession, setHasDismissedAssistantSession] = useState(false);
 
-  const { allEvents } = useUserCalendar(user);
+  const { allEvents } = useUserCalendar(user, isLocalOnly);
   const todayStr = new Date().toISOString().split('T')[0];
   const activeRemindersCount = useMemo(() =>
     allEvents.filter(e => !e.completed && e.date === todayStr).length,
@@ -157,7 +159,7 @@ const App: React.FC = () => {
 
   // Auto-trigger Onboarding Flow when subscription is detected
   useEffect(() => {
-    if (!authLoading && !profileLoading && !subsLoading && userProfile) {
+    if (!authLoading && !profileLoading && !subsLoading && userProfile && !isRecharging) {
       const hasActiveSub = ['active', 'trialing'].includes(userProfile.subscription?.status || '');
 
       // If user is PAID but hasn't seen the welcome assistant yet AND hasn't dismissed it this session, show it.
@@ -165,7 +167,18 @@ const App: React.FC = () => {
         setIsWelcomeAssistantOpen(true);
       }
     }
-  }, [authLoading, profileLoading, subsLoading, userProfile?.subscription?.status, userProfile?.hasSeenWelcomeAssistant, setIsWelcomeAssistantOpen, hasDismissedAssistantSession]);
+  }, [authLoading, profileLoading, subsLoading, userProfile?.subscription?.status, userProfile?.hasSeenWelcomeAssistant, setIsWelcomeAssistantOpen, hasDismissedAssistantSession, isRecharging]);
+
+  // Manage Recharge / Stabilization Delay
+  useEffect(() => {
+    if (isRecharging && !authLoading && !profileLoading && !subsLoading) {
+      const timer = setTimeout(() => {
+        setIsRecharging(false);
+        sessionStorage.removeItem('recharge_in_progress');
+      }, 1000); // Minimum 1s delay for stabilization
+      return () => clearTimeout(timer);
+    }
+  }, [isRecharging, authLoading, profileLoading, subsLoading]);
 
   const handlePreviewDocument = (rawContent: string) => {
     if (!userProfile?.personalData) {
@@ -243,16 +256,25 @@ const App: React.FC = () => {
   const handleSelectPlan = async (planId: string) => {
     if (!user) return;
 
+    setIsRecharging(true);
+    sessionStorage.setItem('recharge_in_progress', 'true');
+
     // LOCAL DEVELOPMENT BYPASS
     // On emulators, we don't have Stripe Extension running by default.
     // We allow developers to "self-activate" by writing directly to the customers collection.
     if (import.meta.env.VITE_USE_EMULATORS === 'true') {
       console.warn("DEVELOPER MODE: Bypassing Stripe and auto-activating subscription locally.");
       try {
-        const { setDoc, doc, serverTimestamp, updateDoc } = await import('firebase/firestore');
+        const { setDoc, doc, serverTimestamp, updateDoc, getDoc } = await import('firebase/firestore');
         const { db } = await import('./services/firebase');
 
         console.log("Mocking subscription for UID:", user.uid);
+
+        // Fetch validity from config
+        const configDoc = await getDoc(doc(db, 'config', 'pricing'));
+        const validitySeconds = configDoc.exists() ? (configDoc.data().validity_seconds || 604800) : 604800;
+
+        console.log(`Mocking subscription with validity: ${validitySeconds}s`);
 
         // Mock a successful Stripe subscription
         await setDoc(doc(db, 'customers', user.uid, 'subscriptions', 'local_dev_sub'), {
@@ -261,7 +283,7 @@ const App: React.FC = () => {
           items: [{ price: { id: planId } }],
           created: serverTimestamp(),
           current_period_start: serverTimestamp(),
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // +30 days
+          current_period_end: new Date(Date.now() + (validitySeconds * 1000)),
         });
 
         console.log("Subscription doc created. Resetting onboarding...");
@@ -271,7 +293,9 @@ const App: React.FC = () => {
           "profile.hasSeenWelcomeAssistant": false,
           "profile.cookieConsent": false,
           "profile.dataProcessingConsent": false,
-          "profile.isActive": true // Ensure profile is active
+          "profile.isActive": true, // Ensure profile is active
+          "profile.subscription.spentAmount": 0, // Reset spent amount on recharge
+          "profile.subscription.creditLimit": 10 // Ensure credit limit is refreshed
         });
 
         // CLEAR LOCAL CACHE FOR COOKIE CONSENT
@@ -299,13 +323,17 @@ const App: React.FC = () => {
   if (!isSplashDismissed) {
     return (
       <SplashScreen
-        isReady={!authLoading && !profileLoading && !subsLoading}
+        isReady={!authLoading && !profileLoading && !subsLoading && !isRecharging}
         onStart={() => {
           setIsShowAndromeda(true);
           setIsSplashDismissed(true);
         }}
       />
     );
+  }
+
+  if (isRecharging) {
+    return <FullScreenLoader />;
   }
 
   if (!user) {
@@ -320,11 +348,15 @@ const App: React.FC = () => {
     return <FullScreenLoader />;
   }
 
-  // Unified Stripe Migration: Access is granted if Stripe sub is active/trialing AND credit limit not reached.
+  // Unified Stripe Migration: Access is granted if Stripe sub is active/trialing AND credit limit not reached AND not expired.
   // We use this for primary blocking screens.
   const hasActiveStripeSub = ['active', 'trialing'].includes(userProfile?.subscription?.status || '');
+  const isExpired = userProfile?.subscription?.expiresAt && (
+    (typeof userProfile.subscription.expiresAt === 'number' && userProfile.subscription.expiresAt < Date.now()) ||
+    (userProfile.subscription.expiresAt.toMillis && userProfile.subscription.expiresAt.toMillis() < Date.now())
+  );
   const isLimitReached = (userProfile?.subscription?.spentAmount || 0) >= (userProfile?.subscription?.creditLimit || 0) && hasActiveStripeSub;
-  const hasActiveAccess = hasActiveStripeSub && !isLimitReached;
+  const hasActiveAccess = hasActiveStripeSub && !isLimitReached && !isExpired;
 
   const isAwaitingActivation = userProfile?.subscription && userProfile.subscription.isPaid === false && !hasActiveStripeSub;
   if (isAwaitingActivation) {
@@ -341,6 +373,7 @@ const App: React.FC = () => {
           }}
           onProfileClick={() => setIsProfileModalOpen(true)}
           language={i18n.language}
+          onAddCost={handleAddCost}
         />
       )}
       <PWAUpdateNotification />
@@ -448,7 +481,7 @@ const App: React.FC = () => {
             onHistoryClick={() => setIsHistoryPanelOpen(true)}
             onAiToolsClick={() => setIsAiToolsSidebarOpen(true)}
             onBackClick={selectedLawArea ? backToLawArea : undefined}
-            onHomeClick={resetNavigation}
+            onHomeClick={selectedLawArea ? resetNavigation : undefined}
             totalCost={totalCost}
             subscription={userProfile?.subscription}
             onKnowledgeClick={() => handleViewKnowledge()}
@@ -465,8 +498,8 @@ const App: React.FC = () => {
                 setInteractionMode(data.interactionMode);
               });
             } : undefined}
-            onHomeGridClick={!selectedLawArea ? () => setIsShowAndromeda(true) : resetNavigation}
-            isCrossedOut={!selectedLawArea}
+            onHomeGridClick={() => setIsShowAndromeda(!isShowAndromeda)}
+            isCrossedOut={!isShowAndromeda}
           />
         )}
 

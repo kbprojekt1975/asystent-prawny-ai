@@ -9,9 +9,10 @@ interface LegalKnowledgeModalProps {
     onClose: () => void;
     userId: string;
     chatId?: string | null;
+    isLocalOnly?: boolean;
 }
 
-const LegalKnowledgeModal: React.FC<LegalKnowledgeModalProps> = ({ isOpen, onClose, userId, chatId }) => {
+const LegalKnowledgeModal: React.FC<LegalKnowledgeModalProps> = ({ isOpen, onClose, userId, chatId, isLocalOnly = false }) => {
     const [acts, setActs] = useState<LegalAct[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedAct, setSelectedAct] = useState<LegalAct | null>(null);
@@ -19,7 +20,11 @@ const LegalKnowledgeModal: React.FC<LegalKnowledgeModalProps> = ({ isOpen, onClo
     const [viewMode, setViewMode] = useState<'topic' | 'global'>('topic');
 
     useEffect(() => {
-        if (!isOpen || !userId) return;
+        if (!isOpen || !userId || isLocalOnly) {
+            setActs([]);
+            setIsLoading(false);
+            return;
+        }
 
         setIsLoading(true);
         const activeMode = (!chatId) ? 'global' : viewMode;
@@ -50,10 +55,11 @@ const LegalKnowledgeModal: React.FC<LegalKnowledgeModalProps> = ({ isOpen, onClo
         });
 
         return () => unsubscribe();
-    }, [isOpen, userId, chatId, viewMode]);
+    }, [isOpen, userId, chatId, viewMode, isLocalOnly]);
 
     const handleDelete = async (e: React.MouseEvent, actId: string) => {
         e.stopPropagation();
+        if (isLocalOnly) return;
         if (!confirm('Czy na pewno chcesz usunąć ten akt prawny?')) return;
         try {
             const activeMode = (!chatId) ? 'global' : viewMode;

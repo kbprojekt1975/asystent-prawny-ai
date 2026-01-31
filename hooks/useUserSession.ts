@@ -26,7 +26,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
     const [userProfile, setUserProfile] = useState<UserProfile>(initialProfile);
     const [topics, setTopics] = useState<Record<LawArea, string[]>>(initialTopics);
     const [totalCost, setTotalCost] = useState<number>(0);
-    const [isLocalOnly, setIsLocalOnly] = useState<boolean>(false);
+    const [isLocalOnly, setIsLocalOnly] = useState<boolean>(true);
     const [subsLoading, setSubsLoading] = useState(true);
 
     // Auth Listener
@@ -169,11 +169,8 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
 
                 // Derive Local Only state from consent OR manual preference
                 // FORCE Local Only if no consent. Allow preference if consent granted.
-                if (profile.dataProcessingConsent === true) {
-                    setIsLocalOnly(profile.manualLocalMode === true);
-                } else {
-                    setIsLocalOnly(true);
-                }
+                const effectiveLocalOnly = profile.dataProcessingConsent === true ? (profile.manualLocalMode === true) : true;
+                setIsLocalOnly(effectiveLocalOnly);
 
                 const sessionData = sessionStorage.getItem('personalData');
                 if (sessionData) {
@@ -185,7 +182,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                     }
                 }
 
-                if (data.topics && JSON.stringify(data.topics) !== JSON.stringify(topics)) {
+                if (!effectiveLocalOnly && data.topics && JSON.stringify(data.topics) !== JSON.stringify(topics)) {
                     setTopics(data.topics);
                 }
 
@@ -198,6 +195,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                         ...(prev.subscription || {}),
                         // Merge the spentAmount from Firestore (User Doc) with the Status/Limit from Stripe (prev state)
                         spentAmount: firestoreSub?.spentAmount ?? prev.subscription?.spentAmount ?? 0,
+                        tokensUsed: firestoreSub?.tokensUsed ?? prev.subscription?.tokensUsed ?? 0,
                     } as any
                 }));
             } catch (e) {

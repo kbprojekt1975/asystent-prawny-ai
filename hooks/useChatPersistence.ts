@@ -48,17 +48,7 @@ export const useChatPersistence = ({
         if (!user) return;
 
         onAddCost?.(cost);
-
-        if (!isLocalOnly) {
-            try {
-                await updateDoc(doc(db, 'users', user.uid), {
-                    totalCost: increment(cost)
-                });
-            } catch (error) {
-                console.error("Error updating costs:", error);
-            }
-        }
-    }, [user, isLocalOnly, onAddCost]);
+    }, [user, onAddCost]);
 
     const loadChatHistories = useCallback(async () => {
         if (!user || isLocalOnly) return [];

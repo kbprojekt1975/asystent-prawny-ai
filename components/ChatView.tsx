@@ -15,6 +15,7 @@ const ChatView: React.FC = () => {
         interactionMode,
         setInteractionMode,
         setCourtRole,
+        isLocalOnly,
         currentChatId,
     } = useAppContext();
 
@@ -62,6 +63,7 @@ const ChatView: React.FC = () => {
                             ref={caseDashboardRef}
                             userId={user.uid}
                             caseId={currentChatId}
+                            isLocalOnly={isLocalOnly}
                             onChangeMode={() => {
                                 setInteractionMode(null);
                                 setCourtRole(null);
