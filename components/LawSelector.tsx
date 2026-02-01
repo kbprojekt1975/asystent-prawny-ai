@@ -40,6 +40,7 @@ const LawSelector: React.FC<LawSelectorProps> = ({
 }) => {
   const { t } = useTranslation();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isAgentHelpOpen, setIsAgentHelpOpen] = useState(false);
   const topRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -98,58 +99,67 @@ const LawSelector: React.FC<LawSelectorProps> = ({
             <p className="text-xs md:text-base text-slate-400 line-clamp-2">{option.description}</p>
           </button>
         ))}
+      </div>
 
-        {/* CUSTOM AGENTS SECTION */}
-        <div className="md:col-span-full border-t border-slate-700/50 pt-8 mt-4">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-6 text-center">Sekcja Personalizacji</h3>
+      {/* CUSTOM AGENTS SECTION */}
+      <div className="w-full max-w-6xl border-t border-slate-700/50 pt-8 mt-4 mb-8">
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-6 text-center">Sekcja Personalizacji</h3>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-            {/* Create New Agent Tile */}
-            <button
-              onClick={() => isPro ? onCreateCustomAgent() : alert("Funkcja Własnych Agentów dostępna tylko w pakiecie PRO.")}
-              className={`group relative overflow-hidden bg-slate-900 border-2 border-dashed ${isPro ? 'border-cyan-500/30 hover:border-cyan-500 hover:bg-slate-800' : 'border-slate-700 opacity-70'} rounded-xl p-6 text-left transition-all duration-300`}
-            >
-              {!isPro && (
-                <div className="absolute top-2 right-2 px-2 py-0.5 bg-cyan-500 text-slate-950 text-[10px] font-black rounded-full shadow-lg">
-                  PRO ONLY
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+          {/* Create New Agent Tile */}
+          <button
+            onClick={() => isPro ? onCreateCustomAgent() : alert("Funkcja Własnych Agentów dostępna tylko w pakiecie PRO.")}
+            className={`group relative overflow-hidden bg-slate-900 border-2 border-dashed ${isPro ? 'border-cyan-500/30 hover:border-cyan-500 hover:bg-slate-800' : 'border-slate-700 opacity-70'} rounded-lg p-3 md:p-6 text-left transition-all duration-300`}
+          >
+            <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20">
+              <InfoIcon
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsAgentHelpOpen(true);
+                }}
+                className="w-8 h-8 md:w-12 md:h-12 text-cyan-400 hover:text-white bg-slate-800/90 border border-cyan-500/20 rounded-full shadow-2xl flex items-center justify-center p-1.5 md:p-2"
+              />
+            </div>
+            {!isPro && (
+              <div className="absolute top-2 right-12 px-2 py-0.5 bg-cyan-500 text-slate-950 text-[10px] font-black rounded-full shadow-lg">
+                PRO ONLY
+              </div>
+            )}
+            <div className="w-8 h-8 md:w-12 md:h-12 bg-cyan-500/10 rounded-lg flex items-center justify-center mb-2 md:mb-4 group-hover:scale-110 transition-transform">
+              <MagicWandIcon className="w-5 h-5 md:w-6 md:h-6 text-cyan-400" />
+            </div>
+            <h2 className="text-sm md:text-xl font-semibold text-white mb-0.5 md:mb-1 leading-tight">STWÓRZ AGENTA</h2>
+            <p className="text-xs md:text-base text-slate-400 line-clamp-2">Zdefiniuj własną osobowość AI</p>
+          </button>
+
+          {/* List Custom Agents */}
+          {customAgents.map(agent => (
+            <div key={agent.id} className="relative group">
+              <button
+                onClick={() => onCustomAgentSelect(agent)}
+                className="w-full h-full bg-slate-800/40 border border-slate-700 rounded-lg p-3 md:p-6 text-left hover:bg-slate-700/70 hover:border-cyan-500 transition-all duration-300"
+              >
+                <div className="w-8 h-8 md:w-12 md:h-12 bg-violet-500/10 rounded-lg flex items-center justify-center mb-2 md:mb-4 group-hover:bg-violet-500/20 transition-colors">
+                  <div className="text-base md:text-xl font-black text-violet-400 uppercase">{agent.name.substring(0, 1)}</div>
                 </div>
-              )}
-              <div className="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <MagicWandIcon className="w-6 h-6 text-cyan-400" />
-              </div>
-              <h2 className="text-lg font-bold text-white mb-1">STWÓRZ AGENTA</h2>
-              <p className="text-xs text-slate-400">Zdefiniuj własną osobowość AI</p>
-            </button>
+                <h2 className="text-sm md:text-xl font-semibold text-white mb-0.5 md:mb-1 line-clamp-1 leading-tight">{agent.name}</h2>
+                <p className="text-xs md:text-base text-slate-400 line-clamp-2">{agent.persona}</p>
+              </button>
 
-            {/* List Custom Agents */}
-            {customAgents.map(agent => (
-              <div key={agent.id} className="relative group">
-                <button
-                  onClick={() => onCustomAgentSelect(agent)}
-                  className="w-full h-full bg-slate-800/40 border border-slate-700 rounded-xl p-6 text-left hover:bg-slate-700/70 hover:border-cyan-500 transition-all duration-300"
-                >
-                  <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-violet-500/20 transition-colors">
-                    <div className="text-xl font-black text-violet-400 uppercase">{agent.name.substring(0, 1)}</div>
-                  </div>
-                  <h2 className="text-lg font-bold text-white mb-1 line-clamp-1">{agent.name}</h2>
-                  <p className="text-xs text-slate-400 line-clamp-1">{agent.persona}</p>
-                </button>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm(`Czy na pewno chcesz usunąć agenta "${agent.name}" wraz z całą historią?`)) {
-                      onDeleteCustomAgent(agent);
-                    }
-                  }}
-                  className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                  title="Usuń agenta"
-                >
-                  <TrashIcon className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
-          </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm(`Czy na pewno chcesz usunąć agenta "${agent.name}" wraz z całą historią?`)) {
+                    onDeleteCustomAgent(agent);
+                  }
+                }}
+                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                title="Usuń agenta"
+              >
+                <TrashIcon className="w-5 h-5" />
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -241,6 +251,47 @@ const LawSelector: React.FC<LawSelectorProps> = ({
               <strong>{t('law_help.ai_title')}</strong> {t('law_help.ai_desc')}
             </li>
           </ul>
+        </div>
+      </HelpModal>
+
+      <HelpModal
+        isOpen={isAgentHelpOpen}
+        onClose={() => setIsAgentHelpOpen(false)}
+        title={t('customAgent.help.title')}
+      >
+        <div className="space-y-4">
+          <p className="text-slate-300 leading-relaxed">
+            {t('customAgent.help.intro')}
+          </p>
+          <div className="space-y-3 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+            <div className="flex gap-3">
+              <div className="mt-1 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-cyan-400" />
+              <p className="text-sm text-slate-300">
+                {t('customAgent.help.point1').split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-cyan-400">{part}</strong> : part)}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <div className="mt-1 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-cyan-400" />
+              <p className="text-sm text-slate-300">
+                {t('customAgent.help.point2').split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-cyan-400">{part}</strong> : part)}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <div className="mt-1 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-cyan-400" />
+              <p className="text-sm text-slate-300">
+                {t('customAgent.help.point3').split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-cyan-400">{part}</strong> : part)}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <div className="mt-1 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-cyan-400" />
+              <p className="text-sm text-slate-300">
+                {t('customAgent.help.point4').split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-cyan-400">{part}</strong> : part)}
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 italic">
+            * Pamiętaj: Twoje instrukcje są kluczem do jakości porady. Bądź precyzyjny!
+          </p>
         </div>
       </HelpModal>
     </div>

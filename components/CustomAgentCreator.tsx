@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { XIcon, SparklesIcon, SendIcon } from './Icons';
+import { InfoIcon } from './InfoIcon';
 import { CustomAgent } from '../types';
 import { optimizeAgent } from '../services/geminiService';
 
@@ -65,7 +66,11 @@ const CustomAgentCreator: React.FC<CustomAgentCreatorProps> = ({ isOpen, onClose
                         <div className="p-2 bg-cyan-500/20 rounded-lg">
                             <SparklesIcon className="w-5 h-5 text-cyan-400" />
                         </div>
-                        <h2 className="text-xl font-bold text-white">Stwórz Własnego Agenta</h2>
+                        <h2 className="text-lg md:text-xl font-bold text-white">Stwórz Własnego Agenta</h2>
+                        <InfoIcon
+                            onClick={() => alert(`${t('customAgent.help.intro')}\n\n1. ${t('customAgent.help.point1')}\n2. ${t('customAgent.help.point2')}\n3. ${t('customAgent.help.point3')}\n\n${t('customAgent.help.point4')}`)}
+                            className="w-6 h-6 md:w-8 md:h-8 text-cyan-400 hover:text-white"
+                        />
                     </div>
                     <div className="flex items-center gap-2">
                         {(name || persona || instructions) && (
@@ -87,41 +92,50 @@ const CustomAgentCreator: React.FC<CustomAgentCreatorProps> = ({ isOpen, onClose
 
                 <main className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Nazwa Agenta</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                            <span>1. Nazwa dla asystenta</span>
+                            <span className="text-[10px] font-medium lowercase text-slate-600 normal-case">(np. Mój Doradca)</span>
+                        </label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="np. Surowy Sędzia, Ekspert od RODO..."
+                            placeholder="Wpisz jak chcesz go nazywać..."
                             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Kim jest ten Agent? (Persona)</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                            <span>2. Kim ma być ten asystent? (Rola)</span>
+                        </label>
                         <input
                             type="text"
                             value={persona}
                             onChange={(e) => setPersona(e.target.value)}
-                            placeholder="np. Doświadczony prokurator z 20-letnim stażem..."
+                            placeholder="Np. Prawnik tłumaczący z trudnego na nasze..."
                             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Instrukcje Specjalne</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">3. Co ma sprawdzać w dokumentach? (Instrukcje)</label>
                         <textarea
                             value={instructions}
                             onChange={(e) => setInstructions(e.target.value)}
                             rows={6}
-                            placeholder="Opisz jak agent ma się zachowywać, na czym ma się skupiać, jaki ma mieć styl wypowiedzi..."
+                            placeholder="Przykład: Zawsze szukaj terminów płatności i pisz do mnie krótko w punktach..."
                             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors resize-none custom-scrollbar"
                         />
                     </div>
 
-                    <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
-                        <p className="text-xs text-cyan-300 leading-relaxed italic">
-                            Agent będzie miał dostęp do wszystkich Twoich dokumentów i historii czatu w ramach danej sprawy, ale będzie interpretował je zgodnie z powyższą osobliwością.
+                    <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-xl space-y-2">
+                        <p className="text-xs text-cyan-300 leading-relaxed font-bold">
+                            <SparklesIcon className="w-3 h-3 inline mr-1 mb-0.5" />
+                            Precyzja PRO (Gemini 1.5 Pro)
+                        </p>
+                        <p className="text-xs text-slate-400 leading-relaxed italic">
+                            Agent będzie miał dostęp do Twoich dokumentów i historii czatu, interpretując je zgodnie z nadaną mu osobowością. Zerowa temperatura gwarantuje, że AI nie będzie wymyślać faktów.
                         </p>
                     </div>
                 </main>
