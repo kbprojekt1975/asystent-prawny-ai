@@ -101,6 +101,8 @@ const App: React.FC = () => {
     topics,
     customAgents,
     isPro,
+    activeCustomAgent,
+    setActiveCustomAgent,
   } = useAppContext();
 
   const { allEvents } = useUserCalendar(user, isLocalOnly);
@@ -116,7 +118,7 @@ const App: React.FC = () => {
     return ADMIN_UIDS.includes(user.uid) || (user.email && ADMIN_EMAILS.some(email => user.email?.includes(email)));
   }, [user]);
 
-  const handleDeleteCustomAgent = async (agent: any) => {
+  const handleDeleteCustomAgent = useCallback(async (agent: any) => {
     if (!user) return;
     try {
       const { doc, deleteDoc, collection, getDocs, writeBatch } = await import('firebase/firestore');
@@ -150,7 +152,7 @@ const App: React.FC = () => {
       console.error("Failed to delete custom agent:", e);
       alert("Wystąpił błąd podczas usuwania agenta.");
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     (window as any).showCustomAgentCreator = () => setIsCustomAgentCreatorOpen(true);
@@ -159,7 +161,7 @@ const App: React.FC = () => {
       delete (window as any).showCustomAgentCreator;
       delete (window as any).deleteCustomAgent;
     };
-  }, []);
+  }, [handleDeleteCustomAgent]);
 
 
   const {
@@ -392,11 +394,16 @@ const App: React.FC = () => {
     if (!user) return;
     try {
       const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
-      await addDoc(collection(db, 'users', user.uid, 'custom_agents'), {
+      const docRef = await addDoc(collection(db, 'users', user.uid, 'custom_agents'), {
         ...agent,
         createdAt: serverTimestamp()
       });
+
       setIsCustomAgentCreatorOpen(false);
+
+      // Auto-open created agent
+      setActiveCustomAgent({ id: docRef.id, ...agent });
+
     } catch (e) {
       console.error("Failed to save custom agent:", e);
       throw e;
@@ -578,7 +585,11 @@ const App: React.FC = () => {
             )}
             {!isFullScreen && (
               <AppHeader
-                title={selectedLawArea === LawArea.Custom ? (customAgents.find(a => a.id === selectedTopic)?.name || selectedTopic) : (selectedTopic || t('breadcrumbs.home'))}
+                title={
+                  activeCustomAgent
+                    ? (selectedTopic ? `${activeCustomAgent.name}: ${selectedTopic}` : activeCustomAgent.name)
+                    : (selectedLawArea === LawArea.Custom ? (customAgents.find(a => a.id === selectedTopic)?.name || selectedTopic) : (selectedTopic || t('breadcrumbs.home')))
+                }
                 onProfileClick={() => setIsProfileModalOpen(true)}
                 onHelpClick={() => setIsAppHelpSidebarOpen(true)}
                 onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}

@@ -21,24 +21,8 @@ interface UseChatLogicProps {
     setCourtRole: (role: CourtRole | null) => void;
     chatHistories?: { lawArea: LawArea; topic: string; servicePath?: 'pro' | 'standard' }[];
     isLocalOnly?: boolean;
+    activeCustomAgent?: any | null;
 }
-
-const normalizeHistory = (history: ChatMessage[]): ChatMessage[] => {
-    const alternating: ChatMessage[] = [];
-    const nonSystem = history.filter(m => m.role !== 'system');
-
-    nonSystem.forEach((msg) => {
-        if (alternating.length > 0 && alternating[alternating.length - 1].role === msg.role) {
-            alternating[alternating.length - 1].content += "\n\n" + msg.content;
-            if (msg.sources) {
-                alternating[alternating.length - 1].sources = [...(alternating[alternating.length - 1].sources || []), ...msg.sources];
-            }
-        } else {
-            alternating.push({ ...msg });
-        }
-    });
-    return alternating;
-};
 
 export const useChatLogic = ({
     user,
@@ -51,7 +35,8 @@ export const useChatLogic = ({
     onRefreshHistories,
     setCourtRole,
     chatHistories = [],
-    isLocalOnly = false
+    isLocalOnly = false,
+    activeCustomAgent = null
 }: UseChatLogicProps) => {
     const { t, i18n } = useTranslation();
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
@@ -130,7 +115,7 @@ export const useChatLogic = ({
                 effectiveChatId,
                 i18n.language,
                 isLocalOnly,
-                (userProfile as any).activeCustomAgent?.instructions // Placeholder if not in props
+                activeCustomAgent?.instructions
             );
 
             const aiMessage: ChatMessage = { role: 'model', content: aiResponse.text };
@@ -161,7 +146,7 @@ export const useChatLogic = ({
         }
     }, [currentMessage, selectedLawArea, interactionMode, isLoading, legalArticles, isDeepThinkingEnabled, selectedTopic, chatHistory, user, userProfile?.subscription, isLocalOnly, persistence, chatHistories, i18n.language]);
 
-    const modes = useChatModes({ setChatHistory, handleSendMessage, selectedLawArea, selectedTopic, setCourtRole });
+    const modes = useChatModes({ setChatHistory, handleSendMessage, selectedLawArea, selectedTopic, setCourtRole, activeCustomAgent });
     const actions = useChatActions({ setChatHistory, setIsLoading, handleSendMessage, selectedLawArea, selectedTopic, chatHistory, interactionMode });
 
     return {

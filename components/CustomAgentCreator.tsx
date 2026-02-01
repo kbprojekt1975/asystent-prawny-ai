@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { XIcon, SparklesIcon, SendIcon } from './Icons';
 import { CustomAgent } from '../types';
+import { optimizeAgent } from '../services/geminiService';
 
 interface CustomAgentCreatorProps {
     isOpen: boolean;
@@ -15,8 +16,28 @@ const CustomAgentCreator: React.FC<CustomAgentCreatorProps> = ({ isOpen, onClose
     const [persona, setPersona] = useState('');
     const [instructions, setInstructions] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [isOptimizing, setIsOptimizing] = useState(false);
 
     if (!isOpen) return null;
+
+    const handleOptimize = async () => {
+        if (!name && !persona && !instructions) {
+            alert("Najpierw wpisz cokolwiek, co AI mogłoby rozwinąć.");
+            return;
+        }
+        setIsOptimizing(true);
+        try {
+            const optimized = await optimizeAgent(name, persona, instructions);
+            setName(optimized.name);
+            setPersona(optimized.persona);
+            setInstructions(optimized.instructions);
+        } catch (error) {
+            console.error("Failed to optimize agent:", error);
+            alert("Błąd podczas optymalizacji przez AI.");
+        } finally {
+            setIsOptimizing(false);
+        }
+    };
 
     const handleSave = async () => {
         if (!name || !persona || !instructions) {
@@ -46,9 +67,22 @@ const CustomAgentCreator: React.FC<CustomAgentCreatorProps> = ({ isOpen, onClose
                         </div>
                         <h2 className="text-xl font-bold text-white">Stwórz Własnego Agenta</h2>
                     </div>
-                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-white transition-colors">
-                        <XIcon className="w-6 h-6" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {(name || persona || instructions) && (
+                            <button
+                                onClick={handleOptimize}
+                                disabled={isOptimizing}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg text-violet-400 text-xs font-bold transition-all disabled:opacity-50 animate-in fade-in zoom-in-95"
+                                title="AI dostosuje opisy i instrukcje aby agent spelnil jak najlepiej funkcje"
+                            >
+                                <SparklesIcon className={`w-3.5 h-3.5 ${isOptimizing ? 'animate-spin' : ''}`} />
+                                {isOptimizing ? "OPTYMALIZACJA..." : "OPTYMALIZUJ Z AI"}
+                            </button>
+                        )}
+                        <button onClick={onClose} className="p-2 text-slate-400 hover:text-white transition-colors">
+                            <XIcon className="w-6 h-6" />
+                        </button>
+                    </div>
                 </header>
 
                 <main className="p-6 space-y-6 overflow-y-auto custom-scrollbar">

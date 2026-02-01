@@ -106,3 +106,9 @@ export const askAndromeda = async (history: ChatMessage[], language: string = 'p
         return { text: "Przepraszam, wystąpił błąd podczas łączenia z systemem Andromeda." };
     }
 };
+
+export const optimizeAgent = async (name: string, persona: string, instructions: string): Promise<{ name: string, persona: string, instructions: string }> => {
+    const optimizeAgentFunction = httpsCallable(functions, 'optimizeAgent');
+    const result = await optimizeAgentFunction({ name, persona, instructions });
+    return result.data as { name: string, persona: string, instructions: string };
+};

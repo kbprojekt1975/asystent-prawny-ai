@@ -12,6 +12,7 @@ interface UseChatModesProps {
     selectedLawArea: LawArea | null;
     selectedTopic: string | null;
     setCourtRole: (role: CourtRole | null) => void;
+    activeCustomAgent?: any;
 }
 
 export const useChatModes = ({
@@ -19,7 +20,8 @@ export const useChatModes = ({
     handleSendMessage,
     selectedLawArea,
     selectedTopic,
-    setCourtRole
+    setCourtRole,
+    activeCustomAgent
 }: UseChatModesProps) => {
     const { t } = useTranslation();
 
@@ -29,13 +31,20 @@ export const useChatModes = ({
         setChatHistory(initialHistory);
 
         const greetingPrompt = `[SYSTEM: POWITANIE NOWEJ SPRAWY - TRYB ${mode}]
+        ${activeCustomAgent ? `UWAGA: DZIAŁASZ JAKO "CUSTOM AGENT".
+        TWÓJ PROFIL (Imie/Rola): ${activeCustomAgent.name}
+        TWOJA OSOBOWOŚĆ/INSTRUKCJE: "${activeCustomAgent.instructions}"
+        
+        Wprowadź się w rolę. Nie pisz "Jako Twój asystent...", pisz zgodnie z narzuconą osobowością.
+        ` : ""}
+        
         Użytkownik właśnie rozpoczął nową sprawę: "${topic}".
         ${initialDescription ? `OPIS SPRAWY OD UŻYTKOWNIKA: "${initialDescription}"` : ""}
         
         TWOJE ZADANIE:
         1. Zapoznaj się z powyższym opisem (jeśli podano) i tematem.
         2. Jeśli podano opis: Napisz profesjonalne podsumowanie tego, co już wiesz o sprawie (fakty, strony, kluczowy problem) i zapytaj o to czego potrzeba.
-        3. Jeśli NIE podano opisu: Przedstaw się krótko i wyjaśnij swoją rolę.
+        3. Jeśli NIE podano opisu: Przedstaw się (jako ${activeCustomAgent ? activeCustomAgent.name : "Asystent Prawny"}) i wyjaśnij swoją rolę.
         4. Wyjaśnij konkretnie, jak pomożesz w tym trybie (${mode}) w TEJ konkretnej sytuacji.
         5. Wypisz listę DODATKOWYCH informacji lub dokumentów, których będziesz potrzebować, aby przygotować najlepszą pomoc.
         6. Zadaj 1-2 konkretne pytania na start, aby użytkownik mógł od razu doprecyzować sytuację.

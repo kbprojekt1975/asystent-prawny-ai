@@ -40,6 +40,13 @@ const LawSelector: React.FC<LawSelectorProps> = ({
 }) => {
   const { t } = useTranslation();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const topRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (activeAgent && topRef.current) {
+      topRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [activeAgent]);
 
   const lawOptions = [
     { area: LawArea.Criminal, name: t('law.areas.prawo karne'), icon: <GavelIcon />, description: t('law.areas.prawo karne_desc') },
@@ -60,7 +67,7 @@ const LawSelector: React.FC<LawSelectorProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center min-h-full p-4 w-full">
+    <div ref={topRef} className="flex flex-col items-center min-h-full p-4 w-full">
       <div className="text-center mb-10 flex flex-col items-center justify-center gap-2 my-auto md:mt-0 pt-8 md:pt-0">
         {activeAgent && (
           <div className="mb-4 px-4 py-2 bg-violet-500/20 border border-violet-500/30 rounded-full flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">

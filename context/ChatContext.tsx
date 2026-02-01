@@ -68,7 +68,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setServicePath,
         topics,
         setTopics,
-        handleUpdateProfile
+        handleUpdateProfile,
+        activeCustomAgent
     } = useAppContext();
 
     const {
@@ -99,7 +100,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         },
         setCourtRole,
         chatHistories,
-        isLocalOnly
+        isLocalOnly,
+        activeCustomAgent
     });
 
     const {
@@ -124,6 +126,13 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             });
         }
     }, [user, loadChatHistories]);
+
+    // Safety guard to clear loading state when returning home
+    useEffect(() => {
+        if (!selectedLawArea && !selectedTopic) {
+            setIsLoading(false);
+        }
+    }, [selectedLawArea, selectedTopic, setIsLoading]);
 
     // Use topic management hook
     const topicManager = useTopicManagement(
@@ -239,6 +248,20 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 }
 
                 setChatHistory(savedHistory);
+
+                // CUSTOM AGENT CONTEXT CONFIRMATION
+                if (activeCustomAgent && savedHistory.length > 0) {
+                    const lastMsg = savedHistory[savedHistory.length - 1];
+                    const confirmationMarker = `[AGENT: ${activeCustomAgent.name}]`;
+
+                    if (!lastMsg.content.includes(confirmationMarker)) {
+                        const confirmationMsg: ChatMessage = {
+                            role: 'model',
+                            content: `${confirmationMarker} Przejąłem prowadzenie sprawy "${topic}". Zapoznałem się z historią i jestem gotów do pomocy zgodnie z moją rolą.`
+                        };
+                        setChatHistory(prev => [...prev, confirmationMsg]);
+                    }
+                }
 
                 if (finalMode) {
                     setInteractionMode(finalMode);

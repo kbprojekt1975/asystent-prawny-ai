@@ -65,6 +65,19 @@ const MainNavigator: React.FC = () => {
         }
     };
 
+    // Auto-navigate for Custom Agents
+    React.useEffect(() => {
+        if (activeCustomAgent && selectedLawArea) {
+            if (!servicePath) {
+                setServicePath('standard');
+            }
+            if (!interactionMode) {
+                setInteractionMode(InteractionMode.Advice);
+            }
+        }
+    }, [activeCustomAgent, selectedLawArea, servicePath, interactionMode, setServicePath, setInteractionMode]);
+
+
     const handleToggleLocalMode = (val: boolean) => {
         setIsLocalOnly(val);
         if (userProfile?.dataProcessingConsent) {
@@ -118,7 +131,7 @@ const MainNavigator: React.FC = () => {
                     onCreateCustomAgent={() => (window as any).showCustomAgentCreator?.()}
                     activeAgent={activeCustomAgent}
                 />
-            ) : !servicePath ? (
+            ) : (!servicePath && !activeCustomAgent) ? (
                 <ServiceTypeSelector
                     lawArea={selectedLawArea}
                     onSelect={(path) => {
@@ -130,7 +143,7 @@ const MainNavigator: React.FC = () => {
                         }
                     }}
                 />
-            ) : !interactionMode ? (
+            ) : (!interactionMode && !activeCustomAgent) ? (
                 <div className="flex flex-col flex-1">
                     <InteractionModeSelector
                         lawArea={selectedLawArea}
@@ -182,7 +195,7 @@ const MainNavigator: React.FC = () => {
                         handleLoadHistory(selectedLawArea!, topic, InteractionMode.Negotiation);
                     }}
                     onDeleteTopic={(topic) => { /* request delete topic */ }}
-                    onChangeMode={() => {
+                    onChangeMode={activeCustomAgent ? undefined : () => {
                         setInteractionMode(null);
                         setCourtRole(null);
                     }}
