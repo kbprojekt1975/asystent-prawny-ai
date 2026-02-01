@@ -44,15 +44,22 @@ export const syncUserSubscription = onDocumentUpdated("customers/{userId}/subscr
     } else {
         logger.warn(`⚠️ Price ID ${priceId} not found in dynamic config plans. Using hardcoded defaults.`);
         const STARTER_ID = "price_1StBSvDXnXONl2svkF51zTnl";
+        const PRO_ID = "price_1Sw7KFDXnXONl2svPmtUXAxk";
+
         if (priceId === STARTER_ID) {
             creditLimit = 10;
             tokenLimit = 333000;
             packageType = 'starter';
-        } else {
-            // Probably a PRO plan or other
+        } else if (priceId === PRO_ID) {
             creditLimit = 50;
             tokenLimit = 2166666;
             packageType = 'pro';
+        } else {
+            // Default fallback if unknown
+            creditLimit = 0;
+            tokenLimit = 0;
+            packageType = 'starter';
+            logger.warn(`🛑 Unknown Price ID ${priceId}. Set limits to 0.`);
         }
     }
 

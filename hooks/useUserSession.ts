@@ -233,7 +233,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
                 if (activeSub) {
                     const priceId = activeSub.items?.[0]?.price?.id;
                     const STARTER_ID = import.meta.env.VITE_STRIPE_PRICE_STARTER || "price_1StBSvDXnXONl2svkF51zTnl";
-                    const PRO_ID = import.meta.env.VITE_STRIPE_PRICE_PRO || "price_pro_placeholder";
+                    const PRO_ID = import.meta.env.VITE_STRIPE_PRICE_PRO || "price_1Sw7KFDXnXONl2svPmtUXAxk";
 
                     const isSubPro = priceId === PRO_ID;
                     setIsPro(isSubPro);

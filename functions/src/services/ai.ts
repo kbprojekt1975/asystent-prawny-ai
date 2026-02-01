@@ -34,6 +34,11 @@ export const getPricingConfig = async (db: any) => {
                 name: "starter",
                 creditLimit: 10,
                 tokenLimit: 333000
+            },
+            "price_1Sw7KFDXnXONl2svPmtUXAxk": {
+                name: "pro",
+                creditLimit: 50,
+                tokenLimit: 2166666
             }
         }
     };

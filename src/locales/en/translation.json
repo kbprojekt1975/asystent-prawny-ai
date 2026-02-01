@@ -109,6 +109,15 @@
             "selectButton": "Select this plan - 10 PLN",
             "manualActivation": "Manual activation by administrator required"
         },
+        "pro": {
+            "title": "PRO PLAN",
+            "subtitle": "Active 30 days • 5x + 30% performance",
+            "feature1": "5x more power than start plan + 30% bonus",
+            "feature2": "Custom Agent Creation",
+            "feature3": "Highest priority responses",
+            "bestValue": "BEST VALUE",
+            "selectButton": "SELECT PRO - 50 PLN"
+        },
         "pending": {
             "title": "Awaiting Activation",
             "desc": "Your request has been sent. Please make a payment (10 PLN). The administrator will activate your account shortly.",

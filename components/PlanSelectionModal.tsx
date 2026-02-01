@@ -93,7 +93,7 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                         {/* PRO PLAN */}
                         <div className="relative group flex flex-col p-6 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border-2 border-cyan-500 shadow-2xl shadow-cyan-900/20 transform md:scale-105 z-10">
                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-cyan-500 text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-full">
-                                BEST VALUE
+                                {t('plan.pro.bestValue')}
                             </div>
                             <div className="flex justify-between items-start mb-4">
                                 <div className="p-2 bg-cyan-500/20 rounded-lg">
@@ -101,23 +101,23 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                                 </div>
                                 <div className="text-2xl font-black text-white">50<span className="text-sm font-normal text-slate-400"> PLN</span></div>
                             </div>
-                            <h4 className="text-lg font-bold text-white text-left mb-1">PRO PLAN</h4>
+                            <h4 className="text-lg font-bold text-white text-left mb-1">{t('plan.pro.title')}</h4>
                             <p className="text-[10px] text-cyan-400/80 text-left mb-4 font-bold uppercase tracking-wider">
-                                Aktywny 30 dni • 5x + 30% wydajności
+                                {t('plan.pro.subtitle')}
                             </p>
 
                             <ul className="space-y-3 mb-8 text-left flex-1">
                                 <li className="flex items-center gap-2 text-xs text-white">
                                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
-                                    <span className="font-bold">5x wiecej wydajnosci niz w planie start + 30%</span>
+                                    <span className="font-bold">{t('plan.pro.feature1')}</span>
                                 </li>
                                 <li className="flex items-center gap-2 text-xs text-slate-200">
                                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-400"></div>
-                                    <span>Tworzenie Własnych Agentów</span>
+                                    <span>{t('plan.pro.feature2')}</span>
                                 </li>
                                 <li className="flex items-center gap-2 text-xs text-slate-200">
                                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-400"></div>
-                                    <span>Najwyższy priorytet odpowiedzi</span>
+                                    <span>{t('plan.pro.feature3')}</span>
                                 </li>
                             </ul>
 
@@ -126,7 +126,7 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                                 disabled={isLoading}
                                 className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-xl transition-all shadow-lg shadow-cyan-500/20 disabled:opacity-50"
                             >
-                                {isLoading ? t('auth.processing') : "WYBIERZ PRO"}
+                                {isLoading ? t('auth.processing') : t('plan.pro.selectButton')}
                             </button>
                         </div>
                     </div>

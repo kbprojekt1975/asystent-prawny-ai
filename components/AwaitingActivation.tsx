@@ -22,10 +22,11 @@ const AwaitingActivation: React.FC = () => {
             const { setDoc, doc, serverTimestamp, updateDoc } = await import('firebase/firestore');
             const { db } = await import('../services/firebase');
 
-            // 1. Mock a successful Stripe subscription
+            // 1. Mock a successful Stripe subscription (PRO by default for God Mode)
             await setDoc(doc(db, 'customers', user.uid, 'subscriptions', 'local_dev_sub'), {
                 status: 'active',
                 role: 'premium',
+                items: [{ price: { id: "price_1Sw7KFDXnXONl2svPmtUXAxk" } }],
                 created: serverTimestamp(),
                 current_period_start: serverTimestamp(),
                 current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -35,8 +36,11 @@ const AwaitingActivation: React.FC = () => {
             await updateDoc(doc(db, 'users', user.uid), {
                 "profile.isActive": true,
                 "profile.hasSeenWelcomeAssistant": false,
-                "profile.subscription.isPaid": true, // Force this flag
-                "profile.subscription.status": "active"
+                "profile.subscription.isPaid": true,
+                "profile.subscription.status": "active",
+                "profile.subscription.packageType": "pro",
+                "profile.subscription.creditLimit": 50,
+                "profile.subscription.tokenLimit": 2166666
             });
 
             alert("Konto zostało aktywowane pomyślnie! Zaraz zostaniesz przekierowany...");

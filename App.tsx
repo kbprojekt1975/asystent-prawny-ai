@@ -413,7 +413,9 @@ const App: React.FC = () => {
           "profile.cookieConsent": false,
           "profile.isActive": true, // Ensure profile is active
           "profile.subscription.spentAmount": 0, // Reset spent amount on recharge
-          "profile.subscription.creditLimit": planId === PRICE_IDS.PRO_50PLN ? 50 : 10 // Ensure credit limit is refreshed
+          "profile.subscription.creditLimit": planId === PRICE_IDS.PRO_50PLN ? 50 : 10,
+          "profile.subscription.tokenLimit": planId === PRICE_IDS.PRO_50PLN ? 2166666 : 333000,
+          "profile.subscription.packageType": planId === PRICE_IDS.PRO_50PLN ? 'pro' : 'starter'
         });
 
         // CLEAR LOCAL CACHE FOR COOKIE CONSENT

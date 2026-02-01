@@ -109,6 +109,15 @@
             "selectButton": "Wybieram ten plan - 10 PLN",
             "manualActivation": "Szybka aktywacja przez administratora"
         },
+        "pro": {
+            "title": "PRO PLAN",
+            "subtitle": "Aktywny 30 dni • 5x + 30% wydajności",
+            "feature1": "5x więcej wydajności niż w planie start + bonus 30%",
+            "feature2": "Tworzenie Własnych Agentów",
+            "feature3": "Najwyższy priorytet odpowiedzi",
+            "bestValue": "NAJLEPSZA WARTOŚĆ",
+            "selectButton": "WYBIERZ PRO - 50 PLN"
+        },
         "pending": {
             "title": "Oczekiwanie na aktywację",
             "desc": "Twoje zgłoszenie zostało wysłane. Prosimy o dokonanie wpłaty (10 PLN). Administrator aktywuje Twoje konto wkrótce.",
