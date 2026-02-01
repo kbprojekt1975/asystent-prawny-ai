@@ -10,6 +10,7 @@
     "emulators": "firebase emulators:start --import=./emulator_data",
     "emulators:clean": "firebase emulators:start",
     "build:functions": "npm --prefix functions run build",
+    "update-pricing": "npm run build:functions && node functions/lib/scripts/updatePricing.js",
     "seed": "node functions/seed_config.cjs",
     "watch:functions": "npm --prefix functions run build:watch"
   },
