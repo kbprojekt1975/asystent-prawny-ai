@@ -2,7 +2,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LawArea } from '../types';
-import { GavelIcon, FamilyIcon, ScalesIcon, BuildingIcon, MagicWandIcon, BriefcaseIcon, HomeIcon, CoinsIcon, FlagIcon, TrashIcon } from './Icons';
+import { GavelIcon, FamilyIcon, ScalesIcon, BuildingIcon, MagicWandIcon, BriefcaseIcon, HomeIcon, CoinsIcon, FlagIcon, TrashIcon, XIcon } from './Icons';
 import HelpModal from './HelpModal';
 import { InfoIcon } from './InfoIcon';
 import { useState } from 'react';
@@ -19,6 +19,7 @@ interface LawSelectorProps {
   onCustomAgentSelect: (agent: any) => void;
   onDeleteCustomAgent: (agent: any) => void;
   onCreateCustomAgent: () => void;
+  onDeactivateAgent: () => void;
   activeAgent?: any;
 }
 
@@ -36,6 +37,7 @@ const LawSelector: React.FC<LawSelectorProps> = ({
   onCustomAgentSelect,
   onDeleteCustomAgent,
   onCreateCustomAgent,
+  onDeactivateAgent,
   activeAgent
 }) => {
   const { t } = useTranslation();
@@ -76,6 +78,16 @@ const LawSelector: React.FC<LawSelectorProps> = ({
               {activeAgent.name.substring(0, 1)}
             </div>
             <span className="text-sm font-bold text-violet-300">AKTYWNY AGENT: {activeAgent.name.toUpperCase()}</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeactivateAgent();
+              }}
+              className="ml-1 p-0.5 hover:bg-violet-500/30 rounded-full transition-colors group"
+              title="Włącz standardowego asystenta"
+            >
+              <XIcon className="w-4 h-4 text-violet-400 group-hover:text-white" />
+            </button>
           </div>
         )}
         <div className="flex items-center gap-2">

@@ -129,6 +129,7 @@ const MainNavigator: React.FC = () => {
                     }}
                     onDeleteCustomAgent={(agent) => (window as any).deleteCustomAgent?.(agent)}
                     onCreateCustomAgent={() => (window as any).showCustomAgentCreator?.()}
+                    onDeactivateAgent={() => setActiveCustomAgent(null)}
                     activeAgent={activeCustomAgent}
                 />
             ) : (!servicePath && !activeCustomAgent) ? (
