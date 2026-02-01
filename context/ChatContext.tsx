@@ -69,7 +69,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         topics,
         setTopics,
         handleUpdateProfile,
-        activeCustomAgent
+        activeCustomAgent,
+        setActiveCustomAgent,
+        customAgents
     } = useAppContext();
 
     const {
@@ -182,7 +184,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const handleLoadHistory = useCallback(async (lawArea: LawArea, topic: string, mode?: InteractionMode, path?: 'pro' | 'standard', initialDescription?: string) => {
+    const handleLoadHistory = useCallback(async (lawArea: LawArea, topic: string, mode?: InteractionMode, path?: 'pro' | 'standard', initialDescription?: string, agentId?: string) => {
         if (!user) return;
         setIsWelcomeAssistantOpen(false);
         setIsWelcomeModalOpen(false);
@@ -217,8 +219,18 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         setSelectedLawArea(lawArea);
         setSelectedTopic(topic);
+        const chatId = getChatId(lawArea, topic, mode, agentId);
 
-        const chatId = getChatId(lawArea, topic, mode);
+        // SET AGENT IF LOADING AGENT CHAT
+        if (agentId) {
+            const agent = customAgents.find(a => a.id === agentId);
+            if (agent) {
+                setActiveCustomAgent(agent);
+            }
+        } else {
+            // ONLY CLEAR IF WE ARE LOADING A NON-AGENT CHAT
+            setActiveCustomAgent(null);
+        }
 
         let autoInteractionMode: InteractionMode | null = null;
         const lowerTopic = topic.toLowerCase();
@@ -257,7 +269,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     if (!lastMsg.content.includes(confirmationMarker)) {
                         const confirmationMsg: ChatMessage = {
                             role: 'model',
-                            content: `${confirmationMarker} Przejąłem prowadzenie sprawy "${topic}". Zapoznałem się z historią i jestem gotów do pomocy zgodnie z moją rolą.`
+                            content: `${confirmationMarker} Przejąłem prowadzenie sprawy "${topic}". Zapoznałem się z historią i jestem gotów do pomocy zgodnie z moją rolą.`,
+                            isAgentIntro: true,
+                            agentId: activeCustomAgent.id
                         };
                         setChatHistory(prev => [...prev, confirmationMsg]);
                     }
@@ -298,7 +312,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } finally {
             setIsLoading(false);
         }
-    }, [user, interactionMode, courtRole, handleSelectCourtRole, handleInitialGreeting, handleSendMessage, setChatHistory, setInteractionMode, setIsFullScreen, setIsWelcomeAssistantOpen, setIsWelcomeModalOpen, setIsLoading, setSelectedLawArea, setSelectedTopic, setServicePath]);
+    }, [user, isLocalOnly, interactionMode, courtRole, handleSelectCourtRole, handleInitialGreeting, handleSendMessage, setChatHistory, setInteractionMode, setIsFullScreen, setIsWelcomeAssistantOpen, setIsWelcomeModalOpen, setIsLoading, setSelectedLawArea, setSelectedTopic, setServicePath, activeCustomAgent, customAgents, setActiveCustomAgent]);
 
     const handleCaseAnalysis = useCallback(async (description: string) => {
         if (!user) return;

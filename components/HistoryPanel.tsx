@@ -12,8 +12,8 @@ interface HistoryPanelProps {
   onClose: () => void;
   isLocalOnly: boolean;
   userProfile: UserProfile;
-  histories: { lawArea: LawArea, topic: string, interactionMode?: InteractionMode, servicePath?: 'pro' | 'standard', lastUpdated?: any, docCount?: number }[];
-  onLoadHistory: (lawArea: LawArea, topic: string, mode?: InteractionMode, servicePath?: 'pro' | 'standard') => void;
+  histories: { lawArea: LawArea, topic: string, interactionMode?: InteractionMode, agentId?: string, agentName?: string, servicePath?: 'pro' | 'standard', lastUpdated?: any, docCount?: number }[];
+  onLoadHistory: (lawArea: LawArea, topic: string, mode?: InteractionMode, servicePath?: 'pro' | 'standard', agentId?: string) => void;
   onDeleteHistory: (lawArea: LawArea, topic: string) => void;
   onViewKnowledge: (lawArea: LawArea, topic: string, mode?: InteractionMode) => void;
   onViewDocuments: (lawArea: LawArea, topic: string, mode?: InteractionMode) => void;
@@ -154,14 +154,14 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                             <div key={`${m.interactionMode}-${idx}`} className="flex items-center justify-between group/mode hover:bg-slate-700/10 transition-colors px-4 py-2">
                               <button
                                 onClick={() => {
-                                  onLoadHistory(area as LawArea, topic, m.interactionMode, m.servicePath);
+                                  onLoadHistory(area as LawArea, topic, m.interactionMode, m.servicePath, m.agentId);
                                   onClose();
                                 }}
                                 className="flex-grow flex items-center gap-2 text-left min-w-0"
                               >
                                 <div className="w-1.5 h-1.5 rounded-full bg-slate-600 group-hover/mode:bg-cyan-500 transition-colors shrink-0" />
                                 <span className="text-[11px] text-slate-400 group-hover/mode:text-slate-200 transition-colors truncate">
-                                  {m.interactionMode ? t(`interaction.modes.${interactionModeMap[m.interactionMode] || 'advice'}`) : t('history.general_chat')}
+                                  {m.agentName ? `Agent: ${m.agentName}` : (m.interactionMode ? t(`interaction.modes.${interactionModeMap[m.interactionMode] || 'advice'}`) : t('history.general_chat'))}
                                 </span>
                               </button>
                               <div className="flex items-center gap-2">

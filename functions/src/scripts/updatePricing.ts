@@ -2,12 +2,25 @@ import { db } from "../services/db";
 
 async function updatePricing() {
     const pricingData = {
-        profit_margin_multiplier: 500,
+        profit_margin_multiplier: 5,
         rates: {
-            "gemini-1.5-flash": { input: 0.25, output: 1.0 },
             "gemini-1.5-pro": { input: 1.5, output: 4.5 },
+            "gemini-1.5-pro-latest": { input: 1.5, output: 4.5 },
             "gemini-2.0-flash": { input: 0.25, output: 1.0 }
-        }
+        },
+        plans: {
+            "price_1StBSvDXnXONl2svkF51zTnl": {
+                name: "starter",
+                creditLimit: 10,
+                tokenLimit: 333000
+            },
+            "price_pro_placeholder": {
+                name: "pro",
+                creditLimit: 50,
+                tokenLimit: 2166666
+            }
+        },
+        validity_seconds: 604800
     };
 
     try {
@@ -18,4 +31,4 @@ async function updatePricing() {
     }
 }
 
-updatePricing();
+// updatePricing();

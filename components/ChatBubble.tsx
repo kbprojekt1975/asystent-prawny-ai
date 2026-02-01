@@ -22,6 +22,7 @@ interface ChatBubbleProps {
   lawArea?: string;
   topic?: string;
   existingNotes?: any[];
+  onStartAgent?: () => void;
 }
 
 const ChatBubble: React.FC<ChatBubbleProps> = ({
@@ -35,7 +36,8 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   onSelectMode,
   lawArea,
   topic,
-  existingNotes
+  existingNotes,
+  onStartAgent
 }) => {
   const { t } = useTranslation();
   const isUser = message.role === 'user';
@@ -129,6 +131,18 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         ))}
 
         {formatContentWithISAPLinks(message.content)}
+
+        {message.isAgentIntro && onStartAgent && (
+          <div className="mt-4 flex justify-center">
+            <button
+              onClick={onStartAgent}
+              className="px-6 py-2 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-violet-500/20 animate-bounce"
+            >
+              <BotIcon className="w-5 h-5" />
+              <span>ROZPOCZNIJ ANALIZĘ</span>
+            </button>
+          </div>
+        )}
 
         {onAddNote && (
           <div className="flex flex-col gap-2 mt-4 relative z-0">

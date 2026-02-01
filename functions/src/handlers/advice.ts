@@ -209,8 +209,15 @@ export const getLegalAdvice = onCall({
             ]
         }];
 
-        const modelName = 'gemini-2.0-flash';
-        const model = genAI.getGenerativeModel({ model: modelName, systemInstruction: instruction, tools: tools as any }, { apiVersion: 'v1beta' });
+        const modelName = 'gemini-1.5-pro';
+        const model = genAI.getGenerativeModel({
+            model: modelName,
+            systemInstruction: instruction,
+            tools: tools as any,
+            generationConfig: {
+                temperature: 0
+            }
+        }, { apiVersion: 'v1beta' });
         const chat = model.startChat({ history: contents.slice(0, -1) });
         let result = await chat.sendMessage(contents[contents.length - 1].parts);
 

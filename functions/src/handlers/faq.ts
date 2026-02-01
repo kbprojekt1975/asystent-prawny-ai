@@ -61,6 +61,7 @@ export const getLegalFAQ = onCall({
         const model = genAI.getGenerativeModel({
             model: 'gemini-2.0-flash',
             generationConfig: {
+                temperature: 0,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: SchemaType.ARRAY,

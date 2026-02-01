@@ -92,11 +92,14 @@ export const askAndromeda = onCall({
         ]
     }];
 
-    const modelName = 'gemini-2.0-flash';
+    const modelName = 'gemini-1.5-pro';
     const model = genAI.getGenerativeModel({
         model: modelName,
         systemInstruction,
-        tools: tools as any
+        tools: tools as any,
+        generationConfig: {
+            temperature: 0
+        }
     }, { apiVersion: 'v1beta' });
 
     const chatManager = model.startChat({ history: contents.slice(0, -1) });

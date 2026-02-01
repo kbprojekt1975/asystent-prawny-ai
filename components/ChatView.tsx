@@ -17,7 +17,8 @@ const ChatView: React.FC = () => {
         setCourtRole,
         isLocalOnly,
         currentChatId,
-        activeCustomAgent
+        activeCustomAgent,
+        setActiveCustomAgent
     } = useAppContext();
 
     const {
@@ -82,8 +83,15 @@ const ChatView: React.FC = () => {
                             <p className="text-[10px] md:text-xs text-violet-400 font-bold uppercase tracking-wider leading-tight">Twój Agent AI</p>
                             <p className="text-sm md:text-base text-white font-semibold leading-tight">{activeCustomAgent.name}</p>
                         </div>
-                        <div className="ml-auto">
+                        <div className="ml-auto flex items-center gap-2">
                             <span className="text-[10px] md:text-xs bg-violet-500/20 text-violet-300 px-2 py-1 rounded-md font-medium border border-violet-500/30">PERSONA AKTYWNA</span>
+                            <button
+                                onClick={() => setActiveCustomAgent(null)}
+                                className="text-[10px] md:text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 px-2 py-1 rounded-md font-bold border border-red-500/30 transition-all uppercase"
+                                title="Dezaktywuj agenta"
+                            >
+                                Wyłącz
+                            </button>
                         </div>
                     </div>
                 )}
@@ -112,6 +120,9 @@ const ChatView: React.FC = () => {
                                     n.linkedMessage === msg.content.substring(0, 50) &&
                                     (!n.linkedRole || n.linkedRole === msg.role)
                                 )}
+                                onStartAgent={msg.isAgentIntro ? () => {
+                                    handleSendMessage(`[SYSTEM: ROZPOCZNIJ PRACĘ AGENTA]\nJesteś teraz w roli: ${activeCustomAgent?.name}. Zapoznaj się z powyższą sprawą i moimi instrukcjami, a następnie zaproponuj pierwszy krok lub zadaj kluczowe pytania.`);
+                                } : undefined}
                                 lawArea={selectedLawArea || undefined}
                                 topic={selectedTopic || undefined}
                             />

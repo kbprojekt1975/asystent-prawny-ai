@@ -19,7 +19,7 @@ interface UseChatLogicProps {
     onAddCost: (cost: number) => void;
     onRefreshHistories: () => void;
     setCourtRole: (role: CourtRole | null) => void;
-    chatHistories?: { lawArea: LawArea; topic: string; servicePath?: 'pro' | 'standard' }[];
+    chatHistories?: { lawArea: LawArea; topic: string; interactionMode?: InteractionMode; agentId?: string; agentName?: string; servicePath?: 'pro' | 'standard' }[];
     isLocalOnly?: boolean;
     activeCustomAgent?: any | null;
 }
@@ -51,14 +51,14 @@ export const useChatLogic = ({
     const handleSendMessage = useCallback(async (
         messageOverride?: string,
         historyOverride?: ChatMessage[],
-        metadataOverride?: { lawArea: LawArea, topic: string, interactionMode: InteractionMode, servicePath?: 'pro' | 'standard' }
+        metadataOverride?: { lawArea: LawArea, topic: string, interactionMode: InteractionMode, servicePath?: 'pro' | 'standard', agentId?: string, agentName?: string }
     ) => {
         const effectiveLawArea = metadataOverride?.lawArea || selectedLawArea;
         const effectiveTopic = metadataOverride?.topic || selectedTopic;
         const effectiveInteractionMode = metadataOverride?.interactionMode || interactionMode;
         const effectiveChatId = metadataOverride
-            ? getChatId(metadataOverride.lawArea, metadataOverride.topic, metadataOverride.interactionMode)
-            : getChatId(effectiveLawArea!, effectiveTopic!, effectiveInteractionMode);
+            ? getChatId(metadataOverride.lawArea, metadataOverride.topic, metadataOverride.interactionMode, (metadataOverride as any).agentId)
+            : getChatId(effectiveLawArea!, effectiveTopic!, effectiveInteractionMode, activeCustomAgent?.id);
 
         const messageToSend = messageOverride || currentMessage.trim();
         if ((!messageToSend && !historyOverride) || !effectiveLawArea || !effectiveTopic || !effectiveInteractionMode || (isLoading && !historyOverride) || !user || !effectiveChatId) return;
@@ -98,8 +98,10 @@ export const useChatLogic = ({
                 lawArea: effectiveLawArea,
                 topic: effectiveTopic,
                 interactionMode: effectiveInteractionMode,
+                agentId: activeCustomAgent?.id,
+                agentName: activeCustomAgent?.name,
                 servicePath: metadataOverride?.servicePath || (chatHistories.filter(h => h.lawArea === effectiveLawArea).find(h => {
-                    return getChatId(h.lawArea, h.topic) === getChatId(effectiveLawArea, effectiveTopic);
+                    return getChatId(h.lawArea, h.topic, h.interactionMode, (h as any).agentId) === getChatId(effectiveLawArea, effectiveTopic, effectiveInteractionMode, activeCustomAgent?.id);
                 })?.servicePath) || 'standard'
             };
 
@@ -144,7 +146,7 @@ export const useChatLogic = ({
         } finally {
             setIsLoading(false);
         }
-    }, [currentMessage, selectedLawArea, interactionMode, isLoading, legalArticles, isDeepThinkingEnabled, selectedTopic, chatHistory, user, userProfile?.subscription, isLocalOnly, persistence, chatHistories, i18n.language]);
+    }, [currentMessage, selectedLawArea, interactionMode, isLoading, legalArticles, isDeepThinkingEnabled, selectedTopic, chatHistory, user, userProfile?.subscription, isLocalOnly, persistence, chatHistories, i18n.language, activeCustomAgent]);
 
     const modes = useChatModes({ setChatHistory, handleSendMessage, selectedLawArea, selectedTopic, setCourtRole, activeCustomAgent });
     const actions = useChatActions({ setChatHistory, setIsLoading, handleSendMessage, selectedLawArea, selectedTopic, chatHistory, interactionMode });

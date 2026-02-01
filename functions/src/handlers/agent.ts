@@ -37,7 +37,10 @@ export const optimizeAgent = onCall({
             WAŻNE: Nie dodawaj żadnego tekstu poza formatem JSON. Pisz w języku polskim.
         `;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.0-flash",
+            generationConfig: { temperature: 0 }
+        });
         const result = await model.generateContent(prompt);
         const response = result.response;
         let text = response.text();

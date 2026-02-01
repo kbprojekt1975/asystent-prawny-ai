@@ -102,12 +102,12 @@
     "plan": {
         "starter": {
             "title": "Pakiet Startowy AI",
-            "desc": "Uzyskaj pełny dostęp do asystenta prawnego na tydzień. Wykorzystaj 10 PLN kredytu na zaawansowane analizy Gemini 2.0 Flash.",
-            "creditLabel": "Kredyt",
+            "desc": "Uzyskaj pełny dostęp do asystenta prawnego na tydzień. Wykorzystaj 333 000 jednostek AI o precyzji PRO (Gemini 1.5 Pro).",
+            "creditLabel": "Jednostki AI",
             "validityLabel": "Ważność",
             "validityValue": "7 Dni",
             "selectButton": "Wybieram ten plan - 10 PLN",
-            "manualActivation": "Wymagana ręczna aktywacja przez administratora"
+            "manualActivation": "Szybka aktywacja przez administratora"
         },
         "pending": {
             "title": "Oczekiwanie na aktywację",

@@ -73,7 +73,7 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                             <ul className="space-y-3 mb-8 text-left flex-1">
                                 <li className="flex items-center gap-2 text-xs text-slate-300">
                                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-400"></div>
-                                    <span>1 000 000 Tokenów</span>
+                                    <span>333 000 Tokenów</span>
                                 </li>
                                 <li className="flex items-center gap-2 text-xs text-slate-300">
                                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-400"></div>
@@ -109,7 +109,7 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({ isOpen, onSelec
                             <ul className="space-y-3 mb-8 text-left flex-1">
                                 <li className="flex items-center gap-2 text-xs text-white">
                                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
-                                    <span className="font-bold">6 500 000 Tokenów</span>
+                                    <span className="font-bold">5x wiecej wydajnosci niz w planie start + 30%</span>
                                 </li>
                                 <li className="flex items-center gap-2 text-xs text-slate-200">
                                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-400"></div>

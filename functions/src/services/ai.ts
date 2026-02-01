@@ -21,13 +21,20 @@ export const getPricingConfig = async (db: any) => {
     // Fallback defaults
     logger.warn("⚠️ Using fallback pricing config");
     return {
-        profit_margin_multiplier: 500,
+        profit_margin_multiplier: 5,
         validity_seconds: 604800,
         rates: {
             'gemini-2.0-flash': { input: 0.25, output: 1.0 },
             'gemini-1.5-flash': { input: 0.25, output: 1.0 },
             'gemini-1.5-pro': { input: 1.5, output: 4.5 },
-            'gemini-1.5-pro-latest': { input: 1.5, output: 4.5 },
+            'gemini-1.5-pro-latest': { input: 1.5, output: 4.5 }
+        },
+        plans: {
+            "price_1StBSvDXnXONl2svkF51zTnl": {
+                name: "starter",
+                creditLimit: 10,
+                tokenLimit: 333000
+            }
         }
     };
 };
@@ -58,7 +65,7 @@ export const calculateCost = (model: string, usage: { promptTokenCount?: number,
     const outputCost = (usage.candidatesTokenCount || 0) / 1_000_000 * prices.output;
 
     const internalCost = inputCost + outputCost;
-    const multiplier = config.profit_margin_multiplier || 8;
+    const multiplier = config.profit_margin_multiplier || 10;
 
     const finalCost = internalCost * multiplier;
     logger.info(`💰 Cost calculated: Model=${model}, In=${usage.promptTokenCount}, Out=${usage.candidatesTokenCount}, Base=${internalCost.toFixed(6)}, Multiplier=${multiplier}, Final=${finalCost.toFixed(6)}`);

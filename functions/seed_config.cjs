@@ -12,8 +12,8 @@ const db = admin.firestore();
 
 // 3. Define the Pricing Config Data (from screenshots)
 const pricingConfig = {
-    profit_margin_multiplier: 500,
-    validity_seconds: 600, // Default 7 days in seconds
+    profit_margin_multiplier: 5,
+    validity_seconds: 604800, // Fixed to 7 days in seconds as in ai.ts fallback
     rates: {
         "gemini-1.5-flash": {
             input: 0.25,
@@ -30,6 +30,18 @@ const pricingConfig = {
         "gemini-2.0-flash": {
             input: 0.25,
             output: 1.0
+        }
+    },
+    plans: {
+        "price_1StBSvDXnXONl2svkF51zTnl": {
+            name: "starter",
+            creditLimit: 10,
+            tokenLimit: 333000
+        },
+        "price_pro_placeholder": {
+            name: "pro",
+            creditLimit: 50,
+            tokenLimit: 2166666
         }
     }
 };

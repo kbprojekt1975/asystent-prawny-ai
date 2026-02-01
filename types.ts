@@ -74,6 +74,8 @@ export interface ChatMessage {
   sources?: any[];
   documentIds?: string[];
   followUpOptions?: InteractionMode[];
+  isAgentIntro?: boolean;
+  agentId?: string;
 }
 
 export interface CaseDocument {
@@ -205,14 +207,15 @@ export interface AndromedaChat {
  * Generates a unified chat ID for Firestore storage.
  * Handles specialized mode isolation.
  */
-export const getChatId = (lawArea: string, topic: string, mode?: InteractionMode | null) => {
+export const getChatId = (lawArea: string, topic: string, mode?: InteractionMode | null, agentId?: string | null) => {
   const sanitize = (val: string) => val.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const sanitizedTopic = sanitize(topic);
   let id = `${lawArea}_${sanitizedTopic}`;
 
-  // If it's a specialized mode, append it to the chatId to keep context separate
-  // Advice and Analysis share the same base topic ID
-  if (mode &&
+  if (agentId) {
+    const slug = sanitize(agentId);
+    id = `${lawArea}_${sanitizedTopic}_agent_${slug}`;
+  } else if (mode &&
     mode !== InteractionMode.Advice &&
     mode !== InteractionMode.Analysis) {
     const slug = sanitize(mode);

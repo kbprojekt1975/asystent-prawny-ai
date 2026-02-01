@@ -1,5 +1,6 @@
-import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
-import { db, Timestamp } from "../services/db";
+import { onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { db } from "../services/db";
+import { getPricingConfig } from "../services/ai";
 import * as logger from "firebase-functions/logger";
 
 /**
@@ -28,26 +29,31 @@ export const syncUserSubscription = onDocumentUpdated("customers/{userId}/subscr
 
     const userRef = db.collection('users').doc(userId);
 
-    // Limits based on plan
+    const pricingConfig = await getPricingConfig(db);
+    const planConfig = pricingConfig.plans?.[priceId];
+
     let creditLimit = 10;
-    let tokenLimit = 1000000;
+    let tokenLimit = 333000;
     let packageType: 'starter' | 'pro' = 'starter';
 
-    // We check against environment variables or placeholders
-    // On production, these should match the real Stripe Price IDs
-    const STARTER_ID = process.env.VITE_STRIPE_PRICE_STARTER || "price_1StBSvDXnXONl2svkF51zTnl";
-    const PRO_ID = process.env.VITE_STRIPE_PRICE_PRO || "price_pro_placeholder";
-
-    if (priceId === PRO_ID) {
-        creditLimit = 50;
-        tokenLimit = 6500000;
-        packageType = 'pro';
-    } else if (priceId === STARTER_ID) {
-        creditLimit = 10;
-        tokenLimit = 1000000;
-        packageType = 'starter';
+    if (planConfig) {
+        creditLimit = planConfig.creditLimit;
+        tokenLimit = planConfig.tokenLimit;
+        packageType = planConfig.name;
+        logger.info(`📋 Using dynamic plan config for ${priceId}: ${packageType}`);
     } else {
-        logger.info(`ℹ️ Price ID ${priceId} doesn't match known plans. Using defaults.`);
+        logger.warn(`⚠️ Price ID ${priceId} not found in dynamic config plans. Using hardcoded defaults.`);
+        const STARTER_ID = "price_1StBSvDXnXONl2svkF51zTnl";
+        if (priceId === STARTER_ID) {
+            creditLimit = 10;
+            tokenLimit = 333000;
+            packageType = 'starter';
+        } else {
+            // Probably a PRO plan or other
+            creditLimit = 50;
+            tokenLimit = 2166666;
+            packageType = 'pro';
+        }
     }
 
     try {

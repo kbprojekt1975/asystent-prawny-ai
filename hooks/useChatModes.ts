@@ -7,7 +7,7 @@ interface UseChatModesProps {
     handleSendMessage: (
         messageOverride?: string,
         historyOverride?: ChatMessage[],
-        metadataOverride?: { lawArea: LawArea, topic: string, interactionMode: InteractionMode, servicePath?: 'pro' | 'standard' }
+        metadataOverride?: { lawArea: LawArea, topic: string, interactionMode: InteractionMode, servicePath?: 'pro' | 'standard', agentId?: string, agentName?: string }
     ) => Promise<void>;
     selectedLawArea: LawArea | null;
     selectedTopic: string | null;
@@ -56,6 +56,8 @@ export const useChatModes = ({
             lawArea,
             topic,
             interactionMode: mode,
+            agentId: activeCustomAgent?.id,
+            agentName: activeCustomAgent?.name,
             servicePath: 'standard'
         });
     }, [handleSendMessage, setChatHistory]);

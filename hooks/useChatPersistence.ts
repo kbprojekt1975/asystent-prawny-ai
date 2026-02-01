@@ -26,6 +26,8 @@ export const useChatPersistence = ({
             topic: string;
             interactionMode: InteractionMode;
             servicePath?: 'pro' | 'standard';
+            agentId?: string;
+            agentName?: string;
         }
     ) => {
         if (!user || isLocalOnly) return;
@@ -89,6 +91,8 @@ export const useChatPersistence = ({
                         lawArea,
                         topic,
                         interactionMode,
+                        agentId: data.agentId,
+                        agentName: data.agentName,
                         servicePath: data.servicePath || 'standard',
                         lastUpdated: data.lastUpdated,
                         docCount

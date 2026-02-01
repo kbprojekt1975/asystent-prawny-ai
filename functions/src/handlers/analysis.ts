@@ -76,6 +76,7 @@ export const analyzeLegalCase = onCall({
         const model = genAI.getGenerativeModel({
             model: modelName,
             generationConfig: {
+                temperature: 0,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: SchemaType.OBJECT,
