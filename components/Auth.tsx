@@ -10,7 +10,11 @@ import AppGuide from './AppGuide';
 
 import PrivacyPolicyModal from './PrivacyPolicyModal';
 
-const Auth: React.FC = () => {
+interface AuthProps {
+  onAuthStart?: () => void;
+}
+
+const Auth: React.FC<AuthProps> = ({ onAuthStart }) => {
   const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [isResetPassword, setIsResetPassword] = useState(false);
@@ -36,9 +40,9 @@ const Auth: React.FC = () => {
     } catch (err: any) {
       console.error(err);
       setError(t('auth.errors.googleLogin'));
-    } finally {
       setIsLoading(false);
     }
+    // Do not clear loading on success - wait for unmount
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -62,9 +66,9 @@ const Auth: React.FC = () => {
       if (err.code === 'auth/user-not-found') msg = t('auth.errors.userNotFound');
       else if (err.code === 'auth/invalid-email') msg = t('auth.errors.invalidEmail');
       setError(msg);
-    } finally {
       setIsLoading(false);
     }
+    // Do not clear loading on success
   };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -99,9 +103,9 @@ const Auth: React.FC = () => {
       else if (err.code === 'auth/weak-password') msg = t('auth.errors.weakPassword');
       else if (err.code === 'auth/invalid-email') msg = authMethod === 'nickname' ? t('auth.errors.invalidNick') : t('auth.errors.invalidEmail');
       setError(msg);
-    } finally {
       setIsLoading(false);
     }
+    // Do not clear loading on success
   };
 
   return (
