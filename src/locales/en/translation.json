@@ -20,6 +20,13 @@
         "detailsComfortDesc": "We remember your choices, e.g., that you already closed this window.",
         "detailsFooter": "Remember: This is your data. In the user panel, you can delete chat history or your entire account at any time."
     },
+    "cookie": {
+        "title": "Cookie Policy",
+        "message": "We use cookies to ensure the best experience with our assistant. Your data is secure and used only for functional improvements.",
+        "details": "Security|Privacy|Convenience",
+        "detailsLink": "Policy details",
+        "accept": "I understand"
+    },
     "app": {
         "title": "AI Legal Assistant",
         "back": "Back",

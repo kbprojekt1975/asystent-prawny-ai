@@ -31,7 +31,8 @@ export const getLegalAdvice = onCall({
             chatId,
             language = 'pl',
             isLocalOnly = false,
-            agentId
+            agentId,
+            agentInstructions
         } = request.data;
         const uid = request.auth.uid;
 
@@ -43,8 +44,16 @@ export const getLegalAdvice = onCall({
 
         // --- FETCH CUSTOM AGENT (if applicable) ---
         let customAgentInstructions = "";
-        if (lawArea === "Własny Agent" || lawArea === "Custom" || agentId) {
-            const targetAgentId = agentId || topic; // Fallback to topic if agentId not explicit
+
+        if (agentInstructions) {
+            customAgentInstructions = `
+                # CUSTOM PERSONA: Custom Agent
+                # SPECIFIC INSTRUCTIONS:
+                ${agentInstructions}
+            `;
+            logger.info("✅ Custom agent instructions provided in request.");
+        } else if (lawArea === "Własny Agent" || lawArea === "Custom" || agentId) {
+            const targetAgentId = agentId || topic;
             try {
                 const agentDoc = await userRef.collection('custom_agents').doc(targetAgentId).get();
                 if (agentDoc.exists) {
@@ -55,7 +64,7 @@ export const getLegalAdvice = onCall({
                         # SPECIFIC INSTRUCTIONS:
                         ${agentData?.instructions || 'Follow user preferences.'}
                     `;
-                    logger.info(`✅ Custom agent "${agentData?.name}" instructions loaded.`);
+                    logger.info(`✅ Custom agent "${agentData?.name}" instructions loaded from DB.`);
                 }
             } catch (e) {
                 logger.error("Error fetching custom agent", e);

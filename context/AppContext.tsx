@@ -27,6 +27,8 @@ interface AppContextType {
     setCourtRole: (role: CourtRole | null) => void;
     servicePath: 'pro' | 'hub' | 'standard' | null;
     setServicePath: (path: 'pro' | 'hub' | 'standard' | null) => void;
+    activeCustomAgent: any | null;
+    setActiveCustomAgent: (agent: any | null) => void;
     isAnalysisMode: boolean;
     setIsAnalysisMode: (val: boolean) => void;
     currentChatId: string | null;

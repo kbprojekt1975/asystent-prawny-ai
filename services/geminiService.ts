@@ -32,7 +32,8 @@ export const getLegalAdvice = async (
     articles: string | undefined,
     chatId: string,
     language: string = 'pl',
-    isLocalOnly: boolean = false
+    isLocalOnly: boolean = false,
+    agentInstructions?: string
 ): Promise<{ text: string, sources?: any[], usage?: TokenUsage }> => {
     try {
         const getLegalAdviceFunction = httpsCallable(functions, 'getLegalAdvice');
@@ -46,7 +47,8 @@ export const getLegalAdvice = async (
             articles,
             chatId,
             language,
-            isLocalOnly
+            isLocalOnly,
+            agentInstructions
         });
 
         const data = result.data as LegalAdviceResponse;

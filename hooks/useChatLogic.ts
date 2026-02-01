@@ -129,7 +129,8 @@ export const useChatLogic = ({
                 articlesToPass,
                 effectiveChatId,
                 i18n.language,
-                isLocalOnly
+                isLocalOnly,
+                (userProfile as any).activeCustomAgent?.instructions // Placeholder if not in props
             );
 
             const aiMessage: ChatMessage = { role: 'model', content: aiResponse.text };

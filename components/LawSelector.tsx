@@ -19,6 +19,7 @@ interface LawSelectorProps {
   onCustomAgentSelect: (agent: any) => void;
   onDeleteCustomAgent: (agent: any) => void;
   onCreateCustomAgent: () => void;
+  activeAgent?: any;
 }
 
 // Options will be mapped inside component to access t() function
@@ -34,7 +35,8 @@ const LawSelector: React.FC<LawSelectorProps> = ({
   customAgents = [],
   onCustomAgentSelect,
   onDeleteCustomAgent,
-  onCreateCustomAgent
+  onCreateCustomAgent,
+  activeAgent
 }) => {
   const { t } = useTranslation();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -59,9 +61,21 @@ const LawSelector: React.FC<LawSelectorProps> = ({
 
   return (
     <div className="flex flex-col items-center min-h-full p-4 w-full">
-      <div className="text-center mb-10 flex items-center justify-center gap-2 my-auto md:mt-0 pt-8 md:pt-0">
-        <p className="text-lg text-slate-400">{t('law.header')}</p>
-        <InfoIcon onClick={() => setIsHelpOpen(true)} />
+      <div className="text-center mb-10 flex flex-col items-center justify-center gap-2 my-auto md:mt-0 pt-8 md:pt-0">
+        {activeAgent && (
+          <div className="mb-4 px-4 py-2 bg-violet-500/20 border border-violet-500/30 rounded-full flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="w-6 h-6 bg-violet-500 rounded-full flex items-center justify-center text-[10px] font-black text-white uppercase">
+              {activeAgent.name.substring(0, 1)}
+            </div>
+            <span className="text-sm font-bold text-violet-300">AKTYWNY AGENT: {activeAgent.name.toUpperCase()}</span>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <p className="text-lg text-slate-400">
+            {activeAgent ? `Wybierz kategorię dla agenta ${activeAgent.name}` : t('law.header')}
+          </p>
+          <InfoIcon onClick={() => setIsHelpOpen(true)} />
+        </div>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 w-full max-w-6xl mb-8">
         {lawOptions.map((option) => (

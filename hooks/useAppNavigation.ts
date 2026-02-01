@@ -28,6 +28,7 @@ export const useAppNavigation = () => {
     const [interactionMode, setInteractionMode] = useState<InteractionMode | null>(savedNav?.interactionMode || null);
     const [courtRole, setCourtRole] = useState<CourtRole | null>(savedNav?.courtRole || null);
     const [servicePath, setServicePath] = useState<'pro' | 'hub' | null>(savedNav?.servicePath || null);
+    const [activeCustomAgent, setActiveCustomAgent] = useState<any | null>(savedNav?.activeCustomAgent || null);
 
     const [isAnalysisMode, setIsAnalysisMode] = useState<boolean>(savedNav?.isAnalysisMode || false);
     const [isFullScreen, setIsFullScreen] = useState<boolean>(savedNav?.isFullScreen || false);
@@ -41,11 +42,12 @@ export const useAppNavigation = () => {
             interactionMode,
             courtRole,
             servicePath,
+            activeCustomAgent,
             isAnalysisMode,
             isFullScreen
         };
         localStorage.setItem(NAV_STORAGE_KEY, JSON.stringify(navState));
-    }, [selectedLawArea, selectedTopic, interactionMode, courtRole, servicePath, isAnalysisMode, isFullScreen]);
+    }, [selectedLawArea, selectedTopic, interactionMode, courtRole, servicePath, activeCustomAgent, isAnalysisMode, isFullScreen]);
 
     const currentChatId = useMemo(() => {
         if (selectedLawArea && selectedTopic) {
@@ -62,6 +64,7 @@ export const useAppNavigation = () => {
         setServicePath(null);
         setIsAnalysisMode(false);
         setIsFullScreen(false);
+        setActiveCustomAgent(null);
     };
 
     const backToTopic = () => {
@@ -79,6 +82,7 @@ export const useAppNavigation = () => {
         setServicePath(null);
         setIsAnalysisMode(false);
         setIsFullScreen(false);
+        setActiveCustomAgent(null);
     };
 
     return {
@@ -93,6 +97,8 @@ export const useAppNavigation = () => {
         resetNavigation,
         backToTopic,
         backToLawArea,
+        activeCustomAgent,
+        setActiveCustomAgent,
         initialTopics
     };
 };

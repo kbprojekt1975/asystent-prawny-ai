@@ -14,9 +14,10 @@ interface TopicSelectorProps {
   onDeleteTopic: (topic: string) => void;
   onChangeMode?: () => void;
   isLocalOnly?: boolean;
+  activeAgent?: any;
 }
 
-const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelectTopic, onAddTopic, onAddNegotiationTopic, onDeleteTopic, onChangeMode, isLocalOnly }) => {
+const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelectTopic, onAddTopic, onAddNegotiationTopic, onDeleteTopic, onChangeMode, isLocalOnly, activeAgent }) => {
   const { t } = useTranslation();
   const [newTopic, setNewTopic] = useState('');
   const [newNegotiationTopic, setNewNegotiationTopic] = useState('');
@@ -43,9 +44,21 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
 
   return (
     <div className="flex flex-col items-center min-h-full p-4 w-full">
-      <div className="text-center mb-10 flex items-center justify-center gap-2 mt-4 md:mt-0">
-        <p className="text-lg text-slate-400">{t('topic.header')}</p>
-        <InfoIcon onClick={() => setIsHelpOpen(true)} />
+      <div className="text-center mb-10 flex flex-col items-center justify-center gap-2 mt-4 md:mt-0">
+        {activeAgent && (
+          <div className="mb-4 px-4 py-2 bg-violet-500/20 border border-violet-500/30 rounded-full flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="w-6 h-6 bg-violet-500 rounded-full flex items-center justify-center text-[10px] font-black text-white uppercase">
+              {activeAgent.name.substring(0, 1)}
+            </div>
+            <span className="text-sm font-bold text-violet-300">AKTYWNY AGENT: {activeAgent.name.toUpperCase()}</span>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <p className="text-lg text-slate-400">
+            {activeAgent ? `Wybierz sprawę dla agenta ${activeAgent.name}` : t('topic.header')}
+          </p>
+          <InfoIcon onClick={() => setIsHelpOpen(true)} />
+        </div>
       </div>
       <div className="w-full max-w-2xl space-y-8 my-auto pb-8">
         {/* AI Tools Access - RELOCATED TO TOP */}

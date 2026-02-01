@@ -20,6 +20,13 @@
         "detailsComfortDesc": "Zapamiętujemy Twoje wybory, np. to, że już zamknąłeś to okienko.",
         "detailsFooter": "Pamiętaj: To Twoje dane. W panelu użytkownika możesz w każdej chwili usunąć historię czatu lub całe konto."
     },
+    "cookie": {
+        "title": "Polityka Cookies",
+        "message": "Używamy plików cookies, aby zapewnić najlepszą jakość korzystania z naszego asystenta. Twoje dane są bezpieczne i używane wyłącznie w celu poprawy funkcjonalności.",
+        "details": "Bezpieczeństwo|Prywatność|Wygoda",
+        "detailsLink": "Szczegóły polityki",
+        "accept": "Rozumiem"
+    },
     "app": {
         "title": "Asystent Prawny AI",
         "back": "Wróć",

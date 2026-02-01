@@ -10,7 +10,7 @@ const FullScreenLoader: React.FC<FullScreenLoaderProps> = ({ isOverlay = false, 
     const { t } = useTranslation();
 
     return (
-        <div className={`fixed inset-0 z-[1000] flex flex-col items-center justify-center transition-opacity duration-300 ${transparent ? 'bg-slate-900/50 backdrop-blur-sm' : 'bg-slate-900'} overflow-hidden animate-fade-in`}>
+        <div className={`fixed inset-0 z-[10000] flex flex-col items-center justify-center transition-all duration-500 ${transparent ? 'bg-slate-900/60 backdrop-blur-md' : 'bg-slate-900'} overflow-hidden animate-in fade-in duration-500`}>
             {/* Background Effects */}
             {!transparent && (
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">

@@ -17,6 +17,7 @@ const ChatView: React.FC = () => {
         setCourtRole,
         isLocalOnly,
         currentChatId,
+        activeCustomAgent
     } = useAppContext();
 
     const {
@@ -71,6 +72,21 @@ const ChatView: React.FC = () => {
                         />
                     </div>
                 </div>
+
+                {activeCustomAgent && (
+                    <div className="bg-gradient-to-r from-violet-600/10 to-transparent border-b border-violet-500/20 px-8 py-2 md:py-3 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-violet-600 rounded-full flex items-center justify-center text-xs md:text-sm font-black text-white shadow-lg shadow-violet-500/20">
+                            {activeCustomAgent.name.substring(0, 1)}
+                        </div>
+                        <div>
+                            <p className="text-[10px] md:text-xs text-violet-400 font-bold uppercase tracking-wider leading-tight">Twój Agent AI</p>
+                            <p className="text-sm md:text-base text-white font-semibold leading-tight">{activeCustomAgent.name}</p>
+                        </div>
+                        <div className="ml-auto">
+                            <span className="text-[10px] md:text-xs bg-violet-500/20 text-violet-300 px-2 py-1 rounded-md font-medium border border-violet-500/30">PERSONA AKTYWNA</span>
+                        </div>
+                    </div>
+                )}
                 <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
                     <div className="max-w-4xl mx-auto">
                         {interactionMode === InteractionMode.Analysis && (

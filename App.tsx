@@ -361,7 +361,6 @@ const App: React.FC = () => {
         await updateDoc(doc(db, 'users', user.uid), {
           "profile.hasSeenWelcomeAssistant": false,
           "profile.cookieConsent": false,
-          "profile.dataProcessingConsent": false,
           "profile.isActive": true, // Ensure profile is active
           "profile.subscription.spentAmount": 0, // Reset spent amount on recharge
           "profile.subscription.creditLimit": planId === PRICE_IDS.PRO_50PLN ? 50 : 10 // Ensure credit limit is refreshed
@@ -419,7 +418,8 @@ const App: React.FC = () => {
   const hasActiveAccess = hasActiveStripeSub && !isLimitReached && !isExpired;
 
   const isAwaitingActivation = userProfile?.subscription?.status === SubscriptionStatus.Pending;
-  const showActivation = isSplashDismissed && user && isAwaitingActivation;
+  // Activation screen only shows if we are NOT in the middle of a recharge/loading process
+  const showActivation = isSplashDismissed && user && isAwaitingActivation && !profileLoading && !subsLoading && !isRecharging;
 
   // Force Andromeda on successful activation
   const prevIsAwaitingActivation = useRef(isAwaitingActivation);
@@ -432,7 +432,11 @@ const App: React.FC = () => {
   }, [isAwaitingActivation, user]);
 
   const isNavigating = isLoading && (!selectedTopic || (chatHistory && chatHistory.length === 0));
-  const showLoader = isSplashDismissed && !showAuth && !showSplash && !showActivation && (authLoading || profileLoading || subsLoading || isRecharging || (isNavigating && !isShowAndromeda));
+
+  // Unified Loader logic: shows if splash is gone, auth is done, and any background load is active, 
+  // OR if we are explicitly recharging (payment flow).
+  const showLoader = isSplashDismissed && !showAuth && !showSplash &&
+    (authLoading || profileLoading || subsLoading || isRecharging || (isNavigating && !isShowAndromeda && !showActivation));
 
   return (
     <div className="min-h-screen w-full bg-slate-900 animate-fade-in relative">
@@ -634,6 +638,7 @@ const App: React.FC = () => {
           />
         </div>
       )}
+      <CookieConsent />
     </div>
   );
 };

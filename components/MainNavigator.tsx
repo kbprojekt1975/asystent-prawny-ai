@@ -26,6 +26,8 @@ const MainNavigator: React.FC = () => {
         handleUpdateProfile,
         topics,
         customAgents,
+        activeCustomAgent,
+        setActiveCustomAgent,
         isPro
     } = useAppContext();
 
@@ -109,13 +111,12 @@ const MainNavigator: React.FC = () => {
                     isPro={isPro}
                     customAgents={customAgents}
                     onCustomAgentSelect={(agent) => {
-                        setSelectedLawArea(LawArea.Custom);
-                        setSelectedTopic(agent.id);
-                        setInteractionMode(InteractionMode.Advice);
-                        handleLoadHistory(LawArea.Custom, agent.id);
+                        setActiveCustomAgent(agent);
+                        // Do not navigate yet, wait for user to pick a LawArea
                     }}
                     onDeleteCustomAgent={(agent) => (window as any).deleteCustomAgent?.(agent)}
                     onCreateCustomAgent={() => (window as any).showCustomAgentCreator?.()}
+                    activeAgent={activeCustomAgent}
                 />
             ) : !servicePath ? (
                 <ServiceTypeSelector
@@ -186,6 +187,7 @@ const MainNavigator: React.FC = () => {
                         setCourtRole(null);
                     }}
                     isLocalOnly={isLocalOnly}
+                    activeAgent={activeCustomAgent}
                 />
             ) : servicePath === 'pro' ? (
                 <ProDashboard
