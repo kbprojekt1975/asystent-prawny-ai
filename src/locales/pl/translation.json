@@ -97,7 +97,9 @@
         },
         "success": {
             "resetSent": "Link do resetowania hasła został wysłany na Twój email."
-        }
+        },
+        "loadingProfile": "Ładowanie profilu...",
+        "loadingProfileDesc": "Przygotowujemy Twoją przestrzeń roboczą"
     },
     "plan": {
         "starter": {

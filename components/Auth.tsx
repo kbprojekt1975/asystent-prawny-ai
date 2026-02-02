@@ -12,9 +12,10 @@ import PrivacyPolicyModal from './PrivacyPolicyModal';
 
 interface AuthProps {
   onAuthStart?: () => void;
+  isPostAuthLoading?: boolean;
 }
 
-const Auth: React.FC<AuthProps> = ({ onAuthStart }) => {
+const Auth: React.FC<AuthProps> = ({ onAuthStart, isPostAuthLoading = false }) => {
   const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [isResetPassword, setIsResetPassword] = useState(false);
@@ -339,6 +340,19 @@ const Auth: React.FC<AuthProps> = ({ onAuthStart }) => {
               {isLogin ? t('auth.registerButton') : t('auth.loginButton')}
             </button>
           </p>
+        )}
+
+        {/* Post-Authentication Loading State */}
+        {isPostAuthLoading && (
+          <div className="mt-6 p-4 bg-cyan-900/20 border border-cyan-500/30 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 rounded-full border-2 border-cyan-500/30 border-t-cyan-500 animate-spin"></div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-cyan-100">{t('auth.loadingProfile')}</p>
+                <p className="text-xs text-cyan-400/70 mt-0.5">{t('auth.loadingProfileDesc')}</p>
+              </div>
+            </div>
+          </div>
         )}
 
         <div className="mt-8 pt-6 border-t border-slate-700/50">

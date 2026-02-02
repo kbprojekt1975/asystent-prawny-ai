@@ -97,7 +97,9 @@
         },
         "success": {
             "resetSent": "Password reset link has been sent to your email."
-        }
+        },
+        "loadingProfile": "Loading profile...",
+        "loadingProfileDesc": "Preparing your workspace"
     },
     "plan": {
         "starter": {

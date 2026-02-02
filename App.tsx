@@ -216,7 +216,8 @@ const App: React.FC = () => {
 
   // Auto-trigger Onboarding Flow when subscription is detected
   useEffect(() => {
-    if (!authLoading && !profileLoading && !subsLoading && userProfile && !isRecharging) {
+    // CRITICAL: Wait for stabilization to finish before triggering potential popups
+    if (!authLoading && !profileLoading && !subsLoading && userProfile && !isRecharging && !isStabilizing) {
       const hasActiveSub = ['active', 'trialing'].includes(userProfile.subscription?.status || '');
 
       console.log("[App] Checking Welcome Trigger:", {
@@ -224,7 +225,8 @@ const App: React.FC = () => {
         hasSeen: userProfile.hasSeenWelcomeAssistant,
         dismissed: hasDismissedAssistantSession,
         consent: userProfile.dataProcessingConsent,
-        subStatus: userProfile.subscription?.status
+        subStatus: userProfile.subscription?.status,
+        isStabilizing
       });
 
       // If user is PAID but hasn't seen the welcome assistant yet AND hasn't dismissed it this session, show it.
@@ -233,7 +235,7 @@ const App: React.FC = () => {
         setIsWelcomeAssistantOpen(true);
       }
     }
-  }, [authLoading, profileLoading, subsLoading, userProfile?.subscription?.status, userProfile?.hasSeenWelcomeAssistant, setIsWelcomeAssistantOpen, hasDismissedAssistantSession, isRecharging]);
+  }, [authLoading, profileLoading, subsLoading, userProfile?.subscription?.status, userProfile?.hasSeenWelcomeAssistant, setIsWelcomeAssistantOpen, hasDismissedAssistantSession, isRecharging, isStabilizing]);
 
   // Manage Recharge / Stabilization Delay
   useEffect(() => {
@@ -264,6 +266,12 @@ const App: React.FC = () => {
 
   // Clear stabilization when data is ready
   useEffect(() => {
+    // CRITICAL: If in login flow, skip stabilization entirely - Auth component handles its own loading state
+    if (isLoginFlow && isStabilizing) {
+      setIsStabilizing(false);
+      return;
+    }
+
     // If we are stabilizing or in login flow, check if we are truly ready regardless of timer
     const isReady = user && !authLoading && !profileLoading && !subsLoading && !isRecharging;
 
@@ -289,7 +297,7 @@ const App: React.FC = () => {
         return () => clearTimeout(timer);
       }
     }
-  }, [isStabilizing, user, authLoading, profileLoading, subsLoading, isRecharging]);
+  }, [isStabilizing, user, authLoading, profileLoading, subsLoading, isRecharging, isLoginFlow]);
 
   const handlePreviewDocument = (rawContent: string) => {
     if (!userProfile?.personalData) {
@@ -463,15 +471,12 @@ const App: React.FC = () => {
   // Blocking states logic
   const showSplash = !isSplashDismissed;
 
-  // Auth screen shows only if we are NOT stabilizing and we don't have a user yet.
-  // CRITICAL: We also keep showing Auth if we have a user but profile is still loading (to prevent flash),
-  // UNLESS we want the FullScreenLoader to take over.
-  // User requested: "Spinner in button... then screen change".
-  // So Auth should disappear only when we are READY to show something else, OR we replace it with Loader.
-  // Standard strict: Hide Auth when user exists. 
-  // Sticky Auth: Hide Auth only when user exists AND we are NOT in the middle of a login flow.
-  // If isLoginFlow is true, we force Auth to stay visible (where button is spinning).
-  const showAuth = isSplashDismissed && (!user || isLoginFlow) && !authLoading;
+  // Auth screen visibility logic:
+  // CRITICAL: If isLoginFlow is active, Auth MUST stay visible until everything is fully loaded.
+  // This prevents flashing during the login process - user clicks "Login", sees spinner in button,
+  // and screen only changes when the app is 100% ready (profile + subscription loaded).
+  // If NOT in login flow, show Auth only when there's no user and auth is not loading.
+  const showAuth = isSplashDismissed && (isLoginFlow || (!user && !authLoading));
 
   const hasActiveStripeSub = ['active', 'trialing'].includes(userProfile?.subscription?.status || '');
   const isExpired = userProfile?.subscription?.expiresAt && (
@@ -496,13 +501,7 @@ const App: React.FC = () => {
     prevIsAwaitingActivation.current = isAwaitingActivation;
   }, [isAwaitingActivation, user]);
 
-  const isNavigating = isLoading && (!selectedTopic || (chatHistory && chatHistory.length === 0));
-
-  // Unified Loader logic:
-  // Shows if explicit stabilization is active OR if standard loading conditions are met.
-  // CRITICAL FIX: If we have a user but profile/subs are loading, we MUST show loader to prevent "Welcome Assistant" flash.
-  // EXCEPTION: If isLoginFlow is true, we prefer the Auth Spinner, so we HIDE the global loader.
-  const isProfilePending = !!user && (profileLoading || subsLoading || isRecharging);
+  // Removed isNavigating logic to prevent full screen blocking during navigation
 
   const handleSmartBack = () => {
     if (activeCustomAgent) {
@@ -526,8 +525,10 @@ const App: React.FC = () => {
     }
   };
 
-  const showLoader = !isLoginFlow && (isStabilizing || isProfilePending || (isSplashDismissed && !showAuth && !showSplash &&
-    (authLoading || (isNavigating && !isShowAndromeda && !showActivation))));
+  // Simplified Loader logic for authenticated users:
+  // Only show full-screen loader during initial app stabilization OR during auth flow
+  // For logged-in users, all loading states use LOCAL spinners (in components, not full-screen)
+  const showLoader = !isLoginFlow && (isStabilizing || (isSplashDismissed && !showAuth && !showSplash && authLoading));
 
   return (
     <div className="min-h-screen w-full bg-slate-900 animate-fade-in relative">
@@ -543,7 +544,7 @@ const App: React.FC = () => {
       )}
 
       {/* 2. Full Screen blocking states */}
-      {showAuth && <Auth />}
+      {showAuth && <Auth isPostAuthLoading={!!user && (profileLoading || subsLoading || isRecharging)} />}
 
       {showActivation && <AwaitingActivation />}
 

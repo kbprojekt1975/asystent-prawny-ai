@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getLegalAdvice, analyzeLegalCase } from '../services/geminiService';
 import { ChatMessage, InteractionMode, LawArea, CaseNote, getChatId } from '../types';
@@ -339,9 +339,24 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             alert("Wystąpił nieoczekiwany błąd podczas analizy sprawy.");
         } finally {
             setIsLoading(false);
-            setIsWelcomeModalOpen(false);
+            // Removed auto-close - modal will close itself after components are ready
         }
     }, [user, i18n.language, topics, handleAddTopic, handleLoadHistory, handleAddCost, setIsLoading]);
+
+    // Auto-close welcome modal after successful case analysis
+    // Track when analysis completes (isLoading becomes false after being true)
+    const prevLoadingRef = useRef(isLoading);
+    useEffect(() => {
+        // If we just finished loading (was true, now false) and we have a selectedTopic, close modal
+        if (prevLoadingRef.current && !isLoading && selectedTopic) {
+            const timer = setTimeout(() => {
+                setIsWelcomeModalOpen(false);
+            }, 300);
+            prevLoadingRef.current = isLoading;
+            return () => clearTimeout(timer);
+        }
+        prevLoadingRef.current = isLoading;
+    }, [isLoading, selectedTopic]);
 
     const handleSelectInteractionMode = async (mode: InteractionMode, context: 'current' | 'select' | 'new' = 'current') => {
         let lawArea = selectedLawArea || LawArea.Civil;
