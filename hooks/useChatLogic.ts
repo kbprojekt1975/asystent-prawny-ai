@@ -162,6 +162,7 @@ export const useChatLogic = ({
         handleGenerateKnowledge: actions.handleGenerateKnowledge,
         handleFileUpload: actions.handleFileUpload,
         loadChatHistories: persistence.loadChatHistories,
+        saveChatHistory: persistence.saveChatHistory,
         handleAddCost: persistence.updateCosts,
         handleExportChat: actions.handleExportChat,
         handleImportChat: actions.handleImportChat,

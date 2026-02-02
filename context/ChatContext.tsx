@@ -119,6 +119,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isLoading,
         setIsLoading,
         loadChatHistories,
+        saveChatHistory,
         handleExportChat,
         handleImportChat,
         handleAddCost
@@ -404,16 +405,13 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             // 2. Persist to Firestore
             if (currentChatId) {
-                const chatRef = doc(db, 'users', user.uid, 'topics', selectedLawArea, 'chats', currentChatId);
-                const messagesRef = collection(chatRef, 'messages');
-                await setDoc(doc(messagesRef), {
-                    ...newMessage,
-                    timestamp: serverTimestamp()
-                });
-
-                await updateDoc(chatRef, {
-                    lastActivity: serverTimestamp(),
-                    messageCount: increment(1)
+                const finalHistory = [...chatHistory, newMessage];
+                await saveChatHistory(currentChatId, finalHistory, {
+                    lawArea: selectedLawArea as LawArea,
+                    topic: selectedTopic,
+                    interactionMode: interactionMode as InteractionMode,
+                    agentId: activeCustomAgent?.id,
+                    agentName: activeCustomAgent?.name
                 });
             }
 
@@ -423,7 +421,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } finally {
             setIsSuggestionsLoading(false);
         }
-    }, [chatHistory, selectedLawArea, selectedTopic, user, i18n.language, handleAddCost, currentChatId, setChatHistory, t]);
+    }, [chatHistory, selectedLawArea, selectedTopic, user, i18n.language, handleAddCost, currentChatId, setChatHistory, t, saveChatHistory, interactionMode, activeCustomAgent]);
 
     // Auto-close welcome modal after successful case analysis
     // Track when analysis completes (isLoading becomes false after being true)
