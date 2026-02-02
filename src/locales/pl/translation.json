@@ -1007,5 +1007,20 @@
         "save_to_knowledge": "Zapisz w Bazie Wiedzy",
         "saved": "Zapisano!",
         "already_saved": "Już zapisano"
+    },
+    "suggestions": {
+        "button": "Zasugeruj rozwiązania",
+        "tooltipDisabled": "Dostępne po zebraniu informacji (min. 6 wiadomości)",
+        "modalTitle": "Sugerowane dalsze kroki",
+        "generating": "Generuję sugestie...",
+        "roleIdentified": "Zidentyfikowana rola",
+        "plaintiff": "Powód / Oskarżyciel",
+        "defendant": "Pozwany / Obwiniony",
+        "defenseTactics": "🛡️ Linie obrony",
+        "attackStrategies": "⚔️ Strategie postępowania",
+        "evidenceToGather": "📄 Dowody do zebrania",
+        "importantDeadlines": "⏰ Ważne terminy",
+        "mitigatingCircumstances": "🤝 Okoliczności łagodzące",
+        "alternativeSolutions": "🔄 Alternatywne rozwiązania"
     }
 }

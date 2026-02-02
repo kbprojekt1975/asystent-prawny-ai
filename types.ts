@@ -76,6 +76,7 @@ export interface ChatMessage {
   followUpOptions?: InteractionMode[];
   isAgentIntro?: boolean;
   agentId?: string;
+  timestamp?: number;
 }
 
 export interface CaseDocument {

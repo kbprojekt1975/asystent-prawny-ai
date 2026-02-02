@@ -1,13 +1,13 @@
 import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getLegalAdvice, analyzeLegalCase } from '../services/geminiService';
+import { getLegalAdvice, analyzeLegalCase, suggestNextSteps, Suggestions } from '../services/geminiService';
 import { ChatMessage, InteractionMode, LawArea, CaseNote, getChatId } from '../types';
 import { useChatLogic } from '../hooks/useChatLogic';
 import { useAppContext } from './AppContext';
 import { useUIContext } from './UIContext';
 import { useTopicManagement } from '../hooks/useTopicManagement';
 import { db } from '../services/firebase';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, setDoc, serverTimestamp, getDoc, increment } from 'firebase/firestore';
 
 interface ChatContextType {
     chatHistory: ChatMessage[];
@@ -39,6 +39,8 @@ interface ChatContextType {
     handleAddTopic: (newTopic: string, mode: InteractionMode | null, servicePath?: 'pro' | 'standard') => Promise<void>;
     handleDeleteHistory: (lawArea: LawArea, topic: string) => Promise<void>;
     handleCaseAnalysis: (description: string) => Promise<void>;
+    handleSuggestSolutions: () => Promise<void>;
+    isSuggestionsLoading: boolean;
     isDeleteModalOpen: boolean;
     cancelDeleteTopic: () => void;
     confirmDeleteTopic: () => Promise<void>;
@@ -83,6 +85,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const [chatHistories, setChatHistories] = useState<any[]>([]);
     const [chatNotes, setChatNotes] = useState<CaseNote[]>([]);
+
+    const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
 
     const handleCostAdd = useCallback((cost: number) => {
         setTotalCost(prev => prev + cost);
@@ -343,6 +347,84 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     }, [user, i18n.language, topics, handleAddTopic, handleLoadHistory, handleAddCost, setIsLoading]);
 
+    const handleSuggestSolutions = useCallback(async () => {
+        if (!user || chatHistory.length < 6 || !selectedLawArea || !selectedTopic) return;
+
+        setIsSuggestionsLoading(true);
+        try {
+            const result = await suggestNextSteps(
+                chatHistory,
+                selectedLawArea,
+                selectedTopic,
+                i18n.language
+            );
+
+            if (result.usage && result.usage.cost > 0) {
+                handleAddCost(result.usage.cost);
+            }
+
+            // Format Suggestions as Markdown
+            const s = result.suggestions;
+            const role = result.userRole;
+
+            let content = `### 💡 ${t('suggestions.modalTitle')}\n\n`;
+
+            const roleLabel = role === 'plaintiff' ? t('suggestions.plaintiff') : role === 'defendant' ? t('suggestions.defendant') : t('suggestions.unclear');
+            content += `**${t('suggestions.roleIdentified')}:** ${roleLabel}\n\n`;
+
+            if (role === 'defendant' && s.defenseTactics?.length) {
+                content += `#### 🛡️ ${t('suggestions.defenseTactics')}\n` + s.defenseTactics.map(item => `* ${item}`).join('\n') + '\n\n';
+            }
+            if (role === 'plaintiff' && s.attackStrategies?.length) {
+                content += `#### ⚖️ ${t('suggestions.attackStrategies')}\n` + s.attackStrategies.map(item => `* ${item}`).join('\n') + '\n\n';
+            }
+            if (s.evidenceToGather?.length) {
+                content += `#### 📂 ${t('suggestions.evidenceToGather')}\n` + s.evidenceToGather.map(item => `* ${item}`).join('\n') + '\n\n';
+            }
+            if (s.importantDeadlines?.length) {
+                content += `#### ⏳ ${t('suggestions.importantDeadlines')}\n` + s.importantDeadlines.map(item => `* ${item}`).join('\n') + '\n\n';
+            }
+            if (s.mitigatingCircumstances?.length) {
+                content += `#### ❤️ ${t('suggestions.mitigatingCircumstances')}\n` + s.mitigatingCircumstances.map(item => `* ${item}`).join('\n') + '\n\n';
+            }
+            if (s.alternativeSolutions?.length) {
+                content += `#### 🤝 ${t('suggestions.alternativeSolutions')}\n` + s.alternativeSolutions.map(item => `* ${item}`).join('\n') + '\n\n';
+            }
+
+            content += `---\n**${t('suggestions.anythingElse', 'Czy mogę zasugerować coś jeszcze? Może o czymś Pan/Pani zapomniał(a)?')}**`;
+
+            const newMessage: ChatMessage = {
+                role: 'model',
+                content: content,
+                timestamp: Date.now()
+            };
+
+            // 1. Update local state
+            setChatHistory(prev => [...prev, newMessage]);
+
+            // 2. Persist to Firestore
+            if (currentChatId) {
+                const chatRef = doc(db, 'users', user.uid, 'topics', selectedLawArea, 'chats', currentChatId);
+                const messagesRef = collection(chatRef, 'messages');
+                await setDoc(doc(messagesRef), {
+                    ...newMessage,
+                    timestamp: serverTimestamp()
+                });
+
+                await updateDoc(chatRef, {
+                    lastActivity: serverTimestamp(),
+                    messageCount: increment(1)
+                });
+            }
+
+        } catch (error) {
+            console.error('Error generating suggestions:', error);
+            alert('Wystąpił błąd podczas generowania sugestii');
+        } finally {
+            setIsSuggestionsLoading(false);
+        }
+    }, [chatHistory, selectedLawArea, selectedTopic, user, i18n.language, handleAddCost, currentChatId, setChatHistory, t]);
+
     // Auto-close welcome modal after successful case analysis
     // Track when analysis completes (isLoading becomes false after being true)
     const prevLoadingRef = useRef(isLoading);
@@ -471,6 +553,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         handleAddTopic,
         handleDeleteHistory,
         handleCaseAnalysis,
+        handleSuggestSolutions,
+        isSuggestionsLoading,
         isDeleteModalOpen,
         cancelDeleteTopic,
         confirmDeleteTopic,

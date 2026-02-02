@@ -963,5 +963,20 @@
         "save_to_knowledge": "Guardar en la Base de Conocimientos",
         "saved": "¡Guardado!",
         "already_saved": "Ya guardado"
+    },
+    "suggestions": {
+        "button": "Sugerir soluciones",
+        "tooltipDisabled": "Disponible tras recopilar información (mín. 6 mensajes)",
+        "modalTitle": "Próximos pasos sugeridos",
+        "generating": "Generando sugerencias...",
+        "roleIdentified": "Rol identificado",
+        "plaintiff": "Demandante",
+        "defendant": "Demandado",
+        "defenseTactics": "🛡️ Tácticas de defensa",
+        "attackStrategies": "⚔️ Estrategias de ataque",
+        "evidenceToGather": "📄 Evidencia a recolectar",
+        "importantDeadlines": "⏰ Plazos importantes",
+        "mitigatingCircumstances": "🤝 Circunstancias atenuantes",
+        "alternativeSolutions": "🔄 Soluciones alternativas"
     }
 }

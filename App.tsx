@@ -55,6 +55,7 @@ import MainNavigator from './components/MainNavigator';
 import ChatFooter from './components/ChatFooter';
 import { useAppContext, useChatContext, useUIContext } from './context';
 import CustomAgentCreator from './components/CustomAgentCreator';
+import SuggestionsModal from './components/SuggestionsModal';
 
 const GlobalAdminNotes = React.lazy(() => import('./components/GlobalAdminNotes'));
 import FullScreenLoader from './components/FullScreenLoader';
@@ -626,6 +627,8 @@ const App: React.FC = () => {
             onInstall={handleInstallApp}
           />
 
+          <SuggestionsModal />
+
 
           <PlanSelectionModal
             isOpen={!authLoading && !profileLoading && !subsLoading && !hasActiveAccess}
@@ -761,7 +764,9 @@ const App: React.FC = () => {
 
             {/* Only show ChatFooter when we are in a conversation context */}
             {(selectedTopic || activeCustomAgent) && interactionMode && (
-              <ChatFooter />
+              <>
+                <ChatFooter />
+              </>
             )}
           </div>
 

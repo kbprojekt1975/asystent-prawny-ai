@@ -1,8 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChatMessage } from '../types';
-import { UserIcon, BotIcon, DocumentDuplicateIcon, CheckIcon, DownloadIcon, PencilIcon } from './Icons';
+import { UserIcon, BotIcon, DocumentDuplicateIcon, CheckIcon, DownloadIcon, PencilIcon, LightbulbIcon } from './Icons';
 import { useChatBubble } from '../hooks/useChatBubble';
+import { useChatContext } from '../context/ChatContext';
+import LoadingSpinner from './LoadingSpinner';
 
 // Sub-components
 import ChatBubbleNote from './chat/ChatBubbleNote';
@@ -40,6 +42,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   onStartAgent
 }) => {
   const { t } = useTranslation();
+  const { handleSuggestSolutions, isSuggestionsLoading, chatHistory } = useChatContext();
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
 
@@ -182,6 +185,32 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
                     chatBubbleRef={chatBubbleRef}
                   />
                 ))}
+
+                {!isUser && (
+                  <button
+                    onClick={handleSuggestSolutions}
+                    disabled={isSuggestionsLoading || chatHistory.length < 6}
+                    className={`p-2 rounded-lg transition-all border ${chatHistory.length < 6
+                        ? 'opacity-50 cursor-not-allowed bg-slate-700/30 text-slate-500 border-slate-700'
+                        : 'bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-400 hover:text-cyan-300 border-cyan-500/30'
+                      } relative`}
+                    title={chatHistory.length < 6 ? t('suggestions.tooltipDisabled') : t('suggestions.button')}
+                  >
+                    {isSuggestionsLoading ? (
+                      <LoadingSpinner />
+                    ) : (
+                      <>
+                        <LightbulbIcon className="w-4 h-4" />
+                        {chatHistory.length >= 6 && (
+                          <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </button>
+                )}
 
                 {!isAddingNote && (
                   <button

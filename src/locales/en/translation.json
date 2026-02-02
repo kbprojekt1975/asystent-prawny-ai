@@ -990,5 +990,20 @@
         "save_to_knowledge": "Save to Knowledge Base",
         "saved": "Saved!",
         "already_saved": "Already saved"
+    },
+    "suggestions": {
+        "button": "Suggest solutions",
+        "tooltipDisabled": "Available after gathering information (min. 6 messages)",
+        "modalTitle": "Suggested further steps",
+        "generating": "Generating suggestions...",
+        "roleIdentified": "Identified role",
+        "plaintiff": "Plaintiff",
+        "defendant": "Defendant",
+        "defenseTactics": "🛡️ Defense tactics",
+        "attackStrategies": "⚔️ Attack strategies",
+        "evidenceToGather": "📄 Evidence to gather",
+        "importantDeadlines": "⏰ Important deadlines",
+        "mitigatingCircumstances": "🤝 Mitigating circumstances",
+        "alternativeSolutions": "🔄 Alternative solutions"
     }
 }

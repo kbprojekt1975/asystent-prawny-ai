@@ -112,3 +112,33 @@ export const optimizeAgent = async (name: string, persona: string, instructions:
     const result = await optimizeAgentFunction({ name, persona, instructions });
     return result.data as { name: string, persona: string, instructions: string };
 };
+
+export interface Suggestions {
+    defenseTactics?: string[];
+    attackStrategies?: string[];
+    evidenceToGather: string[];
+    importantDeadlines: string[];
+    mitigatingCircumstances?: string[];
+    alternativeSolutions: string[];
+}
+
+export const suggestNextSteps = async (
+    conversationHistory: ChatMessage[],
+    lawArea: LawArea,
+    topic: string,
+    language: string = 'pl'
+): Promise<{ suggestions: Suggestions, userRole: string, usage: TokenUsage }> => {
+    try {
+        const suggestNextStepsFunction = httpsCallable(functions, 'suggestNextSteps');
+        const result = await suggestNextStepsFunction({
+            conversationHistory,
+            lawArea,
+            topic,
+            language
+        });
+        return result.data as { suggestions: Suggestions, userRole: string, usage: TokenUsage };
+    } catch (error) {
+        console.error("Error calling Cloud Function suggestNextSteps:", error);
+        throw error;
+    }
+};
