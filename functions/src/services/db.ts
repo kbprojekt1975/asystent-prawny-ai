@@ -3,7 +3,8 @@ import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import * as logger from "firebase-functions/logger";
 
-initializeApp();
+const adminConfig = process.env.FIREBASE_CONFIG ? JSON.parse(process.env.FIREBASE_CONFIG) : { projectId: "low-assit" };
+initializeApp(adminConfig);
 
 export const db = getFirestore();
 export const storage = getStorage();
@@ -41,9 +42,13 @@ export async function wipeUserData(uid: string, deleteUserDoc: boolean, storage:
     const userRef = db.collection('users').doc(uid);
 
     try {
-        const bucket = storage.bucket();
-        await bucket.deleteFiles({ prefix: `users/${uid}/` });
-
+        // Storage cleanup - non-critical
+        try {
+            const bucket = storage.bucket();
+            await bucket.deleteFiles({ prefix: `users/${uid}/` });
+        } catch (storageError) {
+            logger.warn(`Storage wipe failed for user ${uid} (non-critical):`, storageError);
+        }
 
         const topSubs = ['legal_knowledge', 'reminders', 'timeline', 'chats', 'knowledge_bases'];
         for (const sub of topSubs) {
@@ -63,13 +68,17 @@ export async function wipeUserData(uid: string, deleteUserDoc: boolean, storage:
             }
         }
 
-        // Delete Stripe Customers Data
-        const customerRef = db.collection('customers').doc(uid);
-        const customerSubs = ['subscriptions', 'checkout_sessions', 'payments', 'tax_ids']; // Common Stripe Extension subcollections
-        for (const sub of customerSubs) {
-            await deleteCollection(customerRef.collection(sub));
+        // Delete Stripe Customers Data - non-critical but recommended
+        try {
+            const customerRef = db.collection('customers').doc(uid);
+            const customerSubs = ['subscriptions', 'checkout_sessions', 'payments', 'tax_ids']; // Common Stripe Extension subcollections
+            for (const sub of customerSubs) {
+                await deleteCollection(customerRef.collection(sub));
+            }
+            await customerRef.delete();
+        } catch (stripeError) {
+            logger.warn(`Stripe data wipe failed for user ${uid}:`, stripeError);
         }
-        await customerRef.delete();
 
         if (deleteUserDoc) {
             await userRef.delete();

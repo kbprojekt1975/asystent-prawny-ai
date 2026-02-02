@@ -43,6 +43,10 @@ Ten plik zawiera listę wszystkich komend potrzebnych do pracy z aplikacją, pod
 | `firebase deploy --only functions` | Wysyła tylko zmiany w kodzie backendu (Cloud Functions). |
 | `firebase deploy --only hosting` | Wysyła tylko zmiany w wyglądzie i logice frontendu. |
 
+npm run build && firebase deploy
+
+npm run build && firebase deploy --only hosting
+
 ---
 
 ## 🔑 Inicjalizacja (Pierwszy Raz)
@@ -61,3 +65,8 @@ Ten plik zawiera listę wszystkich komend potrzebnych do pracy z aplikacją, pod
 > 2. Terminal 2: `npm run seed` (wgranie cennika - tylko raz po starcie bazy)
 > 3. Terminal 3: `npm run watch:functions` (backend w tle)
 > 4. Terminal 4: `npm run dev` (praca nad ekranami)
+
+
+Wylaczenie i wlczenie produkcji:
+firebase hosting:disable
+firebase deploy --only hosting

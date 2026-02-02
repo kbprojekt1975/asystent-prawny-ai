@@ -119,9 +119,11 @@ const LawSelector: React.FC<LawSelectorProps> = ({
 
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
           {/* Create New Agent Tile */}
-          <button
+          <div
+            role="button"
+            tabIndex={0}
             onClick={() => isPro ? onCreateCustomAgent() : alert("Funkcja Własnych Agentów dostępna tylko w pakiecie PRO.")}
-            className={`group relative overflow-hidden bg-slate-900 border-2 border-dashed ${isPro ? 'border-cyan-500/30 hover:border-cyan-500 hover:bg-slate-800' : 'border-slate-700 opacity-70'} rounded-lg p-3 md:p-6 text-left transition-all duration-300`}
+            className={`cursor-pointer group relative overflow-hidden bg-slate-900 border-2 border-dashed ${isPro ? 'border-cyan-500/30 hover:border-cyan-500 hover:bg-slate-800' : 'border-slate-700 opacity-70'} rounded-lg p-3 md:p-6 text-left transition-all duration-300`}
           >
             <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20">
               <InfoIcon
@@ -142,7 +144,7 @@ const LawSelector: React.FC<LawSelectorProps> = ({
             </div>
             <h2 className="text-sm md:text-xl font-semibold text-white mb-0.5 md:mb-1 leading-tight">STWÓRZ AGENTA</h2>
             <p className="text-xs md:text-base text-slate-400 line-clamp-2">Zdefiniuj własną osobowość AI</p>
-          </button>
+          </div>
 
           {/* List Custom Agents */}
           {customAgents.map(agent => (

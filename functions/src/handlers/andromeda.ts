@@ -92,7 +92,7 @@ export const askAndromeda = onCall({
         ]
     }];
 
-    const modelName = 'gemini-1.5-pro';
+    const modelName = 'gemini-2.0-flash';
     const model = genAI.getGenerativeModel({
         model: modelName,
         systemInstruction,

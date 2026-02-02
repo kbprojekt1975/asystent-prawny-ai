@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import HamburgerMenu from './HamburgerMenu';
-import { SparklesIcon, ClockIcon, HomeIcon, CreditCardIcon, ProfileIcon, BookOpenIcon, DownloadIcon, UploadIcon, ArrowLeftIcon, BrainIcon } from './Icons';
+import { SparklesIcon, ClockIcon, HomeIcon, CreditCardIcon, ProfileIcon, BookOpenIcon, DownloadIcon, UploadIcon, ArrowLeftIcon, BrainIcon, ChevronRightIcon } from './Icons';
 import CostCounter from './CostCounter';
 import { SubscriptionInfo, SubscriptionStatus } from '../types';
 import HelpModal from './HelpModal';
@@ -10,6 +10,7 @@ import { useState } from 'react';
 
 interface AppHeaderProps {
   title: React.ReactNode;
+  breadcrumbs?: string[];
   onProfileClick: () => void;
   onBackClick?: () => void;
   backButtonText?: string;
@@ -37,6 +38,7 @@ interface AppHeaderProps {
 
 const AppHeader: React.FC<AppHeaderProps> = ({
   title,
+  breadcrumbs,
   onProfileClick,
   onBackClick,
   backButtonText,
@@ -74,7 +76,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   return (
-    <header className="bg-slate-900/70 backdrop-blur-md p-4 border-b border-slate-700 flex flex-col md:flex-row justify-between items-center z-40 flex-shrink-0 gap-3 md:gap-4 w-full">
+    <header className="bg-slate-900/70 backdrop-blur-md p-2 md:p-4 border-b border-slate-700 flex flex-col md:flex-row justify-between items-center z-40 flex-shrink-0 gap-1 md:gap-4 w-full">
       <div className="flex items-center justify-between w-full md:w-auto md:mr-auto truncate gap-3">
         <div className="flex items-center gap-3 truncate">
           {onBackClick && (
@@ -87,9 +89,22 @@ const AppHeader: React.FC<AppHeaderProps> = ({
               <ArrowLeftIcon className="h-6 w-6" />
             </button>
           )}
-          <h1 className="text-sm md:text-lg font-bold text-white truncate">
-            {title}
-          </h1>
+          {breadcrumbs && breadcrumbs.length > 0 ? (
+            <nav className="flex items-center gap-1.5 overflow-x-auto no-scrollbar mask-linear-fade pr-4 text-sm md:text-base font-medium whitespace-nowrap">
+              {breadcrumbs.map((crumb, index) => (
+                <div key={index} className="flex items-center gap-1.5 flex-shrink-0">
+                  {index > 0 && <ChevronRightIcon className="w-4 h-4 text-slate-500 flex-shrink-0" />}
+                  <span className={`${index === breadcrumbs.length - 1 ? 'text-white font-bold' : 'text-slate-400'}`}>
+                    {crumb}
+                  </span>
+                </div>
+              ))}
+            </nav>
+          ) : (
+            <h1 className="text-sm md:text-lg font-bold text-white truncate">
+              {title}
+            </h1>
+          )}
         </div>
 
         {/* Mobile-only Hamburger (if needed, but it's currently at the end) */}

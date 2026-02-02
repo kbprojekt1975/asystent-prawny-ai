@@ -504,6 +504,28 @@ const App: React.FC = () => {
   // EXCEPTION: If isLoginFlow is true, we prefer the Auth Spinner, so we HIDE the global loader.
   const isProfilePending = !!user && (profileLoading || subsLoading || isRecharging);
 
+  const handleSmartBack = () => {
+    if (activeCustomAgent) {
+      setActiveCustomAgent(null);
+      return;
+    }
+    if (selectedTopic) {
+      setSelectedTopic(null);
+      return;
+    }
+    // SKIP clearing interactionMode directly to avoid showing the "Tools Grid".
+    // Instead, go straight back to Service Path selection.
+
+    if (servicePath) {
+      setServicePath(null);
+      setInteractionMode(null); // Clean reset
+      return;
+    }
+    if (selectedLawArea) {
+      setSelectedLawArea(null);
+    }
+  };
+
   const showLoader = !isLoginFlow && (isStabilizing || isProfilePending || (isSplashDismissed && !showAuth && !showSplash &&
     (authLoading || (isNavigating && !isShowAndromeda && !showActivation))));
 
@@ -647,17 +669,61 @@ const App: React.FC = () => {
             )}
             {!isFullScreen && (
               <AppHeader
-                title={
-                  activeCustomAgent
-                    ? (selectedTopic ? `${activeCustomAgent.name}: ${selectedTopic}` : activeCustomAgent.name)
-                    : (selectedLawArea === LawArea.Custom ? (customAgents.find(a => a.id === selectedTopic)?.name || selectedTopic) : (selectedTopic || t('breadcrumbs.home')))
-                }
+                breadcrumbs={(() => {
+                  const paths = [];
+
+                  // 1. Root / Agent Name
+                  if (activeCustomAgent) {
+                    paths.push(activeCustomAgent.name);
+                  } else if (selectedLawArea === LawArea.Custom) {
+                    // If viewing custom agents list but no specific agent active (shouldn't happen often in this view, but good safety)
+                    const agentName = customAgents.find(a => a.id === selectedTopic)?.name;
+                    paths.push(agentName || t('law.areas.custom'));
+                  } else if (selectedLawArea) {
+                    // Standard Law Area
+                    const areaName = Object.values(LawArea).includes(selectedLawArea)
+                      ? t(`law.areas.${selectedLawArea}`, { defaultValue: selectedLawArea })
+                      : selectedLawArea;
+                    paths.push(areaName);
+                  } else {
+                    // Home
+                    paths.push(t('breadcrumbs.home') || 'Strona Główna');
+                  }
+
+                  // 2. Interaction Mode
+                  if (interactionMode) {
+                    const modeName = Object.values(InteractionMode).includes(interactionMode)
+                      ? t(`interactionModes.${interactionMode}`, { defaultValue: interactionMode })
+                      : interactionMode;
+                    paths.push(modeName);
+                  }
+
+                  // 3. Topic
+                  if (selectedTopic && !activeCustomAgent) {
+                    // If standard mode, show topic. For custom agent, topic IS the agent usually or handled above.
+                    // But wait, user's logic was:
+                    // activeCustomAgent ? (selectedTopic ? `${activeCustomAgent.name}: ${selectedTopic}` ...
+                    // So if custom agent is active, topic is essentially a sub-state?
+                    // Let's align with previous title logic:
+                    if (selectedLawArea === LawArea.Custom) {
+                      // Already pushed agent name above if found
+                    } else {
+                      paths.push(selectedTopic);
+                    }
+                  } else if (selectedTopic && activeCustomAgent) {
+                    // Custom agent + topic selected (e.g. chat session details?)
+                    paths.push(selectedTopic);
+                  }
+
+                  return paths;
+                })()}
+                title="" // Fallback/Hidden when breadcrumbs exist
                 onProfileClick={() => setIsProfileModalOpen(true)}
                 onHelpClick={() => setIsAppHelpSidebarOpen(true)}
                 onQuickActionsClick={() => setIsQuickActionsModalOpen(true)}
                 onHistoryClick={() => setIsHistoryPanelOpen(true)}
                 onAiToolsClick={() => setIsAiToolsSidebarOpen(true)}
-                onBackClick={selectedLawArea ? backToLawArea : undefined}
+                onBackClick={selectedLawArea ? handleSmartBack : undefined}
                 onHomeClick={selectedLawArea ? resetNavigation : undefined}
                 totalCost={totalCost}
                 subscription={userProfile?.subscription}
@@ -692,7 +758,10 @@ const App: React.FC = () => {
               userId={user?.uid}
             />
 
-            <ChatFooter />
+            {/* Only show ChatFooter when we are in a conversation context */}
+            {(selectedTopic || activeCustomAgent) && interactionMode && (
+              <ChatFooter />
+            )}
           </div>
 
           <AiToolsSidebar

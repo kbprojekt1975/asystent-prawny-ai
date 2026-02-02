@@ -36,8 +36,12 @@ export const useChatPersistence = ({
             await setDoc(doc(db, 'users', user.uid, 'chats', chatId), {
                 messages: messages.filter(m => m.role !== 'system'),
                 lastUpdated: serverTimestamp(),
-                ...metadata,
-                servicePath: metadata.servicePath || 'standard'
+                lawArea: metadata.lawArea,
+                topic: metadata.topic,
+                interactionMode: metadata.interactionMode,
+                servicePath: metadata.servicePath || 'standard',
+                ...(metadata.agentId ? { agentId: metadata.agentId } : {}),
+                ...(metadata.agentName ? { agentName: metadata.agentName } : {})
             }, { merge: true });
 
             onRefreshHistories?.();
