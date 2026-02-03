@@ -64,6 +64,7 @@ export interface CustomAgent {
   name: string;
   persona: string;
   instructions: string;
+  agentType?: 'standalone' | 'overlay';
   focusAreas?: string[];
   createdAt: any;
 }

@@ -60,7 +60,7 @@ const AndromedaInput: React.FC<AndromedaInputProps> = ({ onSend, onFileUpload, i
     };
 
     return (
-        <footer className="relative z-10 p-4 md:p-6 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent">
+        <footer className="flex-none relative z-10 p-4 md:p-6 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent">
             <div className="max-w-3xl mx-auto relative group">
                 <div className="absolute inset-0 bg-cyan-600/5 blur-xl group-focus-within:bg-cyan-600/10 transition-colors rounded-2xl" />
                 <div className="relative flex flex-col bg-slate-900/80 border border-slate-800 group-focus-within:border-cyan-500/50 rounded-2xl transition-all backdrop-blur-xl shadow-2xl overflow-hidden">

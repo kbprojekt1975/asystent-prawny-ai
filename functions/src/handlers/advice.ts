@@ -43,12 +43,13 @@ export const getLegalAdvice = onCall({
         const userRef = db.collection('users').doc(uid);
 
         // --- FETCH CUSTOM AGENT (if applicable) ---
+        // --- FETCH CUSTOM AGENT (if applicable) ---
         let customAgentInstructions = "";
+        let isStandalone = false;
 
         if (agentInstructions) {
             customAgentInstructions = `
-                # CUSTOM PERSONA: Custom Agent
-                # SPECIFIC INSTRUCTIONS:
+                # CUSTOM PERSONA (User Defined):
                 ${agentInstructions}
             `;
             logger.info("✅ Custom agent instructions provided in request.");
@@ -58,13 +59,15 @@ export const getLegalAdvice = onCall({
                 const agentDoc = await userRef.collection('custom_agents').doc(targetAgentId).get();
                 if (agentDoc.exists) {
                     const agentData = agentDoc.data();
+                    isStandalone = agentData?.agentType === 'standalone'; // Check type
+
                     customAgentInstructions = `
                         # CUSTOM PERSONA: ${agentData?.name || 'Custom Agent'}
                         # IDENTITY/ROLE: ${agentData?.persona || 'Specialized Assistant'}
                         # SPECIFIC INSTRUCTIONS:
                         ${agentData?.instructions || 'Follow user preferences.'}
                     `;
-                    logger.info(`✅ Custom agent "${agentData?.name}" instructions loaded from DB.`);
+                    logger.info(`✅ Custom agent "${agentData?.name}" (Type: ${agentData?.agentType || 'overlay'}) loaded.`);
                 }
             } catch (e) {
                 logger.error("Error fetching custom agent", e);
@@ -136,29 +139,55 @@ export const getLegalAdvice = onCall({
         const modeInstructions = dynamicPrompts?.instructions?.[language]?.[interactionMode] ||
             instrMapDefault[areaKey]?.[interactionMode] || "";
 
-        const instruction = `
-            ${customAgentInstructions}
+        let instruction = "";
 
-            # ROLE: LEGAL EXPERT (${lawArea || areaKey})
-            # TOPIC: ${topic || 'General Query'}
-            
-            # CORE RULES:
-            ${coreRules}
-            
-            # PILLAR RULES:
-            ${pillarRules}
-            
-            # MODE SPECIFIC:
-            ${modeInstructions}
-            
-            # EXISTING KNOWLEDGE:
-            ${existingKnowledgeContext}
-            
-            # ADDITIONAL CONTEXT (Articles):
-            ${articles || "None provided"}
-            
-            # RESPONSE LANGUAGE: ${language === 'en' ? 'ENGLISH' : language === 'es' ? 'SPANISH' : 'POLISH'}.
-        `;
+        if (isStandalone) {
+            // STANDALONE AGENT PROMPT
+            // We drop the forced "LEGAL EXPERT" role and Pillar Rules to let the Persona shine.
+            // We keep Core Rules for safety.
+            instruction = `
+                ${customAgentInstructions}
+
+                # TOPIC/CONTEXT: ${topic || 'User Query'}
+                
+                # CORE SAFETY RULES:
+                ${coreRules}
+                
+                # EXISTING KNOWLEDGE (If relevant):
+                ${existingKnowledgeContext}
+                
+                # ADDITIONAL CONTEXT (Articles):
+                ${articles || "None provided"}
+                
+                # RESPONSE LANGUAGE: ${language === 'en' ? 'ENGLISH' : language === 'es' ? 'SPANISH' : 'POLISH'}.
+            `;
+            logger.info("🤖 Using STANDALONE Agent Prompt Structure");
+        } else {
+            // STANDARD / OVERLAY PROMPT
+            instruction = `
+                ${customAgentInstructions}
+
+                # ROLE: LEGAL EXPERT (${lawArea || areaKey})
+                # TOPIC: ${topic || 'General Query'}
+                
+                # CORE RULES:
+                ${coreRules}
+                
+                # PILLAR RULES:
+                ${pillarRules}
+                
+                # MODE SPECIFIC:
+                ${modeInstructions}
+                
+                # EXISTING KNOWLEDGE:
+                ${existingKnowledgeContext}
+                
+                # ADDITIONAL CONTEXT (Articles):
+                ${articles || "None provided"}
+                
+                # RESPONSE LANGUAGE: ${language === 'en' ? 'ENGLISH' : language === 'es' ? 'SPANISH' : 'POLISH'}.
+            `;
+        }
 
         // --- PREPARE CONTENT ---
         let contents = (history as any[]).map((msg: any) => ({

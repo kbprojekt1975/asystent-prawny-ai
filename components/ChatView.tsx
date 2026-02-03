@@ -18,7 +18,8 @@ const ChatView: React.FC = () => {
         isLocalOnly,
         currentChatId,
         activeCustomAgent,
-        setActiveCustomAgent
+        setActiveCustomAgent,
+        resetNavigation
     } = useAppContext();
 
     const {
@@ -86,9 +87,12 @@ const ChatView: React.FC = () => {
                         <div className="ml-auto flex items-center gap-2">
                             <span className="text-[10px] md:text-xs bg-violet-500/20 text-violet-300 px-2 py-1 rounded-md font-medium border border-violet-500/30">PERSONA AKTYWNA</span>
                             <button
-                                onClick={() => setActiveCustomAgent(null)}
+                                onClick={() => {
+                                    setActiveCustomAgent(null);
+                                    resetNavigation();
+                                }}
                                 className="text-[10px] md:text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 px-2 py-1 rounded-md font-bold border border-red-500/30 transition-all uppercase"
-                                title="Dezaktywuj agenta"
+                                title="Dezaktywuj agenta i wróć do ekranu głównego"
                             >
                                 Wyłącz
                             </button>

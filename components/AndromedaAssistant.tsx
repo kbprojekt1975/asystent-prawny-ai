@@ -57,7 +57,7 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onPr
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex bg-slate-950 text-slate-100 overflow-hidden font-sans">
+        <div className="fixed inset-0 z-50 flex bg-slate-950 text-slate-100 overflow-hidden font-sans h-[100dvh]">
             <AndromedaSidebar
                 isSidebarOpen={isSidebarOpen}
                 setIsSidebarOpen={setIsSidebarOpen}
@@ -81,7 +81,7 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onPr
                 />
             )}
 
-            <div className="flex-1 flex flex-col relative h-full">
+            <div className="flex-1 flex flex-col relative h-full min-h-0">
                 <AndromedaChatView
                     history={history}
                     isLoading={isLoading}

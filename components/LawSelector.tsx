@@ -18,7 +18,7 @@ interface LawSelectorProps {
   customAgents?: any[];
   onCustomAgentSelect: (agent: any) => void;
   onDeleteCustomAgent: (agent: any) => void;
-  onCreateCustomAgent: () => void;
+  onCreateCustomAgent: (type: 'standalone' | 'overlay') => void;
   onDeactivateAgent: () => void;
   activeAgent?: any;
 }
@@ -122,7 +122,7 @@ const LawSelector: React.FC<LawSelectorProps> = ({
           <div
             role="button"
             tabIndex={0}
-            onClick={() => isPro ? onCreateCustomAgent() : alert("Funkcja Własnych Agentów dostępna tylko w pakiecie PRO.")}
+            onClick={() => isPro ? onCreateCustomAgent('overlay') : alert("Funkcja Agentów dostępna tylko w pakiecie PRO.")}
             className={`cursor-pointer group relative overflow-hidden bg-slate-900 border-2 border-dashed ${isPro ? 'border-cyan-500/30 hover:border-cyan-500 hover:bg-slate-800' : 'border-slate-700 opacity-70'} rounded-lg p-3 md:p-6 text-left transition-all duration-300`}
           >
             <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20">
@@ -142,8 +142,36 @@ const LawSelector: React.FC<LawSelectorProps> = ({
             <div className="w-8 h-8 md:w-12 md:h-12 bg-cyan-500/10 rounded-lg flex items-center justify-center mb-2 md:mb-4 group-hover:scale-110 transition-transform">
               <MagicWandIcon className="w-5 h-5 md:w-6 md:h-6 text-cyan-400" />
             </div>
-            <h2 className="text-sm md:text-xl font-semibold text-white mb-0.5 md:mb-1 leading-tight">STWÓRZ AGENTA</h2>
-            <p className="text-xs md:text-base text-slate-400 line-clamp-2">Zdefiniuj własną osobowość AI</p>
+            <h2 className="text-sm md:text-xl font-semibold text-white mb-0.5 md:mb-1 leading-tight uppercase">Stwórz Agenta</h2>
+            <p className="text-xs md:text-base text-slate-400 line-clamp-2">Nakładka AI na dziedziny prawa</p>
+          </div>
+
+          {/* Create New Standalone Assistant Tile */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => isPro ? onCreateCustomAgent('standalone') : alert("Funkcja Niezależnych Asystentów dostępna tylko w pakiecie PRO.")}
+            className={`cursor-pointer group relative overflow-hidden bg-slate-900 border-2 border-dashed ${isPro ? 'border-violet-500/30 hover:border-violet-500 hover:bg-slate-800' : 'border-slate-700 opacity-70'} rounded-lg p-3 md:p-6 text-left transition-all duration-300`}
+          >
+            <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20">
+              <InfoIcon
+                onClick={(e) => {
+                  e.stopPropagation();
+                  alert("Asystent Autonomiczny to niezależny byt AI, który po wybraniu przenosi Cię od razu do czatu. Idealny dla bardzo wąskich, spersonalizowanych tematów.");
+                }}
+                className="w-8 h-8 md:w-12 md:h-12 text-violet-400 hover:text-white bg-slate-800/90 border border-violet-500/20 rounded-full shadow-2xl flex items-center justify-center p-1.5 md:p-2"
+              />
+            </div>
+            {!isPro && (
+              <div className="absolute top-2 right-12 px-2 py-0.5 bg-violet-500 text-white text-[10px] font-black rounded-full shadow-lg">
+                PRO ONLY
+              </div>
+            )}
+            <div className="w-8 h-8 md:w-12 md:h-12 bg-violet-500/10 rounded-lg flex items-center justify-center mb-2 md:mb-4 group-hover:scale-110 transition-transform">
+              <MagicWandIcon className="w-5 h-5 md:w-6 md:h-6 text-violet-400" />
+            </div>
+            <h2 className="text-sm md:text-xl font-semibold text-white mb-0.5 md:mb-1 leading-tight uppercase">Stwórz Asystenta</h2>
+            <p className="text-xs md:text-base text-slate-400 line-clamp-2">Niezależny byt (bezpośredni czat)</p>
           </div>
 
           {/* List Custom Agents */}
@@ -151,10 +179,17 @@ const LawSelector: React.FC<LawSelectorProps> = ({
             <div key={agent.id} className="relative group">
               <button
                 onClick={() => onCustomAgentSelect(agent)}
-                className="w-full h-full bg-slate-800/40 border border-slate-700 rounded-lg p-3 md:p-6 text-left hover:bg-slate-700/70 hover:border-cyan-500 transition-all duration-300"
+                className={`w-full h-full bg-slate-800/40 border border-slate-700 rounded-lg p-3 md:p-6 text-left hover:bg-slate-700/70 ${agent.agentType === 'standalone' ? 'hover:border-violet-500' : 'hover:border-cyan-500'} transition-all duration-300`}
               >
-                <div className="w-8 h-8 md:w-12 md:h-12 bg-violet-500/10 rounded-lg flex items-center justify-center mb-2 md:mb-4 group-hover:bg-violet-500/20 transition-colors">
-                  <div className="text-base md:text-xl font-black text-violet-400 uppercase">{agent.name.substring(0, 1)}</div>
+                <div className="flex items-center justify-between mb-2 md:mb-4">
+                  <div className={`w-8 h-8 md:w-12 md:h-12 ${agent.agentType === 'standalone' ? 'bg-violet-500/10' : 'bg-cyan-500/10'} rounded-lg flex items-center justify-center group-hover:bg-opacity-20 transition-colors`}>
+                    <div className={`text-base md:text-xl font-black ${agent.agentType === 'standalone' ? 'text-violet-400' : 'text-cyan-400'} uppercase font-mono`}>{agent.name.substring(0, 1)}</div>
+                  </div>
+                  {agent.agentType === 'standalone' && (
+                    <span className="text-[8px] md:text-[10px] bg-violet-500/20 text-violet-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-violet-500/20">
+                      Asystent
+                    </span>
+                  )}
                 </div>
                 <h2 className="text-sm md:text-xl font-semibold text-white mb-0.5 md:mb-1 line-clamp-1 leading-tight">{agent.name}</h2>
                 <p className="text-xs md:text-base text-slate-400 line-clamp-2">{agent.persona}</p>
@@ -195,30 +230,32 @@ const LawSelector: React.FC<LawSelectorProps> = ({
         </button>
       </div>
 
-      {onImport && (
-        <div className="w-full max-w-6xl mb-8">
-          <input
-            type="file"
-            id="main-json-import"
-            className="hidden"
-            accept=".json"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                onImport(file);
-                e.target.value = '';
-              }
-            }}
-          />
-          <button
-            onClick={() => document.getElementById('main-json-import')?.click()}
-            className="w-full group bg-slate-800/40 border border-slate-700 rounded-lg p-4 flex items-center justify-center gap-3 hover:bg-slate-700/60 hover:border-cyan-500 transition-all duration-300"
-          >
-            <MagicWandIcon className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
-            <span className="text-slate-200 font-medium">{t('law.importJson')}</span>
-          </button>
-        </div>
-      )}
+      {
+        onImport && (
+          <div className="w-full max-w-6xl mb-8">
+            <input
+              type="file"
+              id="main-json-import"
+              className="hidden"
+              accept=".json"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  onImport(file);
+                  e.target.value = '';
+                }
+              }}
+            />
+            <button
+              onClick={() => document.getElementById('main-json-import')?.click()}
+              className="w-full group bg-slate-800/40 border border-slate-700 rounded-lg p-4 flex items-center justify-center gap-3 hover:bg-slate-700/60 hover:border-cyan-500 transition-all duration-300"
+            >
+              <MagicWandIcon className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+              <span className="text-slate-200 font-medium">{t('law.importJson')}</span>
+            </button>
+          </div>
+        )
+      }
 
       <div className="w-full max-w-6xl p-6 bg-slate-800/40 rounded-xl border border-slate-700/50 backdrop-blur-sm">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -308,7 +345,7 @@ const LawSelector: React.FC<LawSelectorProps> = ({
           </p>
         </div>
       </HelpModal>
-    </div>
+    </div >
   );
 };
 

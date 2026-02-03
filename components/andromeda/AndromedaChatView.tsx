@@ -22,7 +22,7 @@ const AndromedaChatView: React.FC<AndromedaChatViewProps> = ({
     const { t } = useTranslation();
 
     return (
-        <div className="flex-1 flex flex-col relative h-full">
+        <div className="flex-1 flex flex-col relative min-h-0">
             {/* Ambient Background */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-900/10 blur-[120px] rounded-full animate-pulse" />
@@ -30,7 +30,7 @@ const AndromedaChatView: React.FC<AndromedaChatViewProps> = ({
             </div>
 
             {/* Header */}
-            <header className="relative z-10 px-4 md:px-6 py-4 flex items-center justify-between border-b border-slate-800/50 backdrop-blur-md bg-slate-900/40">
+            <header className="flex-none relative z-10 px-4 md:px-6 py-4 flex items-center justify-between border-b border-slate-800/50 backdrop-blur-md bg-slate-900/40">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setIsSidebarOpen(true)}
@@ -63,7 +63,7 @@ const AndromedaChatView: React.FC<AndromedaChatViewProps> = ({
             </header>
 
             {/* Chat Area */}
-            <main className="relative z-10 flex-1 overflow-y-auto px-4 md:px-6 py-6 md:py-8 scrollbar-hide">
+            <main className="relative z-10 flex-1 overflow-y-auto px-4 md:px-6 py-6 md:py-8 min-h-0 scrollbar-hide">
                 <div className="max-w-3xl mx-auto space-y-6 md:space-y-8">
                     {history.length === 0 && (
                         <div className="text-center py-10 md:py-20 animate-in fade-in slide-in-from-bottom-4 duration-1000">

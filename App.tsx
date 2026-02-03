@@ -74,6 +74,7 @@ const App: React.FC = () => {
   const [isShowAndromeda, setIsShowAndromeda] = useState(false);
   const [hasDismissedAssistantSession, setHasDismissedAssistantSession] = useState(false);
   const [isCustomAgentCreatorOpen, setIsCustomAgentCreatorOpen] = useState(false);
+  const [agentTypeToCreate, setAgentTypeToCreate] = useState<'standalone' | 'overlay'>('overlay');
   // Default to true to be safe on initial mount, but clear quickly if not needed
   const [isStabilizing, setIsStabilizing] = useState(true);
   const [isLoginFlow, setIsLoginFlow] = useState(false);
@@ -158,7 +159,10 @@ const App: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    (window as any).showCustomAgentCreator = () => setIsCustomAgentCreatorOpen(true);
+    (window as any).showCustomAgentCreator = (type: 'standalone' | 'overlay' = 'overlay') => {
+      setAgentTypeToCreate(type);
+      setIsCustomAgentCreatorOpen(true);
+    };
     (window as any).deleteCustomAgent = (agent: any) => handleDeleteCustomAgent(agent);
     return () => {
       delete (window as any).showCustomAgentCreator;
@@ -251,18 +255,17 @@ const App: React.FC = () => {
   // STABILIZATION LOGIC (Fix for flickering login/register)
   // Use useLayoutEffect to prevent painting the "gap" frame between Auth and Dashboard.
   React.useLayoutEffect(() => {
-    if (user && isSplashDismissed) {
-      // User is authenticated.
-      // If we came from a state where we were NOT authenticated (captured by isStabilizing or just the flow)
-      // We want to ensure isLoginFlow handles the transition.
-      setIsStabilizing(true);
-    }
-
     // Detect login flow start: if we have no user and splash is gone, we are in auth mode
     if (!user && isSplashDismissed) {
       setIsLoginFlow(true);
     }
-  }, [user, isSplashDismissed]);
+
+    // Trigger stabilization ONLY for new logins/registration (when user becomes available during login flow)
+    // Avoid triggering it for return users just dismissing the splash screen.
+    if (user && isLoginFlow) {
+      setIsStabilizing(true);
+    }
+  }, [user, isSplashDismissed, isLoginFlow]);
 
   // Clear stabilization when data is ready
   useEffect(() => {
@@ -462,6 +465,13 @@ const App: React.FC = () => {
       // Auto-open created agent
       setActiveCustomAgent({ id: docRef.id, ...agent });
 
+      // If standalone, jump directly to chat
+      if (agent.agentType === 'standalone') {
+        setSelectedLawArea(LawArea.Custom);
+        setSelectedTopic(agent.name);
+        setInteractionMode(InteractionMode.Advice);
+      }
+
     } catch (e) {
       console.error("Failed to save custom agent:", e);
       throw e;
@@ -535,7 +545,7 @@ const App: React.FC = () => {
       {/* 1. Splash Screen */}
       {showSplash && (
         <SplashScreen
-          isReady={!authLoading && !profileLoading && !subsLoading && !isRecharging}
+          isReady={!authLoading && !profileLoading && !subsLoading && !isRecharging && !isStabilizing}
           onStart={() => {
             setIsShowAndromeda(true);
             setIsSplashDismissed(true);
@@ -638,6 +648,7 @@ const App: React.FC = () => {
             isOpen={isCustomAgentCreatorOpen}
             onClose={() => setIsCustomAgentCreatorOpen(false)}
             onSave={handleSaveCustomAgent}
+            initialType={agentTypeToCreate}
           />
 
           <GlobalAnnouncement />

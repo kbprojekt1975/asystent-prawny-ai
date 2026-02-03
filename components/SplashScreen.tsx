@@ -13,6 +13,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
     const { t, i18n } = useTranslation();
     const [messageIndex, setMessageIndex] = useState(0);
     const [fade, setFade] = useState(true);
+    const [isExiting, setIsExiting] = useState(false);
     const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
     useEffect(() => {
@@ -40,10 +41,18 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
         localStorage.setItem('i18nextLng', lang);
     };
 
-    const canStart = isReady && minTimeElapsed;
+    const canStart = isReady && minTimeElapsed && !isExiting;
+
+    const handleStart = () => {
+        setIsExiting(true);
+        // Wait for the duration of the transition (duration-500)
+        setTimeout(() => {
+            onStart();
+        }, 500);
+    };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-slate-900 z-[9999] overflow-hidden">
+        <div className={`fixed inset-0 flex items-center justify-center bg-slate-900 z-[9999] overflow-hidden transition-all duration-500 ${isExiting ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}`}>
             {/* Background Effects */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
@@ -92,7 +101,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
                 <div className="mb-8 min-h-[40px] flex items-center justify-center w-full">
                     {canStart ? (
                         <button
-                            onClick={onStart}
+                            onClick={handleStart}
+                            disabled={isExiting}
                             className="group relative px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-700 text-white font-bold rounded-xl shadow-lg shadow-cyan-900/20 hover:shadow-cyan-500/30 hover:scale-105 active:scale-95 transition-all duration-300 animate-in fade-in zoom-in"
                         >
                             <div className="flex items-center gap-2">

@@ -1,10 +1,14 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { SchemaType } from "@google/generative-ai";
-import { db, FieldValue } from "../services/db";
+import { db, FieldValue, Timestamp } from "../services/db";
 import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, getSystemPrompts, GEMINI_API_KEY } from "../services/ai";
 import { searchLegalActs } from "../services/isapService";
 import { searchJudgments } from "../services/saosService";
+import {
+    CORE_RULES_PL, CORE_RULES_EN, CORE_RULES_ES,
+    PILLAR_RULES_PL, PILLAR_RULES_EN, PILLAR_RULES_ES
+} from "../prompts";
 
 export const askAndromeda = onCall({
     cors: true,
@@ -65,8 +69,24 @@ export const askAndromeda = onCall({
     const dynamicPrompts = await getSystemPrompts(db);
     const dynamicAndromedaPrompt = dynamicPrompts?.instructions?.[language]?.["Andromeda"];
 
+    // 1. CORE RULES
+    const coreRulesDefault = (language === 'en' ? CORE_RULES_EN : language === 'es' ? CORE_RULES_ES : CORE_RULES_PL);
+    const coreRules = dynamicPrompts?.core?.[language] || coreRulesDefault;
+
+    // 2. PILLAR RULES (Universal/Andromeda always uses 'Asystent Prawny')
+    const pillarRulesMapDefault = (language === 'en' ? PILLAR_RULES_EN : language === 'es' ? PILLAR_RULES_ES : PILLAR_RULES_PL);
+    const pillarRules = dynamicPrompts?.pillars?.[language]?.['Asystent Prawny'] || pillarRulesMapDefault['Asystent Prawny'] || "";
+
     const systemInstruction = dynamicAndromedaPrompt || `
     # ROLE: ANDROMEDA - GLOBAL LEGAL COMPASS
+    
+    # CORE RULES:
+    ${coreRules}
+    
+    # PILLAR RULES (UNIVERSAL):
+    ${pillarRules}
+    
+    # CONTEXT:
     ${existingKnowledgeContext}
     
     Respond in ${language}. Use tools to verify.
@@ -145,7 +165,18 @@ export const askAndromeda = onCall({
         }
     }
 
-    if (isLocalOnly) {
+    if (!isLocalOnly && chatId) {
+        logger.info("💾 Andromeda: Persisting message to chat history.");
+        try {
+            const chatRef = db.collection('users').doc(uid).collection('andromeda_chats').doc(chatId);
+            await chatRef.set({
+                messages: FieldValue.arrayUnion({ role: 'model', content: text, timestamp: Timestamp.now() }),
+                lastUpdated: Timestamp.now()
+            }, { merge: true });
+        } catch (e) {
+            logger.error("❌ Failed to persist Andromeda message", e);
+        }
+    } else if (isLocalOnly) {
         logger.info("🛡️ Andromeda: LocalOnly mode active. Content not persisted.");
     }
 

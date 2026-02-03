@@ -125,10 +125,15 @@ const MainNavigator: React.FC = () => {
                     customAgents={customAgents}
                     onCustomAgentSelect={(agent) => {
                         setActiveCustomAgent(agent);
-                        // Do not navigate yet, wait for user to pick a LawArea
+                        // If standalone, navigate directly to chat
+                        if (agent.agentType === 'standalone') {
+                            setSelectedLawArea(LawArea.Custom);
+                            setSelectedTopic(agent.name);
+                            setInteractionMode(InteractionMode.Advice);
+                        }
                     }}
                     onDeleteCustomAgent={(agent) => (window as any).deleteCustomAgent?.(agent)}
-                    onCreateCustomAgent={() => (window as any).showCustomAgentCreator?.()}
+                    onCreateCustomAgent={(type) => (window as any).showCustomAgentCreator?.(type)}
                     onDeactivateAgent={() => setActiveCustomAgent(null)}
                     activeAgent={activeCustomAgent}
                 />

@@ -234,16 +234,6 @@
         "negotiationPlaceholder": "Np. Kontakt z dziećmi, Spłata zadłużenia",
         "start": "Rozpocznij"
     },
-    "customAgent": {
-        "help": {
-            "title": "Twój Osobisty Pomocnik (Własny Agent)",
-            "intro": "Pomyśl o tym jak o stworzeniu dedykowanego eksperta, któremu mówisz dokładnie, jak ma z Tobą rozmawiać. To Twój prywatny asystent, który pamięta Twoje zasady.",
-            "point1": "**Nazwa**: Nadaj mu imię (np. 'Mój Doradca od Umów' lub 'Szybki Ekspert'). Dzięki temu łatwo go odróżnisz od innych.",
-            "point2": "**Rola (Kim jest?)**: Napisz, kogo ma udawać. Przykład: 'Jesteś bardzo cierpliwym nauczycielem, który tłumaczy trudne akty prawne prostymi słowami'.",
-            "point3": "**Zadania (Co ma robić?)**: Podaj mu prosty plan działania. Przykład: 'Zawsze sprawdzaj daty w moich dokumentach i pisz do mnie krótko, w punktach'.",
-            "point4": "**Gwarancja Jakości**: Twój asystent korzysta z najmocniejszego modelu Gemini PRO. Jest zaprogramowany tak, aby trzymać się faktów i nie wymyślać informacji."
-        }
-    },
     "service": {
         "header": "Wybierz sposób rozwiązania sprawy",
         "description": "Dla wybranej dziedziny ({{lawArea}}) oferujemy dwa podejścia:",
