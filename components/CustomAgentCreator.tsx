@@ -10,9 +10,14 @@ interface CustomAgentCreatorProps {
     onClose: () => void;
     onSave: (agent: Omit<CustomAgent, 'id' | 'createdAt'>) => Promise<void>;
     initialType?: 'standalone' | 'overlay';
+    initialValues?: {
+        name: string;
+        persona: string;
+        instructions: string;
+    };
 }
 
-const CustomAgentCreator: React.FC<CustomAgentCreatorProps> = ({ isOpen, onClose, onSave, initialType = 'overlay' }) => {
+const CustomAgentCreator: React.FC<CustomAgentCreatorProps> = ({ isOpen, onClose, onSave, initialType = 'overlay', initialValues }) => {
     const { t } = useTranslation();
     const [name, setName] = useState('');
     const [persona, setPersona] = useState('');
@@ -24,13 +29,25 @@ const CustomAgentCreator: React.FC<CustomAgentCreatorProps> = ({ isOpen, onClose
     // Sync state with prop when it changes or modal opens
     React.useEffect(() => {
         if (isOpen) {
-            setAgentType(initialType);
+            if (initialValues) {
+                setName(initialValues.name);
+                setPersona(initialValues.persona);
+                setInstructions(initialValues.instructions);
+                setAgentType(initialType); // Type usually doesn't change during edit
+            } else {
+                // Reset for creation
+                setName('');
+                setPersona('');
+                setInstructions('');
+                setAgentType(initialType);
+            }
         }
-    }, [isOpen, initialType]);
+    }, [isOpen, initialType, initialValues]);
 
     if (!isOpen) return null;
 
     const isStandalone = agentType === 'standalone';
+    const isEditMode = !!initialValues;
     const themeColor = isStandalone ? 'violet' : 'cyan';
     const themeColorText = isStandalone ? 'text-violet-400' : 'text-cyan-400';
     const themeColorBg = isStandalone ? 'bg-violet-500' : 'bg-cyan-500';
@@ -83,7 +100,10 @@ const CustomAgentCreator: React.FC<CustomAgentCreatorProps> = ({ isOpen, onClose
                         </div>
                         <div>
                             <h2 className="text-lg md:text-xl font-bold text-white">
-                                {isStandalone ? "Stwórz Autonomicznego Asystenta" : "Stwórz Nakładkę AI (Agenta)"}
+                                {isEditMode
+                                    ? (isStandalone ? "Edytuj Autonomicznego Asystenta" : "Edytuj Nakładkę AI")
+                                    : (isStandalone ? "Stwórz Autonomicznego Asystenta" : "Stwórz Nakładkę AI (Agenta)")
+                                }
                             </h2>
                             <p className="text-xs text-slate-400">
                                 {isStandalone ? "Niezależny ekspert w swojej dziedzinie" : "Rozszerza wybraną przez Ciebie dziedzinę prawa"}
@@ -170,7 +190,7 @@ const CustomAgentCreator: React.FC<CustomAgentCreatorProps> = ({ isOpen, onClose
                     >
                         {isSaving ? "ZAPISYWANIE..." : (
                             <>
-                                <span>{isStandalone ? "ZAPISZ ASYSTENTA" : "ZAPISZ AGENTA"}</span>
+                                <span>{isEditMode ? "ZAPISZ ZMIANY" : (isStandalone ? "ZAPISZ ASYSTENTA" : "ZAPISZ AGENTA")}</span>
                                 <SendIcon className="w-4 h-4" />
                             </>
                         )}

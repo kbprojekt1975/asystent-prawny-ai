@@ -158,17 +158,27 @@ const App: React.FC = () => {
     }
   }, [user]);
 
+  const [editingAgent, setEditingAgent] = useState<any | null>(null);
+
+  const handleEditCustomAgent = (agent: any) => {
+    setEditingAgent(agent);
+    setAgentTypeToCreate(agent.agentType || 'overlay');
+    setIsCustomAgentCreatorOpen(true);
+  };
+
   useEffect(() => {
     (window as any).showCustomAgentCreator = (type: 'standalone' | 'overlay' = 'overlay') => {
       setAgentTypeToCreate(type);
       setIsCustomAgentCreatorOpen(true);
     };
     (window as any).deleteCustomAgent = (agent: any) => handleDeleteCustomAgent(agent);
+    (window as any).editCustomAgent = (agent: any) => handleEditCustomAgent(agent);
     return () => {
       delete (window as any).showCustomAgentCreator;
       delete (window as any).deleteCustomAgent;
+      delete (window as any).editCustomAgent;
     };
-  }, [handleDeleteCustomAgent]);
+  }, [handleDeleteCustomAgent, handleEditCustomAgent]);
 
 
   const {
@@ -451,26 +461,45 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSaveCustomAgent = async (agent: any) => {
+
+
+  const handleSaveCustomAgent = async (agentData: any) => {
     if (!user) return;
     try {
-      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
-      const docRef = await addDoc(collection(db, 'users', user.uid, 'custom_agents'), {
-        ...agent,
-        createdAt: serverTimestamp()
-      });
+      const { collection, addDoc, serverTimestamp, doc, setDoc } = await import('firebase/firestore');
+
+      if (editingAgent) {
+        // UPDATE existing agent
+        const agentRef = doc(db, 'users', user.uid, 'custom_agents', editingAgent.id);
+        await setDoc(agentRef, {
+          ...agentData,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        // Update active agent if valid
+        if (activeCustomAgent && activeCustomAgent.id === editingAgent.id) {
+          setActiveCustomAgent({ ...activeCustomAgent, ...agentData });
+        }
+      } else {
+        // CREATE new agent
+        const docRef = await addDoc(collection(db, 'users', user.uid, 'custom_agents'), {
+          ...agentData,
+          createdAt: serverTimestamp()
+        });
+
+        // Auto-open created agent
+        setActiveCustomAgent({ id: docRef.id, ...agentData });
+
+        // If standalone, jump directly to chat
+        if (agentData.agentType === 'standalone') {
+          setSelectedLawArea(LawArea.Custom);
+          setSelectedTopic(agentData.name);
+          setInteractionMode(InteractionMode.Advice);
+        }
+      }
 
       setIsCustomAgentCreatorOpen(false);
-
-      // Auto-open created agent
-      setActiveCustomAgent({ id: docRef.id, ...agent });
-
-      // If standalone, jump directly to chat
-      if (agent.agentType === 'standalone') {
-        setSelectedLawArea(LawArea.Custom);
-        setSelectedTopic(agent.name);
-        setInteractionMode(InteractionMode.Advice);
-      }
+      setEditingAgent(null);
 
     } catch (e) {
       console.error("Failed to save custom agent:", e);
@@ -516,6 +545,7 @@ const App: React.FC = () => {
   const handleSmartBack = () => {
     if (activeCustomAgent) {
       setActiveCustomAgent(null);
+      resetNavigation();
       return;
     }
     if (selectedTopic) {
@@ -644,11 +674,20 @@ const App: React.FC = () => {
             isLoading={isLoading}
           />
 
+
           <CustomAgentCreator
             isOpen={isCustomAgentCreatorOpen}
-            onClose={() => setIsCustomAgentCreatorOpen(false)}
+            onClose={() => {
+              setIsCustomAgentCreatorOpen(false);
+              setEditingAgent(null);
+            }}
             onSave={handleSaveCustomAgent}
             initialType={agentTypeToCreate}
+            initialValues={editingAgent ? {
+              name: editingAgent.name,
+              persona: editingAgent.persona,
+              instructions: editingAgent.instructions
+            } : undefined}
           />
 
           <GlobalAnnouncement />
@@ -682,13 +721,22 @@ const App: React.FC = () => {
             {!isFullScreen && (
               <AppHeader
                 breadcrumbs={(() => {
+                  // 1. Root / Agent Name - Simplified for Custom Agents
+                  if (activeCustomAgent) {
+                    return [activeCustomAgent.name];
+                  }
+
+                  // 1b. Fallback: If in Custom Law Area AND Topic is selected (and not just viewing list), we are in an agent chat.
+                  // We want to show ONLY the agent name, avoiding "Własny Agent > Porada...".
+                  if ((selectedLawArea === LawArea.Custom || selectedLawArea === 'Własny Agent') && selectedTopic) {
+                    const agent = customAgents.find(a => a.id === selectedTopic || a.name === selectedTopic);
+                    return [agent ? agent.name : selectedTopic];
+                  }
+
                   const paths = [];
 
-                  // 1. Root / Agent Name
-                  if (activeCustomAgent) {
-                    paths.push(activeCustomAgent.name);
-                  } else if (selectedLawArea === LawArea.Custom) {
-                    // If viewing custom agents list but no specific agent active (shouldn't happen often in this view, but good safety)
+                  if (selectedLawArea === LawArea.Custom) {
+                    // If viewing custom agents list but no specific agent active
                     const agentName = customAgents.find(a => a.id === selectedTopic)?.name;
                     paths.push(agentName || t('law.areas.custom'));
                   } else if (selectedLawArea) {
@@ -712,19 +760,11 @@ const App: React.FC = () => {
 
                   // 3. Topic
                   if (selectedTopic && !activeCustomAgent) {
-                    // If standard mode, show topic. For custom agent, topic IS the agent usually or handled above.
-                    // But wait, user's logic was:
-                    // activeCustomAgent ? (selectedTopic ? `${activeCustomAgent.name}: ${selectedTopic}` ...
-                    // So if custom agent is active, topic is essentially a sub-state?
-                    // Let's align with previous title logic:
                     if (selectedLawArea === LawArea.Custom) {
                       // Already pushed agent name above if found
                     } else {
                       paths.push(selectedTopic);
                     }
-                  } else if (selectedTopic && activeCustomAgent) {
-                    // Custom agent + topic selected (e.g. chat session details?)
-                    paths.push(selectedTopic);
                   }
 
                   return paths;

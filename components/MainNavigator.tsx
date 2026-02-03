@@ -8,6 +8,7 @@ import ProCaseInitiator from './ProCaseInitiator';
 import CourtRoleSelector from './CourtRoleSelector';
 import TopicSelector from './TopicSelector';
 import ProDashboard from './ProDashboard';
+import CustomAgentsDashboard from './CustomAgentsDashboard';
 import ChatView from './ChatView';
 import { useAppContext, useChatContext, useUIContext } from '../context';
 
@@ -133,11 +134,43 @@ const MainNavigator: React.FC = () => {
                         }
                     }}
                     onDeleteCustomAgent={(agent) => (window as any).deleteCustomAgent?.(agent)}
+                    onEditCustomAgent={(agent) => (window as any).editCustomAgent?.(agent)}
                     onCreateCustomAgent={(type) => (window as any).showCustomAgentCreator?.(type)}
                     onDeactivateAgent={() => setActiveCustomAgent(null)}
                     activeAgent={activeCustomAgent}
                 />
-            ) : (!servicePath && !activeCustomAgent) ? (
+            ) : ((selectedLawArea === LawArea.Custom || selectedLawArea === 'Własny Agent') && !activeCustomAgent) ? (
+                <CustomAgentsDashboard
+                    customAgents={customAgents}
+                    onCustomAgentSelect={(agent) => {
+                        setActiveCustomAgent(agent);
+                        if (agent.agentType === 'standalone') {
+                            setSelectedLawArea(LawArea.Custom);
+                            setSelectedTopic(agent.name);
+                            setInteractionMode(InteractionMode.Advice);
+                        } else {
+                            // Overlay agent needs law area selection? Or does it work with ANY law area?
+                            // Currently Overlay agents just sit there active.
+                            // If selected, we might want to guide user to select a law area OR 
+                            // if the user expects to "enter" the agent, we need to handle that.
+                            // Per current logic: "Select category for agent X".
+                            // So we should probably navigate BACK to LawSelector but with activeAgent set.
+                            // But setActiveCustomAgent(agent) is already done above.
+                            // If we set activeAgent, MainNavigator useEffect (lines 68-78) might kick in?
+                            // Lines 68-78 only check `if activeCustomAgent && selectedLawArea`.
+                            // Here selectedLawArea is Custom.
+                            // If overlay, we want to go to LawSelector to pick a REAL law area?
+                            // Let's reset LawArea to null so LawSelector shows up?
+                            setSelectedLawArea(null);
+                        }
+                    }}
+                    onDeleteCustomAgent={(agent) => (window as any).deleteCustomAgent?.(agent)}
+                    onEditCustomAgent={(agent) => (window as any).editCustomAgent?.(agent)}
+                    onCreateCustomAgent={(type) => (window as any).showCustomAgentCreator?.(type)}
+                    isPro={isPro}
+                    onBack={() => setSelectedLawArea(null)}
+                />
+            ) : (!servicePath && !activeCustomAgent && selectedLawArea !== LawArea.Custom && selectedLawArea !== 'Własny Agent') ? (
                 <ServiceTypeSelector
                     lawArea={selectedLawArea}
                     onSelect={(path) => {
