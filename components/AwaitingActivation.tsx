@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ClockIcon, SparklesIcon } from './Icons';
 import { auth } from '../services/firebase';
 
-const AwaitingActivation: React.FC = () => {
+const AwaitingActivation: React.FC<{ isManuallyBlocked?: boolean }> = ({ isManuallyBlocked = false }) => {
     const { t } = useTranslation();
     const user = auth.currentUser;
 
@@ -63,9 +63,19 @@ const AwaitingActivation: React.FC = () => {
                 <div className="w-16 h-16 bg-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 mt-4">
                     <ClockIcon className="w-8 h-8" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-4">{t('activation.title')}</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">
+                    {isManuallyBlocked ? 'Konto Zablokowane' : t('activation.title')}
+                </h2>
                 <p className="text-slate-400 mb-8 leading-relaxed">
-                    {t('activation.description')}
+                    {isManuallyBlocked ? (
+                        <>
+                            <span className="text-red-400 font-semibold block mb-2">Zablokowane przez WielkiElectronik</span>
+                            <span className="block mb-2">Powód: Prawdopodobne naruszenie zasad.</span>
+                            <span className="block">Skontaktuj się z administratorem w celu wyjaśnienia sytuacji.</span>
+                        </>
+                    ) : (
+                        t('activation.description')
+                    )}
                 </p>
 
                 {(isEmulator || isAdmin) && (

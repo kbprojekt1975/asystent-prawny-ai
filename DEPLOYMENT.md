@@ -25,7 +25,26 @@ Jeśli chcesz wdrożyć tylko poszczególne części:
 - **Tylko Funkcje:** `firebase deploy --only functions`
 - **Tylko Frontend (Hosting):** `firebase deploy --only hosting`
 
-## 3. Testowanie Lokalne (Emulator)
+## 3. Konfiguracja Danych (Prompty i Cennik)
+
+Po wdrożeniu aplikacji, musisz jednorazowo wepchnąć konfigurację do produkcyjnej bazy Firestore:
+
+```bash
+npm run seed:prod
+```
+
+> [!IMPORTANT]
+> Jeśli otrzymasz błąd "Could not load the default credentials", musisz użyć klucza konta serwisowego (Service Account):
+>
+> 1. Wejdź do **Firebase Console** -> **Project Settings** -> **Service Accounts**.
+> 2. Kliknij **"Generate new private key"** i pobierz plik JSON.
+> 3. W terminalu (PowerShell) ustaw ścieżkę do pliku i uruchom seed:
+>    ```powershell
+>    $env:GOOGLE_APPLICATION_CREDENTIALS="C:\sciezka\do\pliku.json"
+>    npm run seed:prod
+>    ```
+
+## 4. Testowanie Lokalne (Emulator)
 
 Aplikacja wspiera emulatory Firebase. Aby testować lokalnie, upewnij się, że masz plik `.env` w folderze `functions/` z zawartością:
 
@@ -50,6 +69,7 @@ Jeśli chcesz, aby aplikacja była dostępna pod Twoją własną domeną (np. `m
 5.  Firebase automatycznie wygeneruje bezpłatny certyfikat SSL (HTTPS) dla Twojej domeny (może to potrwać od godziny do doby).
 
 ## Bezpieczeństwo - Co zostało zrobione:
+
 1. **Frontend**: Usunięto bibliotekę `@google/genai` z frontendu. Komunikacja z AI odbywa się wyłącznie przez bezpieczny "proxy" w Cloud Functions.
 2. **Backend**: Funkcje Cloud używają `defineSecret`, co oznacza, że klucz API jest wstrzykiwany do pamięci funkcji tylko w momencie jej wykonania i nie jest widoczny w logach ani zmiennych środowiskowych projektu.
 3. **Oficjalne SDK**: Zaktualizowano kod do najnowszego oficjalnego SDK `@google/generative-ai`.

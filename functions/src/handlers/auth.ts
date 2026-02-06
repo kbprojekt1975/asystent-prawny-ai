@@ -28,8 +28,9 @@ export const initializeNewUser = onDocumentCreated("users/{userId}", async (even
                 spentAmount: 0,
                 tokensUsed: 0,
                 activatedAt: Timestamp.now(),
-                expiresAt: Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000) // +30 days
-            }
+                expiresAt: Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000), // +30 days
+            },
+            isActive: false, // Default to inactive - user must select and pay for plan
         }
     };
 

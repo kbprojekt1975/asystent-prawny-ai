@@ -526,7 +526,13 @@ const App: React.FC = () => {
   const isLimitReached = (userProfile?.subscription?.spentAmount || 0) >= (userProfile?.subscription?.creditLimit || 0) && hasActiveStripeSub;
   const hasActiveAccess = hasActiveStripeSub && !isLimitReached && !isExpired;
 
-  const isAwaitingActivation = userProfile?.subscription?.status === SubscriptionStatus.Pending;
+  // Check if account is manually blocked by admin (isActive flag)
+  const isManuallyBlocked = userProfile?.isActive === false;
+  
+  // Show AwaitingActivation ONLY if manually blocked AND has a paid subscription
+  // (New users without subscription will see PlanSelectionModal instead)
+  const isAwaitingActivation = (userProfile?.subscription?.status === SubscriptionStatus.Pending) || 
+                                (isManuallyBlocked && hasActiveStripeSub);
   // Activation screen only shows if we are NOT in the middle of a recharge/loading process
   const showActivation = isSplashDismissed && user && isAwaitingActivation && !profileLoading && !subsLoading && !isRecharging;
 
@@ -586,7 +592,7 @@ const App: React.FC = () => {
       {/* 2. Full Screen blocking states */}
       {showAuth && <Auth isPostAuthLoading={!!user && (profileLoading || subsLoading || isRecharging)} />}
 
-      {showActivation && <AwaitingActivation />}
+      {showActivation && <AwaitingActivation isManuallyBlocked={isManuallyBlocked} />}
 
       {showLoader && (
         <FullScreenLoader transparent={user !== null && !isStabilizing} />

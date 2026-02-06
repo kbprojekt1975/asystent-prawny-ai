@@ -75,7 +75,8 @@ export const syncUserSubscription = onDocumentUpdated("customers/{userId}/subscr
                     // For now, we ensure limits are correct.
                     status: subData.status,
                     isPaid: true
-                }
+                },
+                isActive: true // Auto-activate on valid subscription
             }
         }, { merge: true });
 
