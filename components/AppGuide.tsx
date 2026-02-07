@@ -118,6 +118,30 @@ const AppGuide: React.FC<AppGuideProps> = ({ onClose, showStartButton = true }) 
                         </div>
                     </div>
                 </div>
+
+                {/* Section 5 (Moje Studio AI) */}
+                <div className={`group border border-slate-700/50 rounded-2xl transition-all duration-300 ${expandedSection === 'studio' ? 'bg-slate-900/40 border-cyan-500/30 ring-1 ring-cyan-500/20' : 'bg-slate-900/20 hover:bg-slate-900/40'}`}>
+                    <button
+                        onClick={() => setExpandedSection(expandedSection === 'studio' ? null : 'studio')}
+                        className="w-full flex items-center gap-4 p-4 text-left"
+                    >
+                        <div className={`p-3 rounded-xl transition-colors ${expandedSection === 'studio' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800 text-slate-400 group-hover:text-cyan-400'}`}>
+                            <SparklesIcon className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                            <h5 className="font-bold text-slate-100 italic">{t('guide.studio.title')} <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded ml-1 not-italic">{t('guide.studio.new')}</span></h5>
+                            <p className="text-xs text-slate-400">{t('guide.studio.subtitle')}</p>
+                        </div>
+                        <ChevronDownIcon className={`w-5 h-5 text-slate-500 transition-transform duration-300 ${expandedSection === 'studio' ? 'rotate-180 text-cyan-400' : ''}`} />
+                    </button>
+                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'studio' ? 'max-h-48' : 'max-h-0'}`}>
+                        <div className="p-4 pt-0 border-t border-slate-700/30 mt-2">
+                            <p className="text-sm text-slate-300 leading-relaxed">
+                                {t('guide.studio.desc')}
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {showStartButton && (

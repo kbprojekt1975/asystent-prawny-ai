@@ -78,7 +78,11 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
                 {/* Headline inside Monitor Wrapper */}
                 <div className="mb-12 w-full animate-in fade-in slide-in-from-bottom-6 duration-1000">
                     <MonitorWrapper>
-                        <h2 className="relative z-10 text-3xl md:text-5xl font-bold text-white tracking-tight leading-[1.2] px-4 py-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                        <h2 className="relative z-10 text-3xl md:text-5xl font-bold tracking-tight leading-[1.2] px-4 py-2 animate-neon" 
+                            style={{ 
+                                fontFamily: "'Outfit', sans-serif",
+                                color: "#000000", // Pure black for "void" effect
+                            }}>
                             {t('splash.headline')}
                         </h2>
                     </MonitorWrapper>
@@ -147,8 +151,24 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
                     0%, 100% { transform: translateY(0); }
                     50% { transform: translateY(-5px); }
                 }
+                @keyframes neon-turn-on {
+                    0% {
+                        text-shadow: 
+                            0 0 0 rgba(6,182,212,0);
+                        opacity: 0.8;
+                    }
+                    100% {
+                        text-shadow: 
+                            0 0 5px rgba(6,182,212,0.8),
+                            0 0 10px rgba(6,182,212,0.6),
+                            0 0 20px rgba(6,182,212,0.4),
+                            0 0 40px rgba(6,182,212,0.2);
+                        opacity: 1;
+                    }
+                }
                 .animate-float { animation: float 4s ease-in-out infinite; }
                 .animate-bounce-slow { animation: bounce-slow 3s ease-in-out infinite; }
+                .animate-neon { animation: neon-turn-on 3s ease-out forwards; }
             `}</style>
         </div>
     );

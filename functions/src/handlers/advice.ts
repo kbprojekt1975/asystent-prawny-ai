@@ -3,7 +3,7 @@ import * as logger from "firebase-functions/logger";
 import { SchemaType } from "@google/generative-ai";
 import { db, Timestamp, FieldValue, storage } from "../services/db";
 import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, getSystemPrompts, GEMINI_API_KEY } from "../services/ai";
-import { LawAreaType } from "../types";
+import { LawAreaType, LawArea, InteractionMode } from "../types";
 import {
     CORE_RULES_PL, CORE_RULES_EN, CORE_RULES_ES,
     PILLAR_RULES_PL, PILLAR_RULES_EN, PILLAR_RULES_ES,
@@ -120,31 +120,64 @@ export const getLegalAdvice = onCall({
 
         // --- PREPARE PROMPT (with dynamic overrides) ---
         const dynamicPrompts = await getSystemPrompts(db);
+        const languageClean = (language || "pl").toLowerCase();
         const lawAreaClean = (lawArea || "").trim();
-        const areaKey = Object.keys(systemInstructions).find(k => k.toLowerCase() === lawAreaClean.toLowerCase()) as LawAreaType;
+        const areaKey = (Object.keys(systemInstructions).find(k => k.toLowerCase() === lawAreaClean.toLowerCase()) || LawArea.Universal) as LawAreaType;
 
         // 1. CORE RULES
-        const coreRulesDefault = (language === 'en' ? CORE_RULES_EN : language === 'es' ? CORE_RULES_ES : CORE_RULES_PL);
-        const coreRules = dynamicPrompts?.core?.[language] || coreRulesDefault;
+        const coreRulesDefault = (languageClean === 'en' ? CORE_RULES_EN : languageClean === 'es' ? CORE_RULES_ES : CORE_RULES_PL);
+        const coreRules = dynamicPrompts?.core?.[languageClean] || coreRulesDefault;
 
         // 2. PILLAR RULES
-        const pillarRulesMapDefault = (language === 'en' ? PILLAR_RULES_EN : language === 'es' ? PILLAR_RULES_ES : PILLAR_RULES_PL);
-        const pillarRules = dynamicPrompts?.pillars?.[language]?.[lawAreaClean] ||
-            dynamicPrompts?.pillars?.[language]?.[areaKey] ||
+        const pillarRulesMapDefault = (languageClean === 'en' ? PILLAR_RULES_EN : languageClean === 'es' ? PILLAR_RULES_ES : PILLAR_RULES_PL);
+        const pillarRules = dynamicPrompts?.pillars?.[languageClean]?.[lawAreaClean] ||
+            dynamicPrompts?.pillars?.[languageClean]?.[areaKey] ||
             pillarRulesMapDefault[lawAreaClean] ||
             pillarRulesMapDefault[areaKey] || "";
 
         // 3. MODE SPECIFIC INSTRUCTIONS
-        const instrMapDefault = (language === 'en' ? systemInstructionsEn : language === 'es' ? systemInstructionsEs : systemInstructions);
-        const modeInstructions = dynamicPrompts?.instructions?.[language]?.[interactionMode] ||
+        const instrMapDefault = (languageClean === 'en' ? systemInstructionsEn : languageClean === 'es' ? systemInstructionsEs : systemInstructions);
+        const modeInstructions = dynamicPrompts?.instructions?.[languageClean]?.[interactionMode] ||
             instrMapDefault[areaKey]?.[interactionMode] || "";
 
         let instruction = "";
 
-        if (isStandalone) {
+        // ROBUST APP HELP DETECTION
+        const isAppHelpMode =
+            interactionMode === InteractionMode.AppHelp ||
+            interactionMode === 'Pomoc w obsłudze aplikacji' ||
+            interactionMode === 'AppHelp' ||
+            topic === 'Asystent Aplikacji' ||
+            chatId === 'help-sidebar';
+
+        if (isAppHelpMode) {
+            // DEDICATED APP HELP PERSONA (Nuclear Fix)
+            // We EXPLICITLY strip all legal rules and define a technical persona.
+            instruction = `
+                # ROLE: SOFTWARE GUIDE & PRODUCT EXPERT
+                You are the official Technical Assistant for the "Asystent Prawny AI" platform.
+                
+                # YOUR IDENTITY:
+                - You are NOT a lawyer.
+                - You are NOT a legal consultant.
+                - You are a TECHNICAL GUIDE for the software.
+                
+                # YOUR KNOWLEDGE (Application Features):
+                1. ANDROMEDA: Elite strategic analysis mode (Expert-Analyst). Focuses on litigation strategy, 24h action plans, and "chess-like" thinking. 
+                   *Note: If the user types "adnromeda" or other typos, they mean ANDROMEDA.*
+                2. MOJE STUDIO AI: The PRO workspace for creating custom Agents (overlays) and standalone Assistants.
+                3. DEEP THINKING: A mode for complex, multi-step logical reasoning in law.
+                4. CASE TOOLS: Case files repository, timeline, checklists, and document export.
+                
+                # YOUR MISSION:
+                Exclusively explain the software features. If asked about law, politely remind the user you are here to help with the app, but they can use the "Porada Prawna" mode for legal questions.
+                
+                # RESPONSE STYLE: Technical, helpful, precise.
+                # LANGUAGE: ${languageClean === 'en' ? 'ENGLISH' : languageClean === 'es' ? 'SPANISH' : 'POLISH'}.
+            `;
+            logger.info("🚀 FORCING DEDICATED APP HELP PERSONA (Topic/Mode Match)");
+        } else if (isStandalone) {
             // STANDALONE AGENT PROMPT
-            // We drop the forced "LEGAL EXPERT" role and Pillar Rules to let the Persona shine.
-            // We keep Core Rules for safety.
             instruction = `
                 ${customAgentInstructions}
 
@@ -159,7 +192,7 @@ export const getLegalAdvice = onCall({
                 # ADDITIONAL CONTEXT (Articles):
                 ${articles || "None provided"}
                 
-                # RESPONSE LANGUAGE: ${language === 'en' ? 'ENGLISH' : language === 'es' ? 'SPANISH' : 'POLISH'}.
+                # RESPONSE LANGUAGE: ${languageClean === 'en' ? 'ENGLISH' : languageClean === 'es' ? 'SPANISH' : 'POLISH'}.
             `;
             logger.info("🤖 Using STANDALONE Agent Prompt Structure");
         } else {
@@ -185,7 +218,7 @@ export const getLegalAdvice = onCall({
                 # ADDITIONAL CONTEXT (Articles):
                 ${articles || "None provided"}
                 
-                # RESPONSE LANGUAGE: ${language === 'en' ? 'ENGLISH' : language === 'es' ? 'SPANISH' : 'POLISH'}.
+                # RESPONSE LANGUAGE: ${languageClean === 'en' ? 'ENGLISH' : languageClean === 'es' ? 'SPANISH' : 'POLISH'}.
             `;
         }
 
@@ -196,10 +229,13 @@ export const getLegalAdvice = onCall({
         }));
 
         // CRITICAL: Gemini requires the first message to be from 'user'.
-        // If the history starts with a 'model' message (e.g. from UI welcome msg), we strip it.
-        while (contents.length > 0 && contents[0].role !== 'user') {
-            logger.info("Skipping leading non-user message in history for Gemini compatibility");
-            contents.shift();
+        // Instead of shifting, we prepend a virtual user message if it's a model-first chat (like Help Sidebar).
+        if (contents.length > 0 && contents[0].role !== 'user') {
+            logger.info("Satisfying user-first requirement by prepending virtual user message");
+            contents.unshift({
+                role: 'user',
+                parts: [{ text: "Dzień dobry, potrzebuję informacji o aplikacji." }]
+            });
         }
 
         if (contents.length === 0) {

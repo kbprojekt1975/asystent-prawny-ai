@@ -342,6 +342,12 @@
             "subtitle": "Strategia procesowa i zarządzanie kompletną teczką sprawy",
             "desc": "Profesjonalne narzędzie do prowadzenia skomplikowanych spraw. Twórz teczki, dodawaj dokumenty strony przeciwnej, symuluj rozprawy sądowe i buduj zwycięską strategię."
         },
+        "studio": {
+            "title": "5. Moje Studio AI",
+            "new": "NOWOŚĆ",
+            "subtitle": "Twórz własnych Agentów i Asystentów (PRO)",
+            "desc": "Zaprojektuj AI idealnie dopasowane do Twoich potrzeb. Stwórz Eksperta od konkretnej dziedziny lub Asystenta z unikalną osobowością i wiedzą."
+        },
         "ready": {
             "title": "Gotowy?",
             "text": "Wybierz metodę działania, która pasuje Tobie najlepiej. Pamiętaj, że w każdej chwili możesz wrócić do tego przewodnika.",
@@ -360,18 +366,18 @@
     "welcome": {
         "title": "Twój Przewodnik AI",
         "subtitle": "Poznaj możliwości aplikacji",
-        "intro_message": "Witaj w Asystencie Prawnym AI! 👋 Jestem tutaj, aby pomóc Ci odnaleźć się w aplikacji. \n\nMogę Cię przeprowadzić przez proces zakładania pierwszej sprawy, tłumaczenia przepisów czy przygotowania pism do sądu. W czym mogę Ci pomóc na start?",
+        "intro_message": "Witaj w Asystencie Prawnym AI! 👋 Jestem tutaj, aby pomóc Ci odnaleźć się w aplikacji. \n\nMogę Cię przeprowadzić przez proces zakładania pierwszej sprawy, tworzenia własnych Agentów w **Moje Studio AI**, czy korzystania z zaawansowanej strategii **Andromeda**. W czym mogę Ci pomóc?",
         "error_message": "Przepraszam, wystąpił błąd. Spróbuj zadać pytanie ponownie.",
         "input_placeholder": "Zadaj pytanie o aplikację...",
         "tip_title": "Wskazówka",
-        "tip_text": "Posiadam wiele zaprogramowanych funkcji. Jeśli chcesz coś zrobić, a nie widzisz tego – po prostu napisz w oknie czatu czego potrzebujesz.",
-        "tip_subtext": "W zasadzie posiadam nieograniczoną ilość funkcji.",
+        "tip_text": "Możesz tworzyć własne instrukcje dla AI w sekcji 'Moje Studio AI' lub korzystać z trybu 'Deep Thinking' dla bardzo trudnych spraw.",
+        "tip_subtext": "Wspieram Cię na każdym etapie – od analizy dokumentów po symulację rozprawy.",
         "dont_show": "Nie pokazuj więcej",
         "close": "Zamknij"
     },
     "app_help": {
         "title": "Przewodnik po aplikacji",
-        "intro": "Witaj w Asystencie Prawnym AI!",
+        "intro": "Witaj w Twoim Centrum Wsparcia AI! Poznaj narzędzia, które pomogą Ci wygrać sprawę:",
         "icons_intro": "Oto co oznaczają poszczególne ikony:",
         "home": "Dom",
         "home_desc": "Powrót do ekranu startowego.",
@@ -386,7 +392,7 @@
     },
     "help_sidebar": {
         "title": "Pomoc AI",
-        "welcome": "Witaj! Jestem Twoim asystentem aplikacji. W czym mogę Ci dzisiaj pomóc? Mogę wyjaśnić jak działają poszczególne funkcje, jak zarządzać sprawami lub jak korzystać z narzędzi AI.",
+        "welcome": "Witaj! Jestem Twoim przewodnikiem po aplikacji. Mogę Ci wyjaśnić jak działają zaawansowane funkcje, takie jak **Moje Studio AI (PRO)**, strategia **Andromeda**, czy tryb **Deep Thinking**. W czym mogę Ci dzisiaj pomóc?",
         "error": "Przepraszam, wystąpił błąd podczas ładowania odpowiedzi. Spróbuj ponownie później.",
         "mode": "Tryb: Pomoc w obsłudze aplikacji",
         "placeholder": "Zadaj pytanie..."
@@ -508,7 +514,9 @@
         "manual_fam": "Prawo Rodzinne",
         "manual_fam_pre": "Jeśli dotyczy rozwodu -",
         "ai_title": "Analiza AI (\"Analizuj moją sprawę\"):",
-        "ai_desc": "Najlepszy wybór, jeśli nie masz pewności. Opisz sytuację, a asystent sam zakwalifikuje sprawę i przeniesie Cię do odpowiedniego działu."
+        "ai_desc": "Najlepszy wybór, jeśli nie masz pewności. Opisz sytuację, a asystent sam zakwalifikuje sprawę i przeniesie Cię do odpowiedniego działu.",
+        "studio_title": "Moje Studio AI (PRO):",
+        "studio_desc": "Twórz i zarządzaj własnymi agentami prawnymi. Dostosuj ich wiedzę i osobowość do swoich specyficznych potrzeb."
     },
     "splash": {
         "headline": "Twoja armia prawników na wyciągnięcie ręki.",

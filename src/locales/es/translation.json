@@ -305,6 +305,12 @@
             "subtitle": "Estrategia procesal y gestión del expediente completo del caso",
             "desc": "Una herramienta profesional para llevar casos complejos. Crea archivos, añade documentos de la contraparte, simula audiencias judiciales y construye una estrategia ganadora."
         },
+        "studio": {
+            "title": "5. Tu Estudio IA",
+            "new": "NUEVO",
+            "subtitle": "Crea tus propios Agentes y Asistentes (PRO)",
+            "desc": "Diseña una IA perfectamente adaptada a tus necesidades. Crea un Experto en un campo específico o un Asistente con una personalidad y conocimientos únicos."
+        },
         "ready": {
             "title": "¿Listo?",
             "text": "Elige el método de operación que mejor se adapte a ti. Recuerda que puedes volver a esta guía en cualquier momento.",
@@ -323,18 +329,18 @@
     "welcome": {
         "title": "Tu Guía IA",
         "subtitle": "Descubre las capacidades de la app",
-        "intro_message": "¡Bienvenido al Asistente Legal IA! 👋 Estoy aquí para ayudarte a navegar por la aplicación. \n\nPuedo guiarte en el proceso de configurar tu primer caso, traducir regulaciones o preparar documentos judiciales. ¿Cómo puedo ayudarte a comenzar?",
+        "intro_message": "¡Bienvenido al Asistente Legal IA! 👋 Estoy aquí para ayudarte a navegar por la aplicación. \n\nPuedo guiarte en el proceso de configurar tu primer caso, crear tus propios agentes en **Tu Estudio IA**, o utilizar la estrategia avanzada **Andrómeda**. ¿En qué puedo ayudarte?",
         "error_message": "Lo siento, ocurrió un error. Por favor, intenta hacer la pregunta de nuevo.",
         "input_placeholder": "Haz una pregunta sobre la app...",
         "tip_title": "Consejo",
-        "tip_text": "Tengo muchas funciones programadas. Si quieres hacer algo y no lo ves, simplemente escribe en la ventana de chat lo que necesitas.",
-        "tip_subtext": "Básicamente, tengo funciones ilimitadas.",
+        "tip_text": "Puedes crear tus propias instrucciones para la IA en 'Tu Estudio IA' o usar el modo 'Pensamiento Profundo' para casos complejos.",
+        "tip_subtext": "Te apoyo en cada etapa: desde el análisis de documentos hasta la simulación del juicio.",
         "dont_show": "No volver a mostrar",
         "close": "Cerrar"
     },
     "app_help": {
         "title": "Guía de la App",
-        "intro": "¡Bienvenido al Asistente Legal IA!",
+        "intro": "¡Bienvenido a tu Centro de Soporte IA! Descubre las herramientas que te ayudarán a ganar tu caso:",
         "icons_intro": "Esto es lo que significan los iconos:",
         "home": "Inicio",
         "home_desc": "Volver a la pantalla de inicio.",
@@ -349,7 +355,7 @@
     },
     "help_sidebar": {
         "title": "Ayuda IA",
-        "welcome": "¡Bienvenido! Soy tu asistente de la aplicación. ¿En qué puedo ayudarte hoy? Puedo explicarte cómo funcionan las distintas funciones, cómo gestionar casos o cómo utilizar las herramientas de IA.",
+        "welcome": "¡Bienvenido! Soy tu guía de la aplicación. Puedo explicarte cómo funcionan las funciones avanzadas, como **Tu Estudio IA (PRO)**, la estrategia **Andrómeda** o el modo de **Pensamiento Profundo**. ¿En qué puedo ayudarte hoy?",
         "error": "Lo siento, ha ocurrido un error al cargar la respuesta. Por favor, inténtalo de nuevo más tarde.",
         "mode": "Modo: Ayuda de soporte de la aplicación",
         "placeholder": "Haz una pregunta..."

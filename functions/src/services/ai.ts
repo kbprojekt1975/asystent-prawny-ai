@@ -26,7 +26,8 @@ export const getPricingConfig = async (db: any) => {
         rates: {
             'gemini-2.0-flash': { input: 0.25, output: 1.0 },
             'gemini-1.5-flash': { input: 0.25, output: 1.0 },
-            'gemini-1.5-pro': { input: 1.5, output: 4.5 }
+            'gemini-1.5-pro': { input: 1.5, output: 4.5 },
+            'gemini-2.5-pro': { input: 1.25, output: 10.0 }
         },
         plans: {
             "price_1StBSvDXnXONl2svkF51zTnl": {

@@ -235,6 +235,9 @@ const LawSelector: React.FC<LawSelectorProps> = ({
             <li>
               <strong>{t('law_help.ai_title')}</strong> {t('law_help.ai_desc')}
             </li>
+            <li>
+              <strong>{t('law_help.studio_title')}</strong> {t('law_help.studio_desc')}
+            </li>
           </ul>
         </div>
       </HelpModal>

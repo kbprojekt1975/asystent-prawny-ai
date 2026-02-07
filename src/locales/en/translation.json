@@ -335,6 +335,12 @@
             "subtitle": "Procedural strategy and management of the complete case file",
             "desc": "A professional tool for conducting complex cases. Create files, add documents from the opposing party, simulate court hearings, and build a winning strategy."
         },
+        "studio": {
+            "title": "5. My AI Studio",
+            "new": "NEW",
+            "subtitle": "Create your own Agents and Assistants (PRO)",
+            "desc": "Design AI perfectly tailored to your needs. Create an Expert in a specific field or an Assistant with a unique personality and knowledge."
+        },
         "ready": {
             "title": "Ready?",
             "text": "Choose the method of operation that suits you best. Remember that you can return to this guide at any time.",
@@ -353,18 +359,18 @@
     "welcome": {
         "title": "Your AI Guide",
         "subtitle": "Discover the app's capabilities",
-        "intro_message": "Welcome to the AI Legal Assistant! 👋 I am here to help you navigate the application. \n\nI can guide you through the process of setting up your first case, translating regulations, or preparing court documents. How can I help you get started?",
+        "intro_message": "Welcome to the AI Legal Assistant! 👋 I am here to help you navigate the application. \n\nI can guide you through setting up your first case, creating custom agents in **My AI Studio**, or using the advanced **Andromeda** strategy. How can I help you?",
         "error_message": "Sorry, an error occurred. Please try asking the question again.",
         "input_placeholder": "Ask a question about the app...",
         "tip_title": "Tip",
-        "tip_text": "I have many programmed functions. If you want to do something and don't see it - just write in the chat window what you need.",
-        "tip_subtext": "Basically, I have unlimited functions.",
+        "tip_text": "You can create custom instructions for AI in 'My AI Studio' or use 'Deep Thinking' mode for complex legal issues.",
+        "tip_subtext": "I support you at every stage – from document analysis to court simulation.",
         "dont_show": "Don't show again",
         "close": "Close"
     },
     "app_help": {
         "title": "App Guide",
-        "intro": "Welcome to AI Legal Assistant!",
+        "intro": "Welcome to your AI Support Center! Discover tools that will help you win your case:",
         "icons_intro": "Here is what the icons mean:",
         "home": "Home",
         "home_desc": "Return to the home screen.",
@@ -379,7 +385,7 @@
     },
     "help_sidebar": {
         "title": "AI Help",
-        "welcome": "Welcome! I am your application assistant. How can I help you today? I can explain how individual functions work, how to manage cases, or how to use AI tools.",
+        "welcome": "Welcome! I am your guide to the application. I can explain how advanced features work, such as **My AI Studio (PRO)**, the **Andromeda** strategy, or **Deep Thinking** mode. How can I help you today?",
         "error": "Sorry, an error occurred while loading the response. Please try again later.",
         "mode": "Mode: App Support Help",
         "placeholder": "Ask a question..."

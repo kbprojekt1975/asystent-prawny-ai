@@ -508,7 +508,8 @@ const App: React.FC = () => {
   };
 
   // Blocking states logic
-  const showSplash = !isSplashDismissed;
+  // Gated by isStabilizing to ensure a clean sequential loading: Spinner -> Splash -> App
+  const showSplash = !isSplashDismissed && !isStabilizing;
 
   // Auth screen visibility logic:
   // CRITICAL: If isLoginFlow is active, Auth MUST stay visible until everything is fully loaded.

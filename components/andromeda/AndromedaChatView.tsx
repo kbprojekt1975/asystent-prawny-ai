@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { SparklesIcon, Bars3Icon, BotIcon } from '../Icons';
+import { SparklesIcon, Bars3Icon, BotIcon, InformationCircleIcon } from '../Icons';
 import { ChatMessage } from '../../types';
 import LoadingSpinner from '../LoadingSpinner';
 
@@ -41,10 +41,53 @@ const AndromedaChatView: React.FC<AndromedaChatViewProps> = ({
                     <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-900/20">
                         <SparklesIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </div>
-                    <div>
-                        <h1 className="text-base md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 tracking-tight">
-                            Andromeda
-                        </h1>
+                    <div className="relative group">
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-base md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 tracking-tight">
+                                Andromeda
+                            </h1>
+                            <div className="relative">
+                                <button className="p-1 text-slate-500 hover:text-cyan-400 transition-colors focus:outline-none">
+                                    <InformationCircleIcon className="w-4 h-4 md:w-5 md:h-5" />
+                                </button>
+                                
+                                {/* Info Popover */}
+                                <div className="absolute left-0 top-full mt-2 w-[85vw] md:w-[480px] p-6 bg-slate-900/95 border border-slate-700/50 rounded-2xl shadow-2xl backdrop-blur-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 pointer-events-none group-hover:pointer-events-auto">
+                                    <h3 className="text-cyan-400 font-bold text-lg md:text-xl mb-3 flex items-center gap-3">
+                                        <SparklesIcon className="w-5 h-5 md:w-6 md:h-6" />
+                                        Tryb Strategiczny Andromeda
+                                    </h3>
+                                    <p className="text-sm md:text-base text-slate-300 leading-relaxed mb-4">
+                                        Andromeda to Twój osobisty strateg procesowy. Łączy zaawansowaną analizę logiczną (Deep Thinking) z bezpośrednim dostępem do aktualnych baz prawa (ISAP) i orzecznictwa (SAOS).
+                                    </p>
+                                    <div className="space-y-3">
+                                        {[
+                                            { title: "Analiza Szans i Ryzyk", desc: "Precyzyjne oszacowanie prawdopodobieństwa wygranej i słabych punktów." },
+                                            { title: "Symulacja Procesowa", desc: "Przewidywanie argumentów drugiej strony i pytań sądu." },
+                                            { title: "Strategia \"Szachowa\"", desc: "Planowanie wieloetapowe, wykraczające poza proste porady." },
+                                            { title: "Weryfikacja Dowodów", desc: "Ocena mocy Twojego materiału dowodowego w świetle prawa." },
+                                            { title: "Argumentacja Prawna", desc: "Gotowe cytaty z ustaw i wyroków dopasowane do Twojej sprawy." }
+                                        ].map((item, i) => (
+                                            <div key={i} className="flex items-start gap-3">
+                                                <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-2 flex-shrink-0 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+                                                <div>
+                                                    <span className="text-slate-200 font-semibold text-sm block">{item.title}</span>
+                                                    <span className="text-slate-400 text-xs md:text-sm leading-snug block">{item.desc}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t border-slate-800 flex justify-between items-center">
+                                        <span className="text-[10px] md:text-xs text-slate-500 italic">
+                                            Powered by Gemini 1.5 Pro & Deep Thinking
+                                        </span>
+                                        <span className="text-[10px] md:text-xs text-cyan-500/80 font-mono border border-cyan-900/30 px-2 py-0.5 rounded bg-cyan-950/20">
+                                            VERSION: ALPHA-OMEGA
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <p className="text-[8px] md:text-[10px] text-cyan-400 uppercase tracking-widest font-bold">{t('andromeda.subtitle')}</p>
                     </div>
                 </div>
