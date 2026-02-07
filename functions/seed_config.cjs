@@ -41,9 +41,33 @@ const pricingConfig = {
             input: 0.25,
             output: 1.0
         },
+        "gemini-2.0-pro-exp-02-05": {
+            input: 1.5,
+            output: 12.0
+        },
         "gemini-2.5-pro": {
             input: 1.25,
             output: 10.0
+        },
+        "gemini-2.5-flash": {
+            input: 0.25,
+            output: 1.0
+        },
+        "gemini-2.5-flash-lite": {
+            input: 0.10,
+            output: 0.30
+        },
+        "gemini-3-pro-preview": {
+            input: 1.5,
+            output: 12.0
+        },
+        "gemini-3-flash-preview": {
+            input: 0.30,
+            output: 1.2
+        },
+        "gemini-3-deepthink-preview": {
+            input: 2.0,
+            output: 15.0
         }
     },
     plans: {
@@ -89,13 +113,20 @@ const systemPrompts = {
     }
 };
 
+const modelsConfig = {
+    andromeda: 'gemini-2.5-pro',
+    advice: 'gemini-2.0-flash',
+    analysis: 'gemini-2.0-flash'
+};
+
 async function seedConfig() {
     const target = isProd ? "REAL Firestore (Production)" : "Firestore Emulator";
-    console.log(`🌱 Seeding config/pricing & config/system to ${target}...`);
+    console.log(`🌱 Seeding config documents to ${target}...`);
     try {
         await db.collection('config').doc('pricing').set(pricingConfig);
         await db.collection('config').doc('system').set(systemPrompts);
-        console.log(`✅ Successfully wrote config documents to ${target}!`);
+        await db.collection('config').doc('models').set(modelsConfig);
+        console.log(`✅ Successfully wrote config documents (pricing, system, models) to ${target}!`);
     } catch (error) {
         console.error("❌ Error writing document:", error);
     }

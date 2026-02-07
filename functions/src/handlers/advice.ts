@@ -2,7 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { SchemaType } from "@google/generative-ai";
 import { db, Timestamp, FieldValue, storage } from "../services/db";
-import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, getSystemPrompts, GEMINI_API_KEY } from "../services/ai";
+import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, getSystemPrompts, getActiveModels, GEMINI_API_KEY } from "../services/ai";
 import { LawAreaType, LawArea, InteractionMode } from "../types";
 import {
     CORE_RULES_PL, CORE_RULES_EN, CORE_RULES_ES,
@@ -274,7 +274,9 @@ export const getLegalAdvice = onCall({
             ]
         }];
 
-        const modelName = 'gemini-2.0-flash';
+        const modelsConfig = await getActiveModels(db);
+        const modelName = modelsConfig.advice || 'gemini-2.0-flash';
+        
         const model = genAI.getGenerativeModel({
             model: modelName,
             systemInstruction: instruction,

@@ -2,7 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { SchemaType } from "@google/generative-ai";
 import { db, FieldValue, Timestamp } from "../services/db";
-import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, getSystemPrompts, GEMINI_API_KEY } from "../services/ai";
+import { getAiClient, calculateCost, getPricingConfig, calculateAppTokens, getSystemPrompts, getActiveModels, GEMINI_API_KEY } from "../services/ai";
 import { searchLegalActs } from "../services/isapService";
 import { searchJudgments } from "../services/saosService";
 import {
@@ -121,7 +121,9 @@ export const askAndromeda = onCall({
             ]
         }];
 
-        const modelName = 'gemini-2.5-pro';
+        const modelsConfig = await getActiveModels(db);
+        const modelName = modelsConfig.andromeda || 'gemini-2.1-pro'; // Fallback to 2.1 or 2.5 if missing
+
         const model = genAI.getGenerativeModel({
             model: modelName,
             systemInstruction,

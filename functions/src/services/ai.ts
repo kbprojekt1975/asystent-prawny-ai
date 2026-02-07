@@ -56,6 +56,26 @@ export const getSystemPrompts = async (db: any) => {
     return null;
 };
 
+export const getActiveModels = async (db: any) => {
+    try {
+        const doc = await db.collection('config').doc('models').get();
+        if (doc.exists) {
+            const data = doc.data();
+            logger.info("✅ Active models config fetched:", data);
+            return data;
+        }
+    } catch (e) {
+        logger.error("❌ Error fetching active models config", e);
+    }
+    
+    // Fallback defaults
+    return {
+        andromeda: 'gemini-2.5-pro',
+        advice: 'gemini-2.0-flash',
+        analysis: 'gemini-2.0-flash'
+    };
+};
+
 export const calculateCost = (model: string, usage: { promptTokenCount?: number, candidatesTokenCount?: number }, config: any): number => {
     // Normalize model name (remove version suffixes if needed, though usually exact match is best)
     // The config keys in user screenshot are 'gemini-1.5-flash', etc.
