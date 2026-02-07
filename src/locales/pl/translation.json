@@ -686,7 +686,11 @@
             "resetDatabaseNote": "UWAGA: Usuwa dane wszystkich użytkowników! Aktywne konta zostaną zachowane.",
             "subscriptionTitle": "Status Subskrypcji",
             "active": "Aktywna",
-            "expires": "Wygasa"
+            "expires": "Wygasa",
+            "themeLabel": "Motyw wizualny",
+            "themeStandard": "Standardowy",
+            "themeDark": "Ciemny (Dark Mode)",
+            "themeSystem": "Systemowy"
         },
         "quickActions": {
             "title": "Szybkie Akcje",
@@ -854,7 +858,7 @@
         "welcomeTitle": "W czym mogę Ci dzisiaj pomóc?",
         "welcomeDesc": "Zadaj dowolne pytanie prawne. Przeszukam dla Ciebie aktualne przepisy, wyroki oraz najnowsze informacje.",
         "fileUploaded": "Przesłano plik: {{name}}",
-        "analyzingFile": "Analiza dokumentu...",
+        "analyzingFile": "Asystent analizuje sprawę...",
         "error": "Przepraszam, wystąpił błąd. Spróbuj ponownie.",
         "placeholders": [
             "Np.: Rozwód bez orzekania o winie - jak zacząć?",

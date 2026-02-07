@@ -54,6 +54,7 @@ import AwaitingActivation from './components/AwaitingActivation';
 import MainNavigator from './components/MainNavigator';
 import ChatFooter from './components/ChatFooter';
 import { useAppContext, useChatContext, useUIContext } from './context';
+import { ThemeProvider } from './contexts/ThemeContext';
 import CustomAgentCreator from './components/CustomAgentCreator';
 
 const GlobalAdminNotes = React.lazy(() => import('./components/GlobalAdminNotes'));
@@ -578,7 +579,7 @@ const App: React.FC = () => {
   const showLoader = !isLoginFlow && (isStabilizing || (isSplashDismissed && !showAuth && !showSplash && authLoading));
 
   return (
-    <div className="min-h-screen w-full bg-slate-900 animate-fade-in relative">
+    <div className="min-h-screen w-full bg-theme-bg-dark animate-fade-in relative">
       {/* 1. Splash Screen */}
       {showSplash && (
         <SplashScreen
@@ -699,7 +700,7 @@ const App: React.FC = () => {
 
           <GlobalAnnouncement />
 
-          <div className="flex flex-col h-[100dvh] bg-slate-800 relative">
+          <div className="flex flex-col h-[100dvh] bg-theme-bg-darker relative">
             {selectedLawArea === LawArea.Family && !isLoading && !isWelcomeModalOpen && (
               <>
                 <DraggableButton
@@ -846,4 +847,10 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+const AppWithTheme: React.FC = () => (
+  <ThemeProvider>
+    <App />
+  </ThemeProvider>
+);
+
+export default AppWithTheme;

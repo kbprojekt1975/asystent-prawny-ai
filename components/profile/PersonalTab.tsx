@@ -2,6 +2,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { User } from 'firebase/auth';
 import { UserProfile } from '../../types';
+import { useTheme } from '../../contexts/ThemeContext';
+import { SunIcon, MoonIcon } from '../Icons';
 
 interface PersonalTabProps {
     user: User | null;
@@ -27,6 +29,7 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
     setIsPrivacyPolicyOpen
 }) => {
     const { t } = useTranslation();
+    const { themeName, setTheme } = useTheme();
 
     const handleDataChange = (field: string, value: string) => {
         setCurrentProfile({
@@ -97,6 +100,48 @@ const PersonalTab: React.FC<PersonalTabProps> = ({
                             </div>
                         </div>
                     )}
+                </div>
+            </div>
+
+            {/* Theme Selection Section */}
+            <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    {t('userProfile.personal.themeLabel') || "Motyw wizualny"}
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                    <button
+                        onClick={() => setTheme('standard')}
+                        className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
+                            themeName === 'standard'
+                                ? 'bg-cyan-600/20 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.15)]'
+                                : 'bg-slate-800/40 border-slate-700 hover:border-slate-500 text-slate-400'
+                        }`}
+                    >
+                        <SunIcon className={`w-6 h-6 mb-2 ${themeName === 'standard' ? 'text-cyan-400' : 'text-slate-500'}`} />
+                        <span className={`text-sm font-medium ${themeName === 'standard' ? 'text-white' : 'text-slate-400'}`}>
+                            {t('userProfile.personal.themeStandard')}
+                        </span>
+                        {themeName === 'standard' && (
+                            <div className="mt-1 w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                        )}
+                    </button>
+
+                    <button
+                        onClick={() => setTheme('dark')}
+                        className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
+                            themeName === 'dark'
+                                ? 'bg-cyan-600/20 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.15)]'
+                                : 'bg-slate-800/40 border-slate-700 hover:border-slate-500 text-slate-400'
+                        }`}
+                    >
+                        <MoonIcon className={`w-6 h-6 mb-2 ${themeName === 'dark' ? 'text-cyan-400' : 'text-slate-500'}`} />
+                        <span className={`text-sm font-medium ${themeName === 'dark' ? 'text-white' : 'text-slate-400'}`}>
+                            {t('userProfile.personal.themeDark')}
+                        </span>
+                        {themeName === 'dark' && (
+                            <div className="mt-1 w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                        )}
+                    </button>
                 </div>
             </div>
 

@@ -93,7 +93,7 @@ const LawSelector: React.FC<LawSelectorProps> = ({
           </div>
         )}
         <div className="flex items-center gap-2">
-          <p className="text-lg text-slate-400">
+          <p className="text-lg text-theme-text-secondary">
             {activeAgent ? `Wybierz kategorię dla agenta ${activeAgent.name}` : t('law.header')}
           </p>
           <InfoIcon onClick={() => setIsHelpOpen(true)} />
@@ -104,20 +104,20 @@ const LawSelector: React.FC<LawSelectorProps> = ({
           <button
             key={option.area}
             onClick={() => onSelect(option.area)}
-            className="group bg-slate-800/50 border border-slate-700 rounded-lg p-3 md:p-6 text-left hover:bg-slate-700/70 hover:border-cyan-500 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="group bg-theme-bg-darker border border-theme-border-default rounded-lg p-3 md:p-6 text-left hover:bg-theme-bg-light hover:border-theme-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-theme-primary"
           >
-            <div className="w-8 h-8 md:w-12 md:h-12 bg-slate-700/50 rounded-lg flex items-center justify-center mb-2 md:mb-4 group-hover:bg-cyan-600/30 transition-colors">
+            <div className="w-8 h-8 md:w-12 md:h-12 bg-theme-bg-light rounded-lg flex items-center justify-center mb-2 md:mb-4 group-hover:bg-theme-primary/30 transition-colors">
               {option.icon}
             </div>
             <h2 className="text-sm md:text-xl font-semibold text-white mb-0.5 md:mb-1 leading-tight">{option.name}</h2>
-            <p className="text-xs md:text-base text-slate-400 line-clamp-2">{option.description}</p>
+            <p className="text-xs md:text-base text-theme-text-secondary line-clamp-2">{option.description}</p>
           </button>
         ))}
       </div>
 
       {/* CUSTOM AGENTS SECTION */}
-      <div className="w-full max-w-6xl border-t border-slate-700/50 pt-8 mt-4 mb-8">
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-6 text-center">Sekcja Personalizacji</h3>
+      <div className="w-full max-w-6xl border-t border-theme-border-default pt-8 mt-4 mb-8">
+        <h3 className="text-xs font-bold text-theme-text-muted uppercase tracking-[0.2em] mb-6 text-center">Sekcja Personalizacji</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
           {/* AI Studio Tile */}
@@ -125,7 +125,7 @@ const LawSelector: React.FC<LawSelectorProps> = ({
             role="button"
             tabIndex={0}
             onClick={() => onSelect(LawArea.Custom)}
-            className="cursor-pointer group relative overflow-hidden bg-slate-900 border-2 border-dashed border-violet-500/30 hover:border-violet-500 hover:bg-slate-800 rounded-lg p-3 md:p-6 text-left transition-all duration-300"
+            className="cursor-pointer group relative overflow-hidden bg-theme-bg-dark border-2 border-dashed border-violet-500/30 hover:border-violet-500 hover:bg-theme-bg-darker rounded-lg p-3 md:p-6 text-left transition-all duration-300"
           >
             <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20">
               <InfoIcon
@@ -141,7 +141,7 @@ const LawSelector: React.FC<LawSelectorProps> = ({
               <MagicWandIcon className="w-5 h-5 md:w-6 md:h-6 text-violet-400" />
             </div>
             <h2 className="text-sm md:text-xl font-semibold text-white mb-0.5 md:mb-1 leading-tight uppercase">Moje Studio AI</h2>
-            <p className="text-xs md:text-base text-slate-400 line-clamp-2">Zarządzaj i twórz własnych asystentów ({customAgents.length})</p>
+            <p className="text-xs md:text-base text-theme-text-secondary line-clamp-2">Zarządzaj i twórz własnych asystentów ({customAgents.length})</p>
           </div>
         </div>
       </div>
@@ -180,22 +180,22 @@ const LawSelector: React.FC<LawSelectorProps> = ({
                 }
               }}
             />
-            <button
-              onClick={() => document.getElementById('main-json-import')?.click()}
-              className="w-full group bg-slate-800/40 border border-slate-700 rounded-lg p-4 flex items-center justify-center gap-3 hover:bg-slate-700/60 hover:border-cyan-500 transition-all duration-300"
-            >
-              <MagicWandIcon className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
-              <span className="text-slate-200 font-medium">{t('law.importJson')}</span>
-            </button>
+              <button
+                onClick={() => document.getElementById('main-json-import')?.click()}
+                className="w-full group bg-theme-bg-darker border border-theme-border-default rounded-lg p-4 flex items-center justify-center gap-3 hover:bg-theme-bg-light hover:border-theme-primary transition-all duration-300"
+              >
+                <MagicWandIcon className="w-5 h-5 text-theme-primary group-hover:scale-110 transition-transform" />
+                <span className="text-theme-text-primary font-medium">{t('law.importJson')}</span>
+              </button>
           </div>
         )
       }
 
-      <div className="w-full max-w-6xl p-6 bg-slate-800/40 rounded-xl border border-slate-700/50 backdrop-blur-sm">
+      <div className="w-full max-w-6xl p-6 bg-theme-bg-darker rounded-xl border border-theme-border-default backdrop-blur-sm">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-white mb-1">{t('law.localMode.title')}</h3>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-theme-text-secondary">
               {t('law.localMode.desc')}
               <span className="block mt-1 text-xs text-slate-500 italic">
                 {t('law.localMode.note')}

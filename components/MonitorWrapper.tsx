@@ -1,18 +1,20 @@
 import React from 'react';
 import MatrixBackground from './MatrixBackground';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface MonitorWrapperProps {
     children: React.ReactNode;
 }
 
 const MonitorWrapper: React.FC<MonitorWrapperProps> = ({ children }) => {
+    const { theme } = useTheme();
     return (
         <div className="relative p-2 md:p-4 perspective-[1000px]">
             {/* Monitor Bezel/Frame */}
-            <div className="relative bg-slate-800 rounded-lg p-1 shadow-[0_0_20px_rgba(0,0,0,0.8),inset_0_0_10px_rgba(255,255,255,0.05)] border border-slate-700 border-b-4 border-b-slate-950 overflow-hidden transform-gpu rotate-x-2">
+            <div className="relative rounded-lg p-1 shadow-[0_0_20px_rgba(0,0,0,0.8),inset_0_0_10px_rgba(255,255,255,0.05)] border border-b-4 overflow-hidden transform-gpu rotate-x-2" style={{ backgroundColor: theme.colors.splash.monitor.bezel, borderColor: theme.colors.splash.monitor.border, borderBottomColor: theme.colors.splash.monitor.borderBottom }}>
                 
                 {/* Screen Surface with Glow */}
-                <div className="relative bg-black rounded-sm overflow-hidden border border-slate-900 shadow-[inset_0_0_30px_rgba(6,182,212,0.2)]">
+                <div className="relative bg-transparent rounded-sm overflow-hidden border" style={{ borderColor: theme.colors.splash.monitor.screenBorder }}>
                     
                     {/* Matrix Effect Background Layer */}
                     <MatrixBackground />

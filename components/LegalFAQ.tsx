@@ -42,10 +42,10 @@ const LegalFAQ: React.FC<LegalFAQProps> = ({ lawArea, onSelectQuestion }) => {
     if (isLoading) {
         return (
             <div className="mt-8 animate-pulse">
-                <div className="h-4 w-32 bg-slate-700 rounded mb-4"></div>
+                <div className="h-4 w-32 bg-theme-bg-dark rounded mb-4"></div>
                 <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
                     {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="h-12 bg-slate-800 rounded-lg border border-slate-700/50"></div>
+                        <div key={i} className="h-12 bg-theme-bg-darker rounded-lg border border-theme-border-default"></div>
                     ))}
                 </div>
             </div>
@@ -56,8 +56,8 @@ const LegalFAQ: React.FC<LegalFAQProps> = ({ lawArea, onSelectQuestion }) => {
 
     return (
         <div className="mt-10">
-            <div className="flex items-center gap-2 mb-4 text-cyan-400">
-                <LightbulbIcon className="w-5 h-5 text-cyan-500" />
+            <div className="flex items-center gap-2 mb-4 text-theme-primary">
+                <LightbulbIcon className="w-5 h-5 text-theme-primary" />
                 <h4 className="font-semibold text-sm uppercase tracking-wider">{t('faq.title')}: {t(`law.areas.${lawArea.toLowerCase()}`)}</h4>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
@@ -65,9 +65,9 @@ const LegalFAQ: React.FC<LegalFAQProps> = ({ lawArea, onSelectQuestion }) => {
                     <button
                         key={index}
                         onClick={() => onSelectQuestion(q)}
-                        className="flex items-start text-left p-3 md:p-4 bg-slate-800/40 hover:bg-slate-700/60 border border-slate-700/50 hover:border-cyan-600/50 rounded-xl transition-all group"
+                        className="flex items-start text-left p-3 md:p-4 bg-theme-bg-darker hover:bg-theme-bg-light border border-theme-border-default hover:border-theme-primary/50 rounded-xl transition-all group"
                     >
-                        <span className="text-sm text-slate-300 group-hover:text-white leading-relaxed">
+                        <span className="text-sm text-theme-text-secondary group-hover:text-theme-text-primary leading-relaxed">
                             {q}
                         </span>
                     </button>

@@ -650,7 +650,11 @@
             "resetDatabaseNote": "ADVERTENCIA: ¡Elimina los datos de TODOS los usuarios del sistema! Las cuentas activas se mantendrán.",
             "subscriptionTitle": "Estado de Suscripción",
             "active": "Activa",
-            "expires": "Expira"
+            "expires": "Expira",
+            "themeLabel": "Tema visual",
+            "themeStandard": "Estándar",
+            "themeDark": "Modo Oscuro",
+            "themeSystem": "Predeterminado del sistema"
         },
         "quickActions": {
             "title": "Acciones Rápidas",

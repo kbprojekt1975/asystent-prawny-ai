@@ -37,10 +37,10 @@ const AiToolsSidebar: React.FC<AiToolsSidebarProps> = ({
             onClick={onClose}
         >
             <div
-                className={`fixed top-0 right-0 h-full w-full max-w-2xl bg-slate-900 shadow-2xl border-l border-slate-700 transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                className={`fixed top-0 right-0 h-full w-full max-w-2xl bg-theme-bg-dark shadow-2xl border-l border-theme-border-default transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
                 onClick={e => e.stopPropagation()}
             >
-                <header className="p-6 flex justify-between items-center border-b border-slate-700 flex-shrink-0 bg-slate-800/50">
+                <header className="p-6 flex justify-between items-center border-b border-theme-border-default flex-shrink-0 bg-theme-bg-darker">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-cyan-500/20 rounded-xl">
                             <svg className="w-6 h-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -51,7 +51,7 @@ const AiToolsSidebar: React.FC<AiToolsSidebarProps> = ({
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-full text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                        className="p-2 rounded-full text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-light transition-colors"
                         aria-label={t('history.close')}
                     >
                         <XIcon className="w-6 h-6" />

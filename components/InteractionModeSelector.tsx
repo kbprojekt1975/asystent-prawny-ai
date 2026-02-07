@@ -46,21 +46,21 @@ const InteractionModeSelector: React.FC<InteractionModeSelectorProps> = ({
   return (
     <div className="flex flex-col items-center min-h-full p-4 w-full">
       <div className="text-center mb-4 md:mb-6 flex items-center justify-center gap-2 mt-4 md:mt-0">
-        <p className="text-sm md:text-lg text-slate-400 font-medium">{t('interaction.header')}</p>
+        <p className="text-sm md:text-lg text-theme-text-secondary font-medium">{t('interaction.header')}</p>
         <InfoIcon onClick={() => setIsHelpOpen(true)} className="w-4 h-4 md:w-5 md:h-5" />
       </div>
 
       {/* Case Context Selector */}
-      <div className="w-full max-w-2xl bg-slate-900/80 p-2 rounded-2xl border-2 border-slate-700 shadow-2xl mb-8 flex flex-col md:flex-row gap-2">
+      <div className="w-full max-w-2xl bg-theme-bg-dark/80 p-2 rounded-2xl border-2 border-theme-border-default shadow-2xl mb-8 flex flex-col md:flex-row gap-2">
         <button
           onClick={() => setActiveContext('current')}
           disabled={!selectedTopic}
           className={`flex-1 flex items-center justify-start md:justify-center gap-2 md:gap-3 px-4 md:px-5 py-3 md:py-4 rounded-xl transition-all duration-300 ${activeContext === 'current'
-            ? 'bg-cyan-600/20 text-cyan-400 border-2 border-cyan-500/40 shadow-lg shadow-cyan-900/20'
-            : 'bg-slate-800/50 text-slate-400 hover:text-slate-300 hover:bg-slate-800/70 border-2 border-slate-700/50'
+            ? 'bg-theme-primary/20 text-theme-primary border-2 border-theme-primary/40 shadow-lg shadow-theme-primary/20'
+            : 'bg-theme-bg-darker text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-light border-2 border-theme-border-default'
             } ${!selectedTopic ? 'opacity-30 cursor-not-allowed' : ''}`}
         >
-          <div className={`p-1.5 md:p-2 rounded-lg flex-shrink-0 ${activeContext === 'current' ? 'bg-cyan-500/20' : 'bg-slate-700/40'}`}>
+          <div className={`p-1.5 md:p-2 rounded-lg flex-shrink-0 ${activeContext === 'current' ? 'bg-theme-primary/20' : 'bg-theme-bg-light'}`}>
             <BriefcaseIcon className="w-4 h-4 md:w-5 md:h-5" />
           </div>
           <div className="text-left overflow-hidden">
@@ -76,8 +76,8 @@ const InteractionModeSelector: React.FC<InteractionModeSelectorProps> = ({
         <button
           onClick={() => setActiveContext('select')}
           className={`flex-1 flex items-center justify-start md:justify-center gap-2 md:gap-3 px-4 md:px-5 py-3 md:py-4 rounded-xl transition-all duration-300 ${activeContext === 'select'
-            ? 'bg-slate-700/90 text-white border-2 border-slate-600 shadow-xl'
-            : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 border-2 border-slate-700/50'
+            ? 'bg-theme-bg-light text-theme-text-primary border-2 border-theme-border-default shadow-xl'
+            : 'bg-theme-bg-darker text-theme-text-secondary hover:bg-theme-bg-light hover:text-theme-text-primary border-2 border-theme-border-default'
             }`}
         >
           <div className={`p-1.5 md:p-2 rounded-lg flex-shrink-0 ${activeContext === 'select' ? 'bg-slate-600/50' : 'bg-slate-700/40'}`}>
@@ -89,8 +89,8 @@ const InteractionModeSelector: React.FC<InteractionModeSelectorProps> = ({
         <button
           onClick={() => setActiveContext('new')}
           className={`flex-1 flex items-center justify-start md:justify-center gap-2 md:gap-3 px-4 md:px-5 py-3 md:py-4 rounded-xl transition-all duration-300 ${activeContext === 'new'
-            ? 'bg-slate-700/90 text-white border-2 border-slate-600 shadow-xl'
-            : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 border-2 border-slate-700/50'
+            ? 'bg-theme-bg-light text-theme-text-primary border-2 border-theme-border-default shadow-xl'
+            : 'bg-theme-bg-darker text-theme-text-secondary hover:bg-theme-bg-light hover:text-theme-text-primary border-2 border-theme-border-default'
             }`}
         >
           <div className={`p-1.5 md:p-2 rounded-lg flex-shrink-0 ${activeContext === 'new' ? 'bg-slate-600/50' : 'bg-slate-700/40'}`}>
@@ -105,7 +105,7 @@ const InteractionModeSelector: React.FC<InteractionModeSelectorProps> = ({
           <button
             key={option.mode}
             onClick={() => handleToolClick(option.mode)}
-            className="group bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 md:p-6 text-left hover:bg-slate-800/70 hover:border-cyan-500/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 shadow-lg flex flex-col items-start"
+            className="group bg-theme-bg-darker border border-theme-border-default rounded-xl p-3 md:p-6 text-left hover:bg-theme-bg-light hover:border-theme-primary/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-theme-primary/50 shadow-lg flex flex-col items-start"
           >
             <div className={`w-7 h-7 md:w-12 md:h-12 ${option.bgColor} rounded-lg md:rounded-xl flex items-center justify-center mb-2 md:mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
               <div className="scale-75 md:scale-100">
@@ -113,18 +113,18 @@ const InteractionModeSelector: React.FC<InteractionModeSelectorProps> = ({
               </div>
             </div>
             <h2 className="text-[11px] md:text-xl font-bold text-white mb-0.5 md:mb-2 leading-tight">{option.label}</h2>
-            <p className="hidden md:block text-xs md:text-sm text-slate-400 leading-relaxed font-medium line-clamp-2">{option.description}</p>
+            <p className="hidden md:block text-xs md:text-sm text-theme-text-secondary leading-relaxed font-medium line-clamp-2">{option.description}</p>
           </button>
         ))}
       </div>
 
       {/* Resources Section */}
-      <div className="w-full max-w-2xl mt-8 pt-8 border-t border-slate-800">
-        <h3 className="text-sm font-semibold text-slate-500 mb-4 px-1">{t('interaction.resources.header')}</h3>
+      <div className="w-full max-w-2xl mt-8 pt-8 border-t border-theme-border-default">
+        <h3 className="text-sm font-semibold text-theme-text-muted mb-4 px-1">{t('interaction.resources.header')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             onClick={onViewDocuments}
-            className="flex items-center gap-3 p-4 bg-slate-800/30 border border-slate-700 rounded-lg hover:bg-slate-700/50 hover:border-cyan-500/50 transition-all group"
+            className="flex items-center gap-3 p-4 bg-theme-bg-darker border border-theme-border-default rounded-lg hover:bg-theme-bg-light hover:border-theme-primary/50 transition-all group"
           >
             <div className="p-2 bg-slate-700/50 rounded-lg text-slate-400 group-hover:text-cyan-400 transition-colors">
               <DocumentTextIcon className="h-5 w-5" />

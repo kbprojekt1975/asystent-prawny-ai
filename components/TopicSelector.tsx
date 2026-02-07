@@ -54,7 +54,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
           </div>
         )}
         <div className="flex items-center gap-2">
-          <p className="text-lg text-slate-400">
+          <p className="text-lg text-theme-text-secondary">
             {activeAgent ? `Wybierz sprawę dla agenta ${activeAgent.name}` : t('topic.header')}
           </p>
           <InfoIcon onClick={() => setIsHelpOpen(true)} />
@@ -66,24 +66,24 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
           <div className="pt-2">
             <button
               onClick={onChangeMode}
-              className="w-full flex items-center justify-between p-4 bg-slate-800/80 border border-slate-700 rounded-xl hover:bg-slate-700 hover:border-cyan-500/50 transition-all group shadow-xl backdrop-blur-sm"
+              className="w-full flex items-center justify-between p-4 bg-theme-bg-darker border border-theme-border-default rounded-xl hover:bg-theme-bg-light hover:border-theme-primary/50 transition-all group shadow-xl backdrop-blur-sm"
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-cyan-600/20 rounded-lg text-cyan-400 group-hover:bg-cyan-600/30 transition-colors">
                   <SparklesIcon className="h-5 w-5" />
                 </div>
                 <div className="text-left">
-                  <span className="block text-sm font-semibold text-slate-200">{t('topic.changeMode')}</span>
-                  <span className="block text-[10px] text-slate-400 uppercase tracking-wider">{t('topic.modeDesc')}</span>
+                  <span className="block text-sm font-semibold text-theme-text-primary">{t('topic.changeMode')}</span>
+                  <span className="block text-[10px] text-theme-text-secondary uppercase tracking-wider">{t('topic.modeDesc')}</span>
                 </div>
               </div>
-              <ChevronUpIcon className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors rotate-90" />
+              <ChevronUpIcon className="w-4 h-4 text-theme-text-muted group-hover:text-theme-primary transition-colors rotate-90" />
             </button>
           </div>
         )}
 
         {/* Lista tematów */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 shadow-xl backdrop-blur-sm">
+        <div className="bg-theme-bg-darker border border-theme-border-default rounded-xl p-6 shadow-xl backdrop-blur-sm">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
               <CaseIcon className="w-6 h-6 text-cyan-400" />
@@ -100,7 +100,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
           {/* Sekcja: Sprawy standardowe */}
           <div className="space-y-6">
             <div>
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 px-1">{t('topic.analysisAndAdvice')}</h3>
+              <h3 className="text-xs font-bold text-theme-text-muted uppercase tracking-widest mb-3 px-1">{t('topic.analysisAndAdvice')}</h3>
               <div className="grid grid-cols-1 gap-3">
                 {topics.filter(t => {
                   const low = t.toLowerCase();
@@ -112,13 +112,13 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
                       return !low.includes('negocjacje') && !low.includes('mediacje') && !low.includes('ugoda') && !low.includes('porozumienie');
                     })
                     .map((topic) => (
-                      <div key={topic} className="group flex items-center justify-between bg-slate-700/30 border border-slate-700/50 rounded-lg pr-3 hover:bg-slate-700/50 hover:border-cyan-500/50 transition-all duration-200">
+                      <div key={topic} className="group flex items-center justify-between bg-theme-bg-dark border border-theme-border-default rounded-lg pr-3 hover:bg-theme-bg-light hover:border-theme-primary/50 transition-all duration-200">
                         <button
                           onClick={() => onSelectTopic(topic)}
                           className="flex-grow flex items-center gap-4 p-4 text-left focus:outline-none"
                         >
-                          <CaseIcon className="w-5 h-5 text-cyan-400 opacity-70" />
-                          <span className="text-slate-200 font-medium">{topic}</span>
+                          <CaseIcon className="w-5 h-5 text-theme-primary opacity-70" />
+                          <span className="text-theme-text-primary font-medium">{topic}</span>
                         </button>
                         <button
                           onClick={(e) => {
@@ -182,7 +182,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
 
         {/* Formularze tworzenia */}
         <div className="grid grid-cols-1 gap-6">
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 shadow-lg">
+          <div className="bg-theme-bg-darker border border-theme-border-default rounded-xl p-6 shadow-lg">
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <PlusCircleIcon className="text-cyan-400 w-5 h-5" />
               {t('topic.newCase')}
@@ -194,7 +194,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ lawArea, topics, onSelect
                 onChange={(e) => setNewTopic(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddClick()}
                 placeholder={t('topic.newCasePlaceholder')}
-                className="flex-grow bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                className="flex-grow bg-theme-bg-dark border border-theme-border-default rounded-lg p-3 text-theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all"
               />
               <button
                 onClick={handleAddClick}

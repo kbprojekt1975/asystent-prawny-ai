@@ -677,7 +677,11 @@
             "resetDatabaseNote": "WARNING: Deletes data of ALL system users! Active accounts will be preserved.",
             "subscriptionTitle": "Subscription Status",
             "active": "Active",
-            "expires": "Expires"
+            "expires": "Expires",
+            "themeLabel": "Visual Theme",
+            "themeStandard": "Standard",
+            "themeDark": "Dark Mode",
+            "themeSystem": "System Default"
         },
         "quickActions": {
             "title": "Quick Actions",

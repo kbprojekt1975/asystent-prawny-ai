@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SparklesIcon, ScaleIcon, ShieldCheckIcon, ChevronRightIcon } from './Icons';
 import MonitorWrapper from './MonitorWrapper';
+import ThemeSwitcher from './ThemeSwitcher';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface SplashScreenProps {
     onStart: () => void;
@@ -10,6 +12,7 @@ interface SplashScreenProps {
 
 const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
     const { t, i18n } = useTranslation();
+    const { theme } = useTheme();
     const [messageIndex, setMessageIndex] = useState(0);
     const [fade, setFade] = useState(true);
     const [isExiting, setIsExiting] = useState(false);
@@ -49,32 +52,38 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart, isReady }) => {
     };
 
     return (
-        <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden transition-all duration-500 bg-[#0f172a] ${isExiting ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}`}>
+        <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden transition-all duration-500 ${isExiting ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}`} style={{ backgroundColor: theme.colors.splash.background.base }}>
             {/* Professional Background Gradient */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(30,41,59,1)_0%,rgba(15,23,42,1)_45%,rgba(8,10,18,1)_100%)]" />
+            <div className="absolute inset-0" style={{ background: theme.colors.splash.background.gradient }} />
             
-            {/* Subtle Indigo/Navy Glow */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-900/10 blur-[120px] rounded-full" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-900/10 blur-[120px] rounded-full" />
+            {/* Subtle Glow Effects */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] blur-[120px] rounded-full" style={{ backgroundColor: theme.colors.splash.background.glowIndigo }} />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-900/10 blur-[120px] rounded-full" style={{ backgroundColor: theme.colors.splash.background.glowCyan }} />
 
-            {/* Discreet Language Switcher - Top Right */}
-            <div className="absolute top-6 right-6 z-50 flex bg-slate-900/40 rounded-lg p-1 border border-white/5 backdrop-blur-md transition-all hover:bg-slate-900/60">
-                {['PL', 'EN', 'ES'].map((lang) => (
-                    <button
-                        key={lang}
-                        onClick={() => i18n.changeLanguage(lang.toLowerCase())}
-                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
-                            i18n.language.startsWith(lang.toLowerCase())
-                                ? 'bg-white/10 text-white shadow-sm'
-                                : 'text-slate-400 hover:text-white hover:bg-white/5'
-                        }`}
-                    >
-                        {lang}
-                    </button>
-                ))}
+            {/* Top Right Controls */}
+            <div className="absolute top-6 right-6 z-[100] flex gap-3">
+                {/* Theme Switcher */}
+                <ThemeSwitcher />
+                
+                {/* Language Switcher */}
+                <div className="flex bg-slate-900/40 rounded-lg p-1 border border-white/5 backdrop-blur-md transition-all hover:bg-slate-900/60">
+                    {['PL', 'EN', 'ES'].map((lang) => (
+                        <button
+                            key={lang}
+                            onClick={() => i18n.changeLanguage(lang.toLowerCase())}
+                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+                                i18n.language.startsWith(lang.toLowerCase())
+                                    ? 'bg-white/10 text-white shadow-sm'
+                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            }`}
+                        >
+                            {lang}
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            <div className="relative flex flex-col items-center max-w-2xl px-6 text-center">
+            <div className="relative z-10 flex flex-col items-center max-w-2xl px-6 text-center">
                 {/* Headline inside Monitor Wrapper */}
                 <div className="mb-12 w-full animate-in fade-in slide-in-from-bottom-6 duration-1000">
                     <MonitorWrapper>

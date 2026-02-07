@@ -76,13 +76,13 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   return (
-    <header className="bg-slate-900/70 backdrop-blur-md p-2 md:p-4 border-b border-slate-700 flex flex-col md:flex-row justify-between items-center z-40 flex-shrink-0 gap-1 md:gap-4 w-full">
+    <header className="bg-theme-bg-dark/70 backdrop-blur-md p-2 md:p-4 border-b border-theme-border-default flex flex-col md:flex-row justify-between items-center z-40 flex-shrink-0 gap-1 md:gap-4 w-full">
       <div className="flex items-center justify-between w-full md:w-auto md:mr-auto truncate gap-3">
         <div className="flex items-center gap-3 truncate">
           {onBackClick && (
             <button
               onClick={onBackClick}
-              className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors flex-shrink-0"
+              className="p-2 text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-light/50 rounded-full transition-colors flex-shrink-0"
               aria-label={finalBackButtonText}
               title={finalBackButtonText}
             >
@@ -93,8 +93,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             <nav className="flex items-center gap-1.5 overflow-x-auto no-scrollbar mask-linear-fade pr-4 text-sm md:text-base font-medium whitespace-nowrap">
               {breadcrumbs.map((crumb, index) => (
                 <div key={index} className="flex items-center gap-1.5 flex-shrink-0">
-                  {index > 0 && <ChevronRightIcon className="w-4 h-4 text-slate-500 flex-shrink-0" />}
-                  <span className={`${index === breadcrumbs.length - 1 ? 'text-white font-bold' : 'text-slate-400'}`}>
+                  {index > 0 && <ChevronRightIcon className="w-4 h-4 text-theme-text-muted flex-shrink-0" />}
+                  <span className={`${index === breadcrumbs.length - 1 ? 'text-theme-text-primary font-bold' : 'text-theme-text-secondary'}`}>
                     {crumb}
                   </span>
                 </div>
@@ -158,7 +158,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             {onHomeClick && (
               <button
                 onClick={onHomeClick}
-                className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden sm:block"
+                className="p-2 text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-light/50 rounded-full transition-colors hidden sm:block"
                 aria-label={t('app.home')}
                 title={t('app.home')}
               >
@@ -210,7 +210,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             {onQuickActionsClick && (
               <button
                 onClick={onQuickActionsClick}
-                className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors hidden sm:block"
+                className="p-2 text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-light/50 rounded-full transition-colors hidden sm:block"
                 aria-label={t('app.quickActions')}
                 title={t('app.quickActions')}
               >
@@ -240,13 +240,13 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 
             <button
               onClick={onProfileClick}
-              className="p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors relative hidden xs:block"
+              className="p-2 text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-light/50 rounded-full transition-colors relative hidden xs:block"
               aria-label={t('app.userProfile')}
               title={t('app.userProfile')}
             >
               <ProfileIcon className="h-6 w-6" />
               {remindersCount > 0 && (
-                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-slate-900">
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-theme-bg-dark">
                   {remindersCount}
                 </span>
               )}
@@ -255,22 +255,22 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50">
+          <div className="flex bg-theme-bg-darker rounded-lg p-1 border border-theme-border-default">
             <button
               onClick={() => changeLanguage('pl')}
-              className={`px-2 py-1 text-xs font-bold rounded transition-all ${i18n.language.startsWith('pl') ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+              className={`px-2 py-1 text-xs font-bold rounded transition-all ${i18n.language.startsWith('pl') ? 'bg-theme-bg-light text-theme-text-primary shadow-sm' : 'text-theme-text-muted hover:text-theme-text-secondary'}`}
             >
               PL
             </button>
             <button
               onClick={() => changeLanguage('en')}
-              className={`px-2 py-1 text-xs font-bold rounded transition-all ${i18n.language.startsWith('en') ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+              className={`px-2 py-1 text-xs font-bold rounded transition-all ${i18n.language.startsWith('en') ? 'bg-theme-bg-light text-theme-text-primary shadow-sm' : 'text-theme-text-muted hover:text-theme-text-secondary'}`}
             >
               EN
             </button>
             <button
               onClick={() => changeLanguage('es')}
-              className={`px-2 py-1 text-xs font-bold rounded transition-all ${i18n.language.startsWith('es') ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+              className={`px-2 py-1 text-xs font-bold rounded transition-all ${i18n.language.startsWith('es') ? 'bg-theme-bg-light text-theme-text-primary shadow-sm' : 'text-theme-text-muted hover:text-theme-text-secondary'}`}
             >
               ES
             </button>

@@ -30,8 +30,8 @@
   font-weight: 400;
 
   color-scheme: dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #0f172a;
+  color: var(--theme-text-primary);
+  background-color: var(--theme-bg-dark);
   /* slate-900 */
 
   font-synthesis: none;
@@ -44,7 +44,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #0f172a;
+  background-color: var(--theme-bg-dark);
 }
 
 #root {

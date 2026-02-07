@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { SparklesIcon, Bars3Icon, BotIcon, InformationCircleIcon } from '../Icons';
 import { ChatMessage } from '../../types';
 import LoadingSpinner from '../LoadingSpinner';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface AndromedaChatViewProps {
     history: ChatMessage[];
@@ -20,17 +21,19 @@ const AndromedaChatView: React.FC<AndromedaChatViewProps> = ({
     messagesEndRef
 }) => {
     const { t } = useTranslation();
+    const { theme } = useTheme();
 
     return (
         <div className="flex-1 flex flex-col relative min-h-0">
             {/* Ambient Background */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-900/10 blur-[120px] rounded-full animate-pulse" />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+                <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] blur-[120px] rounded-full animate-pulse z-0" style={{ backgroundColor: theme.colors.andromeda.ambientGlow.topRight }} />
+                <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] blur-[120px] rounded-full animate-pulse z-0" style={{ backgroundColor: theme.colors.andromeda.ambientGlow.bottomLeft, animationDelay: '2s' }} />
+
             </div>
 
             {/* Header */}
-            <header className="flex-none relative z-10 px-4 md:px-6 py-4 flex items-center justify-between border-b border-slate-800/50 backdrop-blur-md bg-slate-900/40">
+            <header className="flex-none relative z-10 px-4 md:px-6 py-4 flex items-center justify-between border-b backdrop-blur-md" style={{ borderColor: theme.colors.andromeda.header.border, backgroundColor: theme.colors.andromeda.header.background }}>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setIsSidebarOpen(true)}
@@ -126,10 +129,13 @@ const AndromedaChatView: React.FC<AndromedaChatViewProps> = ({
                             key={idx}
                             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}
                         >
-                            <div className={`max-w-[90%] md:max-w-[85%] p-3 md:p-4 rounded-2xl ${msg.role === 'user'
-                                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-900/20'
-                                : 'bg-slate-900 border border-slate-800 text-slate-100 shadow-xl'
-                                }`}>
+                            <div 
+                                className={`max-w-[90%] md:max-w-[85%] p-3 md:p-4 rounded-2xl ${msg.role === 'user' ? 'shadow-lg' : 'border shadow-xl'}`}
+                                style={msg.role === 'user' 
+                                    ? { backgroundColor: theme.colors.andromeda.chat.userBubble, color: theme.colors.andromeda.chat.userText, boxShadow: `0 10px 15px -3px ${theme.colors.andromeda.chat.userShadow}` }
+                                    : { backgroundColor: theme.colors.andromeda.chat.aiBubble, borderColor: theme.colors.andromeda.chat.aiBorder, color: theme.colors.andromeda.chat.aiText, boxShadow: `0 20px 25px -5px ${theme.colors.andromeda.chat.aiShadow}` }
+                                }
+                            >
                                 <div className="prose prose-invert prose-xs md:prose-sm max-w-none whitespace-pre-wrap leading-relaxed">
                                     {msg.content}
                                 </div>
