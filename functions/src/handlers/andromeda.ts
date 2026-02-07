@@ -77,7 +77,7 @@ export const askAndromeda = onCall({
     const pillarRulesMapDefault = (language === 'en' ? PILLAR_RULES_EN : language === 'es' ? PILLAR_RULES_ES : PILLAR_RULES_PL);
     const pillarRules = dynamicPrompts?.pillars?.[language]?.['Asystent Prawny'] || pillarRulesMapDefault['Asystent Prawny'] || "";
 
-    const systemInstruction = dynamicAndromedaPrompt || `
+    const baseInstruction = dynamicAndromedaPrompt || `
     # ROLE: ANDROMEDA - GLOBAL LEGAL COMPASS
     
     # CORE RULES:
@@ -85,6 +85,10 @@ export const askAndromeda = onCall({
     
     # PILLAR RULES (UNIVERSAL):
     ${pillarRules}
+    `;
+    
+    const systemInstruction = `
+    ${baseInstruction}
     
     # CONTEXT:
     ${existingKnowledgeContext}
