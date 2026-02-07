@@ -504,6 +504,7 @@
         "ai_desc": "Best choice if you are unsure. Describe the situation, and the assistant will classify the case and move you to the appropriate department."
     },
     "splash": {
+        "headline": "Your army of lawyers at your fingertips.",
         "start": "GET STARTED",
         "preparing": "Preparing...",
         "messages": [

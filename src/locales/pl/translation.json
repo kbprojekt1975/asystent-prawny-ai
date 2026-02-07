@@ -511,6 +511,7 @@
         "ai_desc": "Najlepszy wybór, jeśli nie masz pewności. Opisz sytuację, a asystent sam zakwalifikuje sprawę i przeniesie Cię do odpowiedniego działu."
     },
     "splash": {
+        "headline": "Twoja armia prawników na wyciągnięcie ręki.",
         "start": "ZACZYNAMY",
         "preparing": "Przygotowanie...",
         "messages": [

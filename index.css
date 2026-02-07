@@ -1,9 +1,31 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .animate-pulse-glow {
+    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 5px rgba(6, 182, 212, 0.2),
+      0 0 10px rgba(6, 182, 212, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(6, 182, 212, 0.6),
+      0 0 35px rgba(6, 182, 212, 0.3);
+  }
+}
+
 :root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Inter", system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -34,9 +56,9 @@ body {
 }
 
 /* Ensure main containers take full width for elements like headers */
-#root>div,
-#root>main,
-#root>header {
+#root > div,
+#root > main,
+#root > header {
   width: 100%;
 }
 
@@ -69,7 +91,6 @@ body {
 }
 
 @keyframes guide-pulse {
-
   0%,
   100% {
     border-color: rgba(51, 65, 85, 0.5);

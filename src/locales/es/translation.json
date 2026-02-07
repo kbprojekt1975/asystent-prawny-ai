@@ -474,6 +474,7 @@
         "ai_desc": "La mejor opción si no estás seguro. Describe la situación y el asistente clasificará el caso y te llevará al departamento correspondiente."
     },
     "splash": {
+        "headline": "Tu ejército de abogados al alcance de la mano.",
         "start": "COMENZAR",
         "preparing": "Preparando...",
         "messages": [
