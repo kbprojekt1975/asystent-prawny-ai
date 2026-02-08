@@ -170,6 +170,7 @@
         "export": "Eksportuj Rozmowę",
         "import": "Importuj Rozmowę",
         "install": "Zainstaluj Aplikację",
+        "documentation": "Dokumentacja",
         "help": "Pomoc",
         "logout": "Wyloguj się",
         "home": "Strona Główna",
@@ -1025,5 +1026,60 @@
         "importantDeadlines": "⏰ Ważne terminy",
         "mitigatingCircumstances": "🤝 Okoliczności łagodzące",
         "alternativeSolutions": "🔄 Alternatywne rozwiązania"
+    },
+    "documentation": {
+        "title": "Dokumentacja Użytkownika",
+        "intro": "Witaj w oficjalnym podręczniku Asystenta Prawnego AI. Ten dokument pomoże Ci zrozumieć i w pełni wykorzystać potencjał naszych narzędzi.",
+        "caseStudyLabel": "Analiza Przypadku",
+        "footerTitle": "Potrzebujesz dalszej pomocy?",
+        "footerDesc": "Skorzystaj z opcji \"Pomoc AI\" w menu głównym.",
+        "andromeda": {
+            "title": "Andromeda - Kompas Prawny",
+            "desc": "Andromeda to serce strategiczne aplikacji. Służy do pogłębionej analizy spraw, szukania orzecznictwa i budowania planu działania.",
+            "feature1": "Strategia Sądowa: AI planuje kolejne 24h Twoich działań.",
+            "feature2": "Analiza szans: Precyzyjne określenie prawdopodobieństwa wygranej.",
+            "feature3": "Dostęp do bazy ISAP/SAOS: Wyszukiwanie żywych aktów prawnych i wyroków.",
+            "caseStudy": "Przykład: Analiza skomplikowanej sprawy o podział majątku – AI znajduje kluczowe orzeczenia dotyczące nakładów na majątek odrębny i buduje linię argumentacji."
+        },
+        "studio": {
+            "title": "Moje Studio AI (PRO)",
+            "desc": "Studio pozwala na tworzenie własnych, wyspecjalizowanych pomocników.",
+            "feature1": "Customowi Agenci: Możesz zdefiniować rolę (np. Ekspert od najmu) i instrukcje.",
+            "feature2": "Wersja Nakładki: Dodawanie specyficznej wiedzy do standardowego modelu.",
+            "feature3": "Optymalizacja AI: System sam ulepsza Twoje instrukcje, aby były skuteczniejsze.",
+            "caseStudy": "Przykład: Stworzenie agenta 'Ekspert od RODO', który automatycznie weryfikuje klauzule informacyjne w przesłanych umowach i sugeruje poprawki."
+        },
+        "deepThinking": {
+            "title": "Deep Thinking - Logika PRO",
+            "desc": "Tryb przeznaczony do najbardziej skomplikowanych problemów, gdzie liczy się każdy szczegół.",
+            "feature1": "Analiza wieloetapowa: AI nie dąży do najszybszej odpowiedzi, lecz do najbardziej poprawnej.",
+            "feature2": "Weryfikacja faktów: System sprawdza spójność Twoich zeznań i dowodów.",
+            "feature3": "Refleksja: Model analizuje własne kroki myślowe przed podaniem wyniku.",
+            "caseStudy": "Przykład: Rozwiązanie wielowątkowego sporu korporacyjnego, gdzie system analizuje sprzeczne interesy wielu stron i proponuje optymalną drogę ugodową."
+        },
+        "caseTools": {
+            "title": "Narzędzia Zarządzania Sprawą",
+            "desc": "Twój wirtualny segregator na dokumenty i fakty.",
+            "timeline": "Oś Czasu: Wizualizacja zdarzeń (kto, co, kiedy).",
+            "checklist": "Checklisty: Gotowe i własne listy zadań do wykonania w sprawie.",
+            "repository": "Repozytorium: Bezpieczne miejsce na pozwy, wnioski i dowody.",
+            "notes": "Notatki: Szybkie zapisywanie pomysłów i pytań do prawnika.",
+            "caseStudy": "Przykład: Oś Czasu pozwala precyzyjnie odtworzyć przebieg kolizji drogowej na podstawie zeznań świadków, a Repozytorium trzyma wszystkie zdjęcia szkód w jednym miejscu."
+        },
+        "modes": {
+            "title": "Tryby Interakcji",
+            "advice": "Porada: Szybka analiza i odpowiedź na pytanie prawne.",
+            "document": "Pismo: Generator dokumentów gotowych do druku lub wysłania.",
+            "court": "Sąd: Symulacja przesłuchania i rozprawy głównej.",
+            "negotiation": "Negocjacje: Pomoc w pisaniu pism ugodowych i mediacjach.",
+            "caseStudy": "Przykład: Użycie 'Trybu Sądowego' do przećwiczenia odpowiedzi na trudne pytania pełnomocnika strony przeciwnej przed realną rozprawą."
+        },
+        "privacy": {
+            "title": "Bezpieczeństwo i RODO",
+            "desc": "Twoje dane są chronione zgodnie z najwyższymi standardami.",
+            "local": "Tryb Lokalny: Działa tylko w Twojej przeglądarce. Zero śladu po zamknięciu karty.",
+            "cloud": "Tryb Chmurowy: Synchronizacja Twoich spraw między urządzeniami (wymaga zgody).",
+            "caseStudy": "Przykład: Praca nad ekstremalnie poufnym dokumentem w trybie lokalnym gwarantuje, że dane nigdy nie trafią na serwer i nie zostaną użyte do szkolenia modeli."
+        }
     }
 }

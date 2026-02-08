@@ -170,6 +170,7 @@
         "export": "Export Chat",
         "import": "Import Chat",
         "install": "Install App",
+        "documentation": "Documentation",
         "help": "Help",
         "logout": "Logout",
         "home": "Home",
@@ -1016,5 +1017,60 @@
         "importantDeadlines": "⏰ Important deadlines",
         "mitigatingCircumstances": "🤝 Mitigating circumstances",
         "alternativeSolutions": "🔄 Alternative solutions"
+    },
+    "documentation": {
+        "title": "User Documentation",
+        "intro": "Welcome to the official AI Legal Assistant manual. This document will help you understand and fully utilize the potential of our tools.",
+        "caseStudyLabel": "Case Study",
+        "footerTitle": "Need further help?",
+        "footerDesc": "Use the \"AI Help\" option in the main menu.",
+        "andromeda": {
+            "title": "Andromeda - Legal Compass",
+            "desc": "Andromeda is the strategic heart of the application. It is used for in-depth case analysis, searching for case law, and building an action plan.",
+            "feature1": "Court Strategy: AI plans the next 24 hours of your actions.",
+            "feature2": "Chances Analysis: Precise determination of the probability of winning.",
+            "feature3": "ISAP/SAOS Database Access: Searching for live legal acts and judgments.",
+            "caseStudy": "Example: Analysis of a complex property division case – AI finds key rulings regarding expenditures on separate property and builds a line of reasoning."
+        },
+        "studio": {
+            "title": "My AI Studio (PRO)",
+            "desc": "The Studio allows you to create your own specialized assistants.",
+            "feature1": "Custom Agents: You can define a role (e.g., Rental Expert) and instructions.",
+            "feature2": "Overlay Version: Adding specific knowledge to the standard model.",
+            "feature3": "AI Optimization: The system improves your instructions itself to make them more effective.",
+            "caseStudy": "Example: Creating a 'GDPR Expert' agent that automatically verifies information clauses in submitted contracts and suggests corrections."
+        },
+        "deepThinking": {
+            "title": "Deep Thinking - PRO Logic",
+            "desc": "Mode designed for the most complicated problems, where every detail counts.",
+            "feature1": "Multi-stage analysis: AI does not strive for the fastest answer, but for the most correct one.",
+            "feature2": "Fact verification: The system checks the consistency of your statements and evidence.",
+            "feature3": "Reflection: The model analyzes its own thought steps before providing the result.",
+            "caseStudy": "Example: Solving a multi-threaded corporate dispute where the system analyzes conflicting interests of many parties and proposes an optimal settlement path."
+        },
+        "caseTools": {
+            "title": "Case Management Tools",
+            "desc": "Your virtual binder for documents and facts.",
+            "timeline": "Timeline: Visualization of events (who, what, when).",
+            "checklist": "Checklists: Ready-made and custom task lists to perform in the case.",
+            "repository": "Repository: A secure place for lawsuits, motions, and evidence.",
+            "notes": "Notes: Quickly save ideas and questions for your lawyer.",
+            "caseStudy": "Example: The Timeline allows to precisely reconstruct a traffic collision based on witness statements, and the Repository keeps all damage photos in one place."
+        },
+        "modes": {
+            "title": "Interaction Modes",
+            "advice": "Advice: Quick analysis and answer to a legal question.",
+            "document": "Document: Generator of documents ready to print or send.",
+            "court": "Court: Simulation of interrogation and main trial.",
+            "negotiation": "Negotiations: Help in writing settlement letters and mediations.",
+            "caseStudy": "Example: Using 'Court Mode' to practice answers to difficult questions from the opposing party's representative before the real trial."
+        },
+        "privacy": {
+            "title": "Security and GDPR",
+            "desc": "Your data is protected according to the highest standards.",
+            "local": "Local Mode: Works only in your browser. Zero trace after closing the tab.",
+            "cloud": "Cloud Mode: Synchronization of your cases between devices (requires consent).",
+            "caseStudy": "Example: Working on an extremely confidential document in local mode guarantees that data will never go to the server and will not be used to train models."
+        }
     }
 }

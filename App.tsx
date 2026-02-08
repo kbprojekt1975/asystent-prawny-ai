@@ -225,6 +225,8 @@ const App: React.FC = () => {
     isWelcomeModalOpen, setIsWelcomeModalOpen,
     welcomeModalInitialViewMode,
     deferredPrompt,
+    isDocumentationModalOpen,
+    setIsDocumentationModalOpen,
   } = useUIContext();
 
 
@@ -672,6 +674,8 @@ const App: React.FC = () => {
             isInstallPromptOpen={isInstallPromptOpen}
             setIsInstallPromptOpen={setIsInstallPromptOpen}
             onInstall={handleInstallApp}
+            isDocumentationModalOpen={isDocumentationModalOpen}
+            setIsDocumentationModalOpen={setIsDocumentationModalOpen}
           />
 
 
@@ -788,6 +792,7 @@ const App: React.FC = () => {
                 totalCost={totalCost}
                 subscription={userProfile?.subscription}
                 onKnowledgeClick={() => handleViewKnowledge()}
+                onDocumentationClick={() => setIsDocumentationModalOpen(true)}
                 onGenerateKnowledgeClick={selectedTopic ? handleGenerateKnowledge : undefined}
                 onInstallApp={deferredPrompt ? handleInstallApp : undefined}
                 remindersCount={activeRemindersCount}

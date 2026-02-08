@@ -149,6 +149,7 @@
         "import": "Importar Chat",
         "install": "Instalar App",
         "help": "Ayuda",
+        "documentation": "Documentación",
         "logout": "Cerrar Sesión",
         "home": "Inicio",
         "myPlan": "Mi Plan",
@@ -989,5 +990,60 @@
         "importantDeadlines": "⏰ Plazos importantes",
         "mitigatingCircumstances": "🤝 Circunstancias atenuantes",
         "alternativeSolutions": "🔄 Soluciones alternativas"
+    },
+    "documentation": {
+        "title": "Documentación del Usuario",
+        "intro": "Bienvenido al manual oficial del Asistente Legal de IA. Este documento le ayudará a entender y aprovechar al máximo el potencial de nuestras herramientas.",
+        "caseStudyLabel": "Caso de Estudio",
+        "footerTitle": "¿Necesitas más ayuda?",
+        "footerDesc": "Utiliza la opción \"Ayuda de IA\" en el menú principal.",
+        "andromeda": {
+            "title": "Andrómeda - Brújula Legal",
+            "desc": "Andrómeda es el corazón estratégico de la aplicación. Se utiliza para el análisis profundo de casos, la búsqueda de jurisprudencia y la creación de un plan de acción.",
+            "feature1": "Estrategia Judicial: La IA planifica las próximas 24 horas de sus acciones.",
+            "feature2": "Análisis de Probabilidades: Determinación precisa de la probabilidad de ganar.",
+            "feature3": "Acceso a Bases de Datos ISAP/SAOS: Búsqueda de actos legales y sentencias en vivo.",
+            "caseStudy": "Ejemplo: Análisis de un caso complejo de división de bienes – la IA encuentra sentencias clave sobre gastos en bienes propios y construye una línea de argumentación."
+        },
+        "studio": {
+            "title": "Mi Estudio de IA (PRO)",
+            "desc": "El Estudio le permite crear sus propios asistentes especializados.",
+            "feature1": "Agentes Personalizados: Puede definir un rol (p. ej., Experto en alquileres) e instrucciones.",
+            "feature2": "Versión Overlay: Añadir conocimientos específicos al modelo estándar.",
+            "feature3": "Optimización de IA: El sistema mejora sus instrucciones por sí mismo para hacerlas más efectivas.",
+            "caseStudy": "Ejemplo: Creación de un agente 'Experto en RGPD' que verifica automáticamente las cláusulas informativas en los contratos presentados y sugiere correcciones."
+        },
+        "deepThinking": {
+            "title": "Deep Thinking - Lógica PRO",
+            "desc": "Modo diseñado para los problemas más complicados, donde cada detalle cuenta.",
+            "feature1": "Análisis multietapa: La IA no busca la respuesta más rápida, sino la más correcta.",
+            "feature2": "Verificación de hechos: El sistema comprueba la coherencia de sus declaraciones y pruebas.",
+            "feature3": "Reflexión: El modelo analiza sus propios pasos de pensamiento antes de dar el resultado.",
+            "caseStudy": "Ejemplo: Resolución de un conflicto corporativo multihilo donde el sistema analiza intereses contrapuestos de múltiples partes y propone una vía de acuerdo óptima."
+        },
+        "caseTools": {
+            "title": "Herramientas de Gestión de Casos",
+            "desc": "Su carpeta virtual para documentos y hechos.",
+            "timeline": "Línea de Tiempo: Visualización de eventos (quién, qué, cuándo).",
+            "checklist": "Listas de Verificación: Listas de tareas predefinidas y personalizadas para el caso.",
+            "repository": "Repositorio: Un lugar seguro para demandas, peticiones y pruebas.",
+            "notes": "Notas: Guarde rápidamente ideas y preguntas para su abogado.",
+            "caseStudy": "Ejemplo: La Línea de Tiempo permite reconstruir con precisión un accidente de tráfico basado en declaraciones de testigos, y el Repositorio guarda todas las fotos de daños en un solo lugar."
+        },
+        "modes": {
+            "title": "Modos de Interacción",
+            "advice": "Consejo: Análisis rápido y respuesta a una pregunta legal.",
+            "document": "Documento: Generador de documentos listos para imprimir o enviar.",
+            "court": "Tribunal: Simulación de interrogatorio y juicio principal.",
+            "negotiation": "Negociación: Ayuda en la redacción de cartas de acuerdo y mediaciones.",
+            "caseStudy": "Ejemplo: Uso del 'Modo Tribunal' para practicar respuestas a preguntas difíciles del representante de la contraparte antes del juicio real."
+        },
+        "privacy": {
+            "title": "Seguridad y RGPD",
+            "desc": "Sus datos están protegidos de acuerdo con los estándares más altos.",
+            "local": "Modo Local: Funciona solo en su navegador. Cero rastro al cerrar la pestaña.",
+            "cloud": "Modo Nube: Sincronización de sus casos entre dispositivos (requiere consentimiento).",
+            "caseStudy": "Ejemplo: Trabajar en un documento extremadamente confidencial en modo local garantiza que los datos nunca lleguen al servidor y no se utilicen para entrenar modelos."
+        }
     }
 }

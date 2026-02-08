@@ -33,6 +33,8 @@ interface UIContextType {
     setWelcomeModalInitialViewMode: (val: 'selection' | 'input') => void;
     deferredPrompt: any;
     setDeferredPrompt: (val: any) => void;
+    isDocumentationModalOpen: boolean;
+    setIsDocumentationModalOpen: (val: boolean) => void;
 }
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
@@ -54,6 +56,7 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
     const [welcomeModalInitialViewMode, setWelcomeModalInitialViewMode] = useState<'selection' | 'input'>('selection');
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+    const [isDocumentationModalOpen, setIsDocumentationModalOpen] = useState(false);
 
     useEffect(() => {
         const handleBeforeInstallPrompt = (e: any) => {
@@ -83,7 +86,8 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         isAlimonyModalOpen, setIsAlimonyModalOpen,
         isWelcomeModalOpen, setIsWelcomeModalOpen,
         welcomeModalInitialViewMode, setWelcomeModalInitialViewMode,
-        deferredPrompt, setDeferredPrompt
+        deferredPrompt, setDeferredPrompt,
+        isDocumentationModalOpen, setIsDocumentationModalOpen
     };
 
     return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

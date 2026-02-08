@@ -7,9 +7,10 @@ interface HelpModalProps {
     onClose: () => void;
     title: string;
     children: React.ReactNode;
+    maxWidth?: string;
 }
 
-const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, title, children }) => {
+const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, title, children, maxWidth = 'max-w-lg' }) => {
     const { t } = useTranslation();
 
     if (!isOpen) return null;
@@ -17,7 +18,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, title, children 
     const modalContent = (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
             <div
-                className="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden relative"
+                className={`bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full ${maxWidth} overflow-hidden relative`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}

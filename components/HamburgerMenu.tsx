@@ -15,6 +15,7 @@ interface HamburgerMenuProps {
     onImportChat?: (file: File) => void;
     onInstallApp?: () => void;
     onHelpClick?: () => void;
+    onDocumentationClick?: () => void;
     subscription?: SubscriptionInfo;
     totalCost?: number;
 }
@@ -31,6 +32,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     onImportChat,
     onInstallApp,
     onHelpClick,
+    onDocumentationClick,
     subscription,
     totalCost
 }) => {
@@ -115,6 +117,17 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                 <span className="text-[8px] bg-indigo-500 text-white px-1 py-0.5 rounded uppercase tracking-tighter">{t('menu.new')}</span>
                             </span>
                         </button>
+
+                        {onDocumentationClick && (
+                            <button
+                                onClick={() => { onDocumentationClick(); setIsOpen(false); }}
+                                className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors"
+                                role="menuitem"
+                            >
+                                <BookOpenIcon className="h-5 w-5 text-emerald-400" />
+                                <span>{t('menu.documentation')}</span>
+                            </button>
+                        )}
 
                         {onAiToolsClick && (
                             <button

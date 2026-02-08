@@ -12,6 +12,7 @@ import DocumentPreviewModal from './DocumentPreviewModal';
 import CaseManagementModal from './CaseManagementModal';
 import WelcomeAssistantModal from './WelcomeAssistantModal';
 import InstallPWAPrompt from './InstallPWAPrompt';
+import FullDocumentationModal from './FullDocumentationModal';
 
 interface AppModalsProps {
     isProfileModalOpen: boolean;
@@ -67,6 +68,9 @@ interface AppModalsProps {
     isInstallPromptOpen: boolean;
     setIsInstallPromptOpen: (open: boolean) => void;
     onInstall: () => void;
+
+    isDocumentationModalOpen: boolean;
+    setIsDocumentationModalOpen: (open: boolean) => void;
 }
 
 const AppModals: React.FC<AppModalsProps> = ({
@@ -81,7 +85,8 @@ const AppModals: React.FC<AppModalsProps> = ({
     isCaseManagementModalOpen, setIsCaseManagementModalOpen, currentChatId, onChangeMode,
     isLocalOnly,
     isWelcomeAssistantOpen, setIsWelcomeAssistantOpen,
-    isInstallPromptOpen, setIsInstallPromptOpen, onInstall
+    isInstallPromptOpen, setIsInstallPromptOpen, onInstall,
+    isDocumentationModalOpen, setIsDocumentationModalOpen
 }) => {
     return (
         <>
@@ -184,6 +189,10 @@ const AppModals: React.FC<AppModalsProps> = ({
                         }, false);
                     }
                 }}
+            />
+            <FullDocumentationModal
+                isOpen={isDocumentationModalOpen}
+                onClose={() => setIsDocumentationModalOpen(false)}
             />
         </>
     );

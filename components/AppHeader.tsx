@@ -32,6 +32,7 @@ interface AppHeaderProps {
   onImportChat?: (file: File) => void;
   onInstallApp?: () => void;
   onHelpClick?: () => void;
+  onDocumentationClick?: () => void;
   onHomeGridClick?: () => void;
   isCrossedOut?: boolean;
 }
@@ -60,6 +61,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   onImportChat,
   onInstallApp,
   onHelpClick,
+  onDocumentationClick,
   onHomeGridClick,
   isCrossedOut
 }) => {
@@ -295,6 +297,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             onImportChat={onImportChat}
             onInstallApp={onInstallApp}
             onHelpClick={onHelpClick}
+            onDocumentationClick={onDocumentationClick}
             subscription={subscription}
             totalCost={totalCost}
           />
