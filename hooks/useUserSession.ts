@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, onSnapshot, collection } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
-import { UserProfile, LawArea, SubscriptionStatus } from '../types';
+import { UserProfile, LawArea, SubscriptionStatus, FeatureFlags } from '../types';
 
 const initialProfile: UserProfile = {
     quickActions: [],
@@ -19,11 +19,20 @@ const initialProfile: UserProfile = {
     }
 };
 
+const initialFeatures: FeatureFlags = {
+    enable_andromeda: true,
+    enable_deep_thinking: true,
+    enable_studio: true,
+    maintenance_mode: false,
+    show_beta_badge: true
+};
+
 export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
     const [user, setUser] = useState<User | null>(null);
     const [authLoading, setAuthLoading] = useState(true);
     const [profileLoading, setProfileLoading] = useState(true); // Moved up
     const [userProfile, setUserProfile] = useState<UserProfile>(initialProfile);
+    const [features, setFeatures] = useState<FeatureFlags>(initialFeatures);
     const [topics, setTopics] = useState<Record<LawArea, string[]>>(initialTopics);
     const [totalCost, setTotalCost] = useState<number>(0);
     const [isLocalOnly, setIsLocalOnly] = useState<boolean>(true);
@@ -276,6 +285,17 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
         return () => unsubscribe();
     }, [user, isLocalOnly]);
 
+    // Sync Feature Flags
+    useEffect(() => {
+        const featuresDocRef = doc(db, 'config', 'features');
+        const unsubscribe = onSnapshot(featuresDocRef, (doc) => {
+            if (doc.exists()) {
+                setFeatures(doc.data() as FeatureFlags);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
+
     // Sync Custom Agents
     useEffect(() => {
         if (!user) {
@@ -368,6 +388,7 @@ export const useUserSession = (initialTopics: Record<LawArea, string[]>) => {
         isLocalOnly,
         setIsLocalOnly,
         customAgents,
-        isPro
+        isPro,
+        features
     };
 };

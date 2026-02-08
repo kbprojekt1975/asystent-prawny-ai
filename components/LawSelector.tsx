@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { LawArea } from '../types';
+import { LawArea, FeatureFlags } from '../types';
 import { GavelIcon, FamilyIcon, ScalesIcon, BuildingIcon, MagicWandIcon, BriefcaseIcon, HomeIcon, CoinsIcon, FlagIcon, TrashIcon, XIcon, PencilIcon } from './Icons';
 import HelpModal from './HelpModal';
 import { InfoIcon } from './InfoIcon';
@@ -12,6 +11,7 @@ interface LawSelectorProps {
   onAnalyzeClick: () => void;
   isLocalOnly: boolean;
   setIsLocalOnly: (val: boolean) => void;
+  features: FeatureFlags;
   hasConsent?: boolean;
   onImport?: (file: File) => void;
   isPro?: boolean;
@@ -40,7 +40,8 @@ const LawSelector: React.FC<LawSelectorProps> = ({
   onEditCustomAgent,
   onCreateCustomAgent,
   onDeactivateAgent,
-  activeAgent
+  activeAgent,
+  features
 }) => {
   const { t } = useTranslation();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -116,7 +117,17 @@ const LawSelector: React.FC<LawSelectorProps> = ({
       </div>
 
       {/* CUSTOM AGENTS SECTION */}
-      <div className="w-full max-w-6xl border-t border-theme-border-default pt-8 mt-4 mb-8">
+      <div className={`w-full max-w-6xl border-t border-theme-border-default pt-8 mt-4 mb-8 relative ${!features.enable_studio ? 'opacity-75 pointer-events-none select-none grayscale' : ''}`}>
+        {!features.enable_studio && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-[2px] rounded-lg border border-yellow-500/30">
+            <div className="bg-slate-900 border border-yellow-500/50 text-yellow-500 px-6 py-3 rounded-full font-bold shadow-2xl flex items-center gap-3 transform -rotate-3 scale-110">
+              <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse" />
+              PRACE SERWISOWE
+              <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse" />
+            </div>
+          </div>
+        )}
+
         <h3 className="text-xs font-bold text-theme-text-muted uppercase tracking-[0.2em] mb-6 text-center">Sekcja Personalizacji</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
@@ -124,7 +135,7 @@ const LawSelector: React.FC<LawSelectorProps> = ({
           <div
             role="button"
             tabIndex={0}
-            onClick={() => onSelect(LawArea.Custom)}
+            onClick={() => features.enable_studio && onSelect(LawArea.Custom)}
             className="cursor-pointer group relative overflow-hidden bg-theme-bg-dark border-2 border-dashed border-violet-500/30 hover:border-violet-500 hover:bg-theme-bg-darker rounded-lg p-3 md:p-6 text-left transition-all duration-300"
           >
             <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20">
@@ -146,10 +157,10 @@ const LawSelector: React.FC<LawSelectorProps> = ({
         </div>
       </div>
 
-      <div className="w-full max-w-6xl mb-8">
+      <div className="w-full max-w-6xl mb-8 relative">
         <button
           onClick={onAnalyzeClick}
-          className="w-full group bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border border-violet-500/30 rounded-lg p-6 flex items-center gap-6 hover:bg-violet-600/30 hover:border-violet-500 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500"
+          className="w-full group bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border border-violet-500/30 rounded-lg p-6 flex items-center gap-6 hover:bg-violet-600/30 hover:border-violet-500 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:cursor-not-allowed"
         >
           <div className="w-16 h-16 bg-violet-600/30 rounded-xl flex items-center justify-center group-hover:bg-violet-500/50 transition-colors shadow-lg shadow-violet-900/50">
             <MagicWandIcon className="w-8 h-8 text-white" />

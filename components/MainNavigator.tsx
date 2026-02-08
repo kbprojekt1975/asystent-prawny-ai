@@ -29,7 +29,8 @@ const MainNavigator: React.FC = () => {
         customAgents,
         activeCustomAgent,
         setActiveCustomAgent,
-        isPro
+        isPro,
+        features
     } = useAppContext();
 
     const {
@@ -138,6 +139,7 @@ const MainNavigator: React.FC = () => {
                     onCreateCustomAgent={(type) => (window as any).showCustomAgentCreator?.(type)}
                     onDeactivateAgent={() => setActiveCustomAgent(null)}
                     activeAgent={activeCustomAgent}
+                    features={features}
                 />
             ) : ((selectedLawArea === LawArea.Custom || selectedLawArea === 'Własny Agent') && !activeCustomAgent) ? (
                 <CustomAgentsDashboard
@@ -264,6 +266,7 @@ const MainNavigator: React.FC = () => {
                             position: n.position
                         }))
                     }
+                    features={features}
                 />
             ) : (
                 <ChatView />

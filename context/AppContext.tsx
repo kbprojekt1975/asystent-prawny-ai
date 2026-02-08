@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { User } from 'firebase/auth';
-import { LawArea, InteractionMode, UserProfile, CourtRole } from '../types';
+import { LawArea, InteractionMode, UserProfile, CourtRole, FeatureFlags } from '../types';
 import { useUserSession } from '../hooks/useUserSession';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 
@@ -9,6 +9,7 @@ interface AppContextType {
     authLoading: boolean;
     profileLoading: boolean;
     userProfile: UserProfile | null;
+    features: FeatureFlags;
     totalCost: number;
     setTotalCost: React.Dispatch<React.SetStateAction<number>>;
     handleUpdateProfile: (profile: any, silent?: boolean) => Promise<void>;

@@ -12,7 +12,7 @@ import {
 import { InfoIcon } from '../InfoIcon';
 import HelpModal from '../HelpModal';
 import ChatBubble from '../ChatBubble';
-import { ChatMessage, LawArea } from '../../types';
+import { ChatMessage, LawArea, FeatureFlags } from '../../types';
 
 interface ProStepAnalysisProps {
     onBack: () => void;
@@ -36,6 +36,7 @@ interface ProStepAnalysisProps {
     topic: string;
     isHelpOpen: boolean;
     setIsHelpOpen: (val: boolean) => void;
+    features: FeatureFlags;
 }
 
 const ProStepAnalysis: React.FC<ProStepAnalysisProps> = ({
@@ -59,7 +60,8 @@ const ProStepAnalysis: React.FC<ProStepAnalysisProps> = ({
     lawArea,
     topic,
     isHelpOpen,
-    setIsHelpOpen
+    setIsHelpOpen,
+    features
 }) => {
     const { t } = useTranslation();
 
@@ -185,18 +187,20 @@ const ProStepAnalysis: React.FC<ProStepAnalysisProps> = ({
 
                         {!isFullScreen && (
                             <div className="flex items-center justify-between gap-3 flex-wrap">
-                                <div className="flex items-center">
-                                    <label htmlFor="pro-analysis-deep-thinking-toggle" className="text-[10px] sm:text-xs leading-tight font-medium text-slate-400 mr-2 cursor-pointer flex flex-col items-center">
-                                        {t('chat.deepThinking')}
-                                    </label>
-                                    <button
-                                        id="pro-analysis-deep-thinking-toggle"
-                                        onClick={() => setIsDeepThinkingEnabled(!isDeepThinkingEnabled)}
-                                        className={`relative inline-flex items-center h-5 rounded-full w-10 transition-colors ${isDeepThinkingEnabled ? 'bg-cyan-600' : 'bg-slate-600'}`}
-                                    >
-                                        <span className={`inline-block w-3.5 h-3.5 transform bg-white rounded-full transition-transform ${isDeepThinkingEnabled ? 'translate-x-5.5' : 'translate-x-1'}`} />
-                                    </button>
-                                </div>
+                                {features.enable_deep_thinking && (
+                                    <div className="flex items-center">
+                                        <label htmlFor="pro-analysis-deep-thinking-toggle" className="text-[10px] sm:text-xs leading-tight font-medium text-slate-400 mr-2 cursor-pointer flex flex-col items-center">
+                                            {t('chat.deepThinking')}
+                                        </label>
+                                        <button
+                                            id="pro-analysis-deep-thinking-toggle"
+                                            onClick={() => setIsDeepThinkingEnabled(!isDeepThinkingEnabled)}
+                                            className={`relative inline-flex items-center h-5 rounded-full w-10 transition-colors ${isDeepThinkingEnabled ? 'bg-cyan-600' : 'bg-slate-600'}`}
+                                        >
+                                            <span className={`inline-block w-3.5 h-3.5 transform bg-white rounded-full transition-transform ${isDeepThinkingEnabled ? 'translate-x-5.5' : 'translate-x-1'}`} />
+                                        </button>
+                                    </div>
+                                )}
 
                                 <div className="flex items-center gap-2">
                                     <button

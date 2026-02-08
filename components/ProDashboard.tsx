@@ -11,7 +11,7 @@ import {
 import { InfoIcon } from './InfoIcon';
 import HelpModal from './HelpModal';
 import NotesWidget from './NotesWidget';
-import { LawArea, InteractionMode } from '../types';
+import { LawArea, InteractionMode, FeatureFlags } from '../types';
 import { useProDashboard, ProStep } from '../hooks/useProDashboard';
 
 // Sub-components
@@ -36,6 +36,7 @@ interface ProDashboardProps {
     onUpdateNotePosition?: (noteId: string, position: { x: number, y: number } | null) => void;
     onSelectInteractionMode?: (mode: InteractionMode) => void;
     existingNotes?: any[];
+    features: FeatureFlags;
 }
 
 const ProDashboard: React.FC<ProDashboardProps> = ({
@@ -52,7 +53,8 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
     onDeleteNote,
     onUpdateNotePosition,
     onSelectInteractionMode,
-    existingNotes
+    existingNotes,
+    features
 }) => {
     const { t } = useTranslation();
     const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -109,6 +111,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                 setIsFullScreen={setIsFullScreen!}
                 isDeepThinkingEnabled={isDeepThinkingEnabled}
                 setIsDeepThinkingEnabled={setIsDeepThinkingEnabled!}
+                features={features}
                 currentInput={currentInput}
                 setCurrentInput={setCurrentInput}
                 handleSendMessage={handleSendMessage}
@@ -139,6 +142,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                 setIsFullScreen={setIsFullScreen!}
                 isDeepThinkingEnabled={isDeepThinkingEnabled}
                 setIsDeepThinkingEnabled={setIsDeepThinkingEnabled!}
+                features={features}
                 currentInput={currentInput}
                 setCurrentInput={setCurrentInput}
                 onAddNote={onAddNote}

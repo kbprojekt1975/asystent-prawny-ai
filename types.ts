@@ -141,6 +141,14 @@ export interface PersonalData {
   idNumber?: string;
 }
 
+export interface FeatureFlags {
+  enable_andromeda: boolean;
+  enable_deep_thinking: boolean;
+  enable_studio: boolean;
+  maintenance_mode: boolean;
+  show_beta_badge: boolean;
+}
+
 export interface UserProfile {
   quickActions?: QuickAction[];
   totalCost?: number;

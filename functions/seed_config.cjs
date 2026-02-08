@@ -127,6 +127,32 @@ const admins = {
     }
 };
 
+const featureFlags = {
+    enable_andromeda: false,
+    enable_deep_thinking: true,
+    enable_studio: true,
+    maintenance_mode: false,
+    show_beta_badge: true
+};
+
+const modelsParams = {
+    "gemini-1.5-pro": {
+        temperature: 0.3,
+        topP: 0.8,
+        maxOutputTokens: 8192
+    },
+    "gemini-2.0-flash": {
+        temperature: 0.7,
+        topP: 0.9,
+        maxOutputTokens: 2048
+    },
+    "gemini-2.5-pro": {
+        temperature: 0.4,
+        topP: 0.85,
+        maxOutputTokens: 8192
+    }
+};
+
 async function seedConfig() {
     const target = isProd ? "REAL Firestore (Production)" : "Firestore Emulator";
     console.log(`🌱 Seeding documents to ${target}...`);
@@ -134,6 +160,8 @@ async function seedConfig() {
         await db.collection('config').doc('pricing').set(pricingConfig);
         await db.collection('config').doc('system').set(systemPrompts);
         await db.collection('config').doc('models').set(modelsConfig);
+        await db.collection('config').doc('features').set(featureFlags);
+        await db.collection('config').doc('params').set(modelsParams);
 
         // Seed admins
         for (const [uid, data] of Object.entries(admins)) {
@@ -141,7 +169,7 @@ async function seedConfig() {
             console.log(`👤 Added admin: ${data.email} (UID: ${uid})`);
         }
 
-        console.log(`✅ Successfully wrote config documents (pricing, system, models, admins) to ${target}!`);
+        console.log(`✅ Successfully wrote config documents (pricing, system, models, features, params, admins) to ${target}!`);
     } catch (error) {
         console.error("❌ Error writing document:", error);
     }

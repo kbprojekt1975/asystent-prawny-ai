@@ -57,7 +57,9 @@ import { useAppContext, useChatContext, useUIContext } from './context';
 import { ThemeProvider } from './contexts/ThemeContext';
 import CustomAgentCreator from './components/CustomAgentCreator';
 
+
 const GlobalAdminNotes = React.lazy(() => import('./components/GlobalAdminNotes'));
+const MaintenanceScreen = React.lazy(() => import('./components/MaintenanceScreen'));
 import FullScreenLoader from './components/FullScreenLoader';
 
 // Emulator Check
@@ -108,6 +110,7 @@ const App: React.FC = () => {
     isPro,
     activeCustomAgent,
     setActiveCustomAgent,
+    features
   } = useAppContext();
 
   const { allEvents } = useUserCalendar(user, isLocalOnly);
@@ -602,8 +605,15 @@ const App: React.FC = () => {
         <FullScreenLoader transparent={user !== null && !isStabilizing} />
       )}
 
+      {/* Maintenance Mode */}
+      {!showSplash && !showAuth && !showActivation && features?.maintenance_mode && !isAdmin && (
+         <React.Suspense fallback={<FullScreenLoader />}>
+            <MaintenanceScreen />
+         </React.Suspense>
+      )}
+
       {/* 3. Main Application UI */}
-      {!showSplash && !showAuth && !showActivation && (
+      {!showSplash && !showAuth && !showActivation && (!features?.maintenance_mode || isAdmin) && (
         <div className="animate-fade-in min-h-screen flex flex-col">
           {isShowAndromeda && (
             <AndromedaAssistant
@@ -614,6 +624,7 @@ const App: React.FC = () => {
               onProfileClick={() => setIsProfileModalOpen(true)}
               language={i18n.language}
               onAddCost={handleAddCost}
+              features={features}
             />
           )}
           <PWAUpdateNotification />

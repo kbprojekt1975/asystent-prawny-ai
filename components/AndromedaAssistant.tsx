@@ -3,16 +3,17 @@ import { useAndromeda } from '../hooks/useAndromeda';
 import AndromedaSidebar from './andromeda/AndromedaSidebar';
 import AndromedaChatView from './andromeda/AndromedaChatView';
 import AndromedaInput from './andromeda/AndromedaInput';
-import { AndromedaChat } from '../types';
+import { AndromedaChat, FeatureFlags } from '../types';
 
 interface AndromedaAssistantProps {
     onProceed: () => void;
     onProfileClick: () => void;
     language: string;
     onAddCost?: (cost: number) => void;
+    features?: FeatureFlags;
 }
 
-const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onProfileClick, language, onAddCost }) => {
+const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onProfileClick, language, onAddCost, features }) => {
     const {
         history,
         isLoading,
@@ -81,7 +82,7 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onPr
                 />
             )}
 
-            <div className="flex-1 flex flex-col relative h-full min-h-0">
+            <div className={`flex-1 flex flex-col relative h-full min-h-0 ${features && !features.enable_andromeda ? 'opacity-50 pointer-events-none select-none grayscale' : ''}`}>
                 <AndromedaChatView
                     history={history}
                     isLoading={isLoading}
@@ -96,6 +97,25 @@ const AndromedaAssistant: React.FC<AndromedaAssistantProps> = ({ onProceed, onPr
                     isLoading={isLoading}
                 />
             </div>
+
+            {features && !features.enable_andromeda && (
+                 <div className="absolute inset-x-0 top-0 bottom-0 lg:left-80 z-[60] flex items-center justify-center pointer-events-auto">
+                    <div className="bg-slate-900 border border-slate-700 p-8 rounded-2xl shadow-2xl flex flex-col items-center">
+                        <div className="w-4 h-4 bg-yellow-500 rounded-full animate-pulse mb-4" />
+                        <h2 className="text-xl font-bold text-slate-200">PRACE SERWISOWE</h2>
+                        <p className="text-slate-400 mt-2 text-center max-w-xs">
+                            Moduł Andromeda jest obecnie aktualizowany.<br/>
+                            Przepraszamy za utrudnienia.
+                        </p>
+                        <button 
+                            onClick={onProceed}
+                            className="mt-6 px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-700"
+                        >
+                            Zamknij okno
+                        </button>
+                    </div>
+                 </div>
+            )}
 
             <style>{`
                 .scrollbar-hide::-webkit-scrollbar { display: none; }
